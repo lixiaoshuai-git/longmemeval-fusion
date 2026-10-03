@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D.I.V.E. 记忆系统 · 第一层：时间语义</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+:root{
+  --bg:#0b0f0d;
+  --bg-panel:#121815;
+  --bg-elev:#1a211d;
+  --border:#24302a;
+  --border-strong:#35463d;
+  --text:#d4dbd6;
+  --text-dim:#8b9a91;
+  --text-faint:#5c6b62;
+  --accent:#4ade80;
+  --accent-soft:rgba(74,222,128,.09);
+  --cyan:#5ec8d8;
+  --cyan-soft:rgba(94,200,216,.09);
+  --amber:#f0b429;
+  --amber-soft:rgba(240,180,41,.08);
+  --red:#f87171;
+  --mono:"JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:32px}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--sans);font-size:15px;line-height:1.8;
+  -webkit-font-smoothing:antialiased;
+}
+body.crt::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.16) 2px 3px);
+}
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:56px;max-width:1140px;margin:0 auto;padding:0 32px 140px}
+
+/* ---------- 目录 ---------- */
+.toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto;padding:44px 0 24px}
+.toc-brand{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--accent);margin-bottom:6px}
+.toc-title{font-size:13px;color:var(--text);margin:0 0 20px;font-weight:500}
+.toc a{display:block;font-size:13px;color:var(--text-dim);text-decoration:none;padding:5px 0 5px 12px;border-left:1px solid var(--border);transition:color .15s,border-color .15s}
+.toc a:hover{color:var(--accent);border-left-color:var(--accent)}
+.toc a.sub{padding-left:24px;font-size:12.5px;color:var(--text-faint)}
+.crt-toggle{
+  margin-top:24px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+  background:transparent;color:var(--text-faint);border:1px solid var(--border);
+  border-radius:5px;padding:4px 9px;cursor:pointer;transition:all .15s;
+}
+.crt-toggle:hover{color:var(--accent);border-color:var(--accent)}
+.crt-toggle.on{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+
+/* ---------- 正文 ---------- */
+.content{padding-top:44px;min-width:0}
+header.doc{margin-bottom:56px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--accent);margin-bottom:14px}
+h1{font-size:27px;font-weight:500;margin:0 0 14px;letter-spacing:-.01em;line-height:1.4}
+.lede{font-size:15px;color:var(--text-dim);margin:0;max-width:64ch}
+h2{font-size:20px;font-weight:500;margin:64px 0 0;padding-top:28px;border-top:1px solid var(--border);letter-spacing:-.01em}
+h2 .num{font-family:var(--mono);font-size:14px;color:var(--accent);margin-right:10px}
+h3{font-size:15.5px;font-weight:500;margin:36px 0 0;color:var(--text)}
+p{margin:14px 0}
+strong{font-weight:500;color:#eaf0ec}
+em{font-style:normal;color:var(--cyan)}
+a.inline{color:var(--cyan);text-decoration:none;border-bottom:1px solid rgba(94,200,216,.3)}
+code{font-family:var(--mono);font-size:.9em;background:var(--bg-elev);padding:1.5px 5px;border-radius:4px;color:var(--cyan)}
+.katex{color:var(--text);font-size:1.03em}
+
+ul,ol{margin:14px 0;padding-left:22px}
+li{margin:7px 0}
+li::marker{color:var(--text-faint)}
+
+/* ---------- 表格 ---------- */
+table{width:100%;border-collapse:collapse;font-size:14px;margin:22px 0}
+th{text-align:left;font-weight:500;color:var(--text-dim);font-size:12.5px;letter-spacing:.03em;
+   border-bottom:1px solid var(--border-strong);padding:9px 12px;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.65}
+tbody tr:hover{background:rgba(255,255,255,.012)}
+td.mono,th.mono{font-family:var(--mono);font-size:12.5px;color:var(--cyan)}
+
+/* ---------- 提示框 ---------- */
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);
+         padding:14px 20px;margin:24px 0;border-radius:0 8px 8px 0}
+.callout.warn{border-left-color:var(--amber);background:var(--amber-soft)}
+.callout .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;display:block;margin-bottom:6px;color:var(--accent)}
+.callout.warn .tag{color:var(--amber)}
+.callout p:first-of-type{margin-top:0}
+.callout p:last-child{margin-bottom:0}
+
+/* ---------- 公式块 ---------- */
+.formula{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;
+         padding:18px 22px;margin:22px 0;overflow-x:auto}
+.formula .cap{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--text-faint);margin-bottom:10px}
+
+/* ---------- 交互演示 ---------- */
+.demo{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;
+      padding:22px 24px 20px;margin:28px 0}
+.demo-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.demo-title{font-size:14px;font-weight:500;color:var(--accent)}
+.demo-title::before{content:"▍";margin-right:2px;opacity:.6}
+.demo-hint{font-size:12.5px;color:var(--text-faint)}
+.demo-sub{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--text-faint);
+          margin:20px 0 8px;text-transform:uppercase}
+
+/* 会话卡 */
+.sessions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.sess{border:1px solid var(--border);border-radius:8px;padding:11px 12px;background:var(--bg);
+      cursor:pointer;transition:all .18s;min-width:0;text-align:left}
+.sess:hover{border-color:var(--border-strong)}
+.sess.active{border-color:var(--accent);background:var(--accent-soft)}
+.sess-id{font-family:var(--mono);font-size:11px;color:var(--text-faint);display:block;margin-bottom:5px}
+.sess.active .sess-id{color:var(--accent)}
+.sess-text{font-size:12.5px;line-height:1.6;color:var(--text-dim);display:block}
+.sess.active .sess-text{color:var(--text)}
+
+/* 滑块 */
+.slider-wrap{display:flex;align-items:center;gap:14px;margin:20px 0 6px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:3px;background:var(--border-strong);
+                  border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;
+                  border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid var(--bg-panel);
+                  box-shadow:0 0 0 1px var(--accent)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--accent);
+                  cursor:pointer;border:3px solid var(--bg-panel)}
+.cursor-read{font-family:var(--mono);font-size:12px;color:var(--amber);min-width:92px;text-align:right}
+
+/* 记忆视图 */
+.memview{margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
+.axis{position:relative;height:26px;margin-left:86px;margin-right:52px}
+.axis span{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:var(--text-faint)}
+.axis .tick{position:absolute;bottom:0;width:1px;height:5px;background:var(--border-strong);transform:translateX(-50%)}
+.rec-row{display:flex;align-items:center;gap:12px;margin:9px 0;min-height:26px}
+.rec-label{width:74px;flex:0 0 74px;font-size:13px;text-align:right;color:var(--text)}
+.rec-track{position:relative;flex:1;height:24px}
+.rec-bar{position:absolute;top:0;height:24px;border-radius:5px;border:1px solid;
+         display:flex;align-items:center;padding:0 9px;font-size:12px;
+         font-family:var(--mono);white-space:nowrap;overflow:hidden}
+.rec-bar.active{background:rgba(94,200,216,.18);border-color:var(--cyan);color:#c9f0f6}
+.rec-bar.revoked{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.45);color:#d9a0a0;
+                 text-decoration:line-through;text-decoration-color:rgba(248,113,113,.6)}
+.rec-bar.retro{background:rgba(74,222,128,.16);border-color:var(--accent);color:#c8f5d8}
+.rec-state{flex:0 0 52px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--text-faint)}
+.rec-state.rev{color:var(--red)}
+.rec-empty{font-size:12.5px;color:var(--text-faint);font-family:var(--mono);padding:12px 0}
+.legend-inline{display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:var(--text-faint);margin-top:14px;font-family:var(--mono)}
+.legend-inline i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* 演示解说 */
+.demo-note{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);
+           font-size:13.5px;color:var(--text-dim);line-height:1.75;min-height:52px}
+.demo-note b{color:var(--amber);font-weight:500}
+
+/* 判定器 */
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.controls label{display:block;font-size:12px;color:var(--text-faint);font-family:var(--mono);
+                letter-spacing:.05em;margin-bottom:7px}
+select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border-strong);
+       border-radius:7px;padding:9px 10px;font-size:13px;font-family:var(--sans);cursor:pointer;outline:none}
+select:focus{border-color:var(--accent)}
+select option{background:var(--bg-elev);color:var(--text)}
+.verdict{border:1px solid var(--border-strong);border-radius:9px;padding:18px 20px;background:var(--bg)}
+.verdict-name{font-size:16px;font-weight:500;margin:0 0 4px;color:var(--accent)}
+.verdict-name.amber{color:var(--amber)}
+.verdict-name.cyan{color:var(--cyan)}
+.verdict-desc{font-size:13.5px;color:var(--text-dim);margin:0 0 16px;line-height:1.75}
+.verdict-code{font-family:var(--mono);font-size:12.5px;line-height:2;background:var(--bg-elev);
+              border-radius:7px;padding:13px 16px;color:#c9f0f6;white-space:pre;overflow-x:auto;margin:0 0 14px}
+.verdict-probe{font-size:13px;color:var(--text-dim);border-top:1px dashed var(--border-strong);padding-top:12px;margin:0}
+.verdict-probe code{color:var(--amber);background:transparent;padding:0}
+
+/* 分布条 */
+.dist{margin:22px 0}
+.dist-row{display:flex;align-items:center;gap:12px;margin:8px 0}
+.dist-name{flex:0 0 190px;font-size:13px;font-family:var(--mono);color:var(--text-dim);text-align:right}
+.dist-name.hi{color:var(--amber)}
+.dist-track{flex:1;height:20px;background:var(--bg-elev);border-radius:4px;overflow:hidden}
+.dist-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.dist-fill.blue{background:linear-gradient(90deg,rgba(94,200,216,.35),rgba(94,200,216,.6))}
+.dist-fill.amber{background:linear-gradient(90deg,rgba(240,180,41,.4),rgba(240,180,41,.72))}
+.dist-val{flex:0 0 46px;font-family:var(--mono);font-size:12.5px;color:var(--text-dim)}
+.dist-sum{margin-top:20px;padding:14px 18px;background:var(--amber-soft);border-left:3px solid var(--amber);
+          border-radius:0 8px 8px 0;font-size:14px}
+
+/* 清单 */
+.checklist{counter-reset:ck;list-style:none;padding:0;margin:22px 0}
+.checklist li{counter-increment:ck;position:relative;padding:16px 18px 16px 54px;margin:10px 0;
+              border:1px solid var(--border);border-radius:9px;background:var(--bg-panel)}
+.checklist li::before{content:counter(ck,decimal-leading-zero);position:absolute;left:18px;top:16px;
+              font-family:var(--mono);font-size:12px;color:var(--accent)}
+.checklist .q{font-size:14.5px;display:block;margin-bottom:5px}
+.checklist .bad{font-size:13px;color:var(--text-faint);display:block;font-family:var(--mono);line-height:1.65}
+
+hr.sep{border:0;border-top:1px solid var(--border);margin:56px 0}
+footer{margin-top:72px;padding-top:24px;border-top:1px solid var(--border);
+       font-family:var(--mono);font-size:11.5px;color:var(--text-faint);line-height:1.9}
+
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr;gap:0;padding:0 20px 100px}
+  .toc{position:static;max-height:none;padding:28px 0 0;border-bottom:1px solid var(--border);margin-bottom:28px}
+  .toc-nav{display:flex;flex-wrap:wrap;gap:0 18px}
+  .toc a{border-left:0;padding:4px 0}
+  .toc a.sub{display:none}
+  .content{padding-top:28px}
+  .sessions{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .controls{grid-template-columns:1fr}
+  .dist-name{flex:0 0 118px;font-size:11.5px}
+  .rec-label{width:52px;flex:0 0 52px;font-size:12px}
+  .axis{margin-left:64px;margin-right:44px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="toc">
+    <div class="toc-brand">DIVE · LAYER 1</div>
+    <p class="toc-title">时间语义</p>
+    <nav class="toc-nav">
+      <a href="#intro">依赖顺序与锚点</a>
+      <a href="#t1">1 · 双时间轴</a>
+      <a href="#t1a" class="sub">为什么需要两条轴</a>
+      <a href="#t1demo" class="sub">交互：事务时间游标</a>
+      <a href="#t1f" class="sub">形式化定义</a>
+      <a href="#t1db" class="sub">与数据库时态模型对应</a>
+      <a href="#t2">2 · 更新语义</a>
+      <a href="#t2c" class="sub">冲突检测（几何）</a>
+      <a href="#t2demo" class="sub">交互：冲突判定器</a>
+      <a href="#t2d" class="sub">演化 vs 更正</a>
+      <a href="#t2t" class="sub">判定速查表</a>
+      <a href="#t3">3 · 题型映射</a>
+      <a href="#t3op" class="sub">各题型所需算子</a>
+      <a href="#t4">4 · 自检清单</a>
+    </nav>
+    <button class="crt-toggle" id="crtBtn">CRT 扫描线</button>
+  </aside>
+
+  <main class="content">
+
+    <header class="doc">
+      <div class="eyebrow">D.I.V.E. × 赛诺菲 · 记忆系统设计</div>
+      <h1>第一层：时间语义</h1>
+      <p class="lede">这一层回答一个问题：当同一件事在对话里被先后说了两次，记忆库要怎么表示。
+      它决定了后面所有数据结构与检索算子的形状，也是 500 题里 211 题（42%）的直接考点。</p>
+    </header>
+
+    <section id="intro">
+      <h2><span class="num">00</span>依赖顺序与锚点</h2>
+      <p>三个概念有严格的依赖关系，不能跳序：<strong>双时间轴是地基，更新语义是从它推出的结论，题型映射是它的验证。</strong></p>
+      <p>先给一个锚点——这两组概念你在数据库课上都见过，只是换了叫法：</p>
+      <table>
+        <thead><tr><th>学术叫法</th><th>数据库叫法</th><th>你见过的形式</th></tr></thead>
+        <tbody>
+          <tr><td>有效时间 valid time</td><td class="mono">business / application time</td><td>SQL:2011 application-time period table</td></tr>
+          <tr><td>事务时间 transaction time</td><td class="mono">system time</td><td>SQL:2011 system-versioned table</td></tr>
+          <tr><td>双时间轴 bitemporal</td><td class="mono">双时态表</td><td>SCD Type 2（缓慢变化维）+ 审计列</td></tr>
+        </tbody>
+      </table>
+      <p>所以这不是新东西，是把你在数据库课程设计里已经碰过的时态建模换到了对话记忆场景。唯一的差别在于：
+      业务主数据的变更由事务驱动，<em>对话记忆的变更由自然语言陈述驱动</em>——后者需要多一步「从语言里抽出时间锚点」。</p>
+    </section>
+
+    <section id="t1">
+      <h2><span class="num">01</span>双时间轴</h2>
+
+      <h3 id="t1a">为什么需要两条轴</h3>
+      <p>如果只维护一条时间轴，有两件事就无法区分：<strong>「事实变了」</strong>和<strong>「我之前记错了」</strong>。
+      它们要求的响应方式完全不同——前者应保留旧值的有效期，后者应撤销旧值。混在一起处理，必然有一类问题答错。</p>
+
+      <div class="callout warn">
+        <span class="tag">WHY IT MATTERS</span>
+        <p>这不是"更严谨"的问题，是表达力问题。单轴模型写不出「我是在什么时候改变看法的」，因此无法回答
+        「在 S2 那一刻，我们认为成都会持续多久」。</p>
+      </div>
+
+      <h3 id="t1demo">交互演示：事务时间游标</h3>
+      <p>下面是四段对话。拖动滑块改变<strong>事务时间</strong>（系统记录的时刻），观察记忆库如何演化。
+      注意 S4 那一步——它不是"新增"，而是把前面两条记录都撤销掉。</p>
+
+      <div class="demo">
+        <div class="demo-head">
+          <span class="demo-title">事务时间游标</span>
+          <span class="demo-hint">点击会话卡片或拖动滑块</span>
+        </div>
+
+        <div class="sessions" id="sessions"></div>
+
+        <div class="slider-wrap">
+          <input type="range" id="txSlider" min="1" max="4" step="1" value="1" aria-label="事务时间游标">
+          <span class="cursor-read" id="cursorRead">事务时间 = S1</span>
+        </div>
+
+        <div class="memview">
+          <div class="demo-sub">该时刻的记忆库（横轴 = 有效时间）</div>
+          <div class="axis" id="axis"></div>
+          <div id="records"></div>
+          <div class="legend-inline">
+            <span><i style="background:rgba(94,200,216,.5);border:1px solid var(--cyan)"></i>活跃记录</span>
+            <span><i style="background:rgba(74,222,128,.5);border:1px solid var(--accent)"></i>追溯写入</span>
+            <span><i style="background:rgba(248,113,113,.3);border:1px solid rgba(248,113,113,.5)"></i>已撤销</span>
+          </div>
+        </div>
+
+        <div class="demo-note" id="demoNote"></div>
+      </div>
+
+      <h3 id="t1f">形式化定义</h3>
+      <p>设谓词集合 $P$，每个谓词 $p$ 有基数 $\mathrm{card}(p)\in\{1,n\}$；时间域 $T=\mathbb{R}$，以对话时间戳为坐标。
+      一条记忆记录是五元组：</p>
+      <div class="formula">
+        <div class="cap">RECORD</div>
+        $$m=(e,\;p,\;v,\;\tau_v,\;\tau_t)$$
+        <p style="margin:10px 0 0;font-size:13.5px;color:var(--text-dim)">
+        $e$ 为实体，$p$ 为谓词，$v$ 为值；$\tau_v=[v_s,v_e)\subseteq T$ 是<strong>有效区间</strong>，
+        $\tau_t=[t_s,t_e)\subseteq T$ 是<strong>事务区间</strong>。记忆库为 $M$。</p>
+      </div>
+
+      <p>在这之上定义三个算子。它们后续会反复出现，符号要记牢：</p>
+      <div class="formula">
+        <div class="cap">OPERATORS</div>
+        $$
+        \begin{aligned}
+        \textbf{快照}\quad & M\big|_{t_t}=\{\,m\in M : t_t\in\tau_t(m)\,\}\\[6pt]
+        \textbf{定值}\quad & \mathrm{Value}(e,p,t_v,t_t)=\{\,m.v : m\in M|_{t_t},\;m.e=e,\;m.p=p,\;t_v\in\tau_v(m)\,\}\\[6pt]
+        \textbf{当前值}\quad & \mathrm{Current}(e,p)=\mathrm{Value}(e,p,\;\text{now},\;\text{now})
+        \end{aligned}
+        $$
+      </div>
+
+      <div class="callout">
+        <span class="tag">表达力损失</span>
+        <p>单时间轴模型等价于强制 $\tau_v=\tau_t$，此时 $\mathrm{Value}$ 退化为 $\mathrm{Value}(e,p,t)$，
+        <strong>丢掉一个自由度</strong>。演示里 S2 快照的「成都（认为长期有效）」与 S3 快照的「成都（区间封口）」
+        差别，在单轴模型下无处记录。</p>
+      </div>
+
+      <h3 id="t1db">与数据库时态模型的对应</h3>
+      <table>
+        <thead><tr><th>本框架</th><th>数据仓库</th><th>实现要点</th></tr></thead>
+        <tbody>
+          <tr><td>有效区间 $\tau_v$</td><td>SCD2 的 <code>valid_from / valid_to</code></td><td>业务语义上的"何时为真"</td></tr>
+          <tr><td>事务区间 $\tau_t$</td><td>审计列 <code>created_at / deleted_at</code></td><td>系统语义上的"何时被认知"</td></tr>
+          <tr><td>$\mathrm{Snapshot}$</td><td><code>FOR SYSTEM_TIME AS OF</code></td><td>时点查询</td></tr>
+          <tr><td>失效 invalidate</td><td>软删除 + 审计留痕</td><td>可追溯，不物理删除</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="t2">
+      <h2><span class="num">02</span>更新语义</h2>
+      <p>既然 $\tau_v$ 与 $\tau_t$ 相互独立，更新就必然不止一种。设新陈述 $c=(e,p,v_{\text{new}})$，
+      它隐含一个时间锚点 $t_a$——即新值从何时开始有效。</p>
+
+      <h3 id="t2c">冲突检测是几何判定</h3>
+      <div class="formula">
+        <div class="cap">CONFLICT TEST</div>
+        $$\mathrm{Conflict}(c)\iff \mathrm{card}(p)=1\;\wedge\;\exists\,m\in M|_{\text{now}}:\;m.e=e\;\wedge\;m.p=p\;\wedge\;t_a\in\tau_v(m)$$
+      </div>
+      <p>读作：谓词是单值、且新值的时间锚点落在某个现存记录的有效区间内部，则构成冲突。
+      锚点在区间之外（或谓词为多值）则不冲突。</p>
+
+      <div class="callout warn">
+        <span class="tag">设计红线</span>
+        <p>这个判定必须是<strong>确定性代码</strong>，不能交给 LLM 决定。理由有两条：
+        一是不可复现，二是答辩时无法解释"为什么这条记忆被标记失效"。
+        这与赛诺菲要求的「记忆模块与 LLM 解耦」直接相关——LLM 只应出现在入口（抽取）与出口（生成）两个边界。</p>
+      </div>
+
+      <h3 id="t2demo">交互：冲突判定器</h3>
+      <p>改变三个输入，观察判定结果与对应的形式化操作。第三项（语言标记）只在冲突发生时起作用。</p>
+
+      <div class="demo">
+        <div class="demo-head">
+          <span class="demo-title">冲突判定器</span>
+          <span class="demo-hint">三输入 → 一判定</span>
+        </div>
+        <div class="controls">
+          <div>
+            <label>谓词基数</label>
+            <select id="selCard">
+              <option value="single">单值 cardinality = 1</option>
+              <option value="multi">多值 cardinality = n</option>
+            </select>
+          </div>
+          <div>
+            <label>锚点位置</label>
+            <select id="selAnchor">
+              <option value="in">t_a ∈ τ_v（落在区间内）</option>
+              <option value="out">t_a ∉ τ_v（落在区间外）</option>
+            </select>
+          </div>
+          <div>
+            <label>语言标记</label>
+            <select id="selMark">
+              <option value="none">无否定标记</option>
+              <option value="corr">有（"其实"、"我记错了"）</option>
+            </select>
+          </div>
+        </div>
+        <div class="verdict">
+          <p class="verdict-name" id="vName"></p>
+          <p class="verdict-desc" id="vDesc"></p>
+          <div class="verdict-code" id="vCode"></div>
+          <p class="verdict-probe" id="vProbe"></p>
+        </div>
+      </div>
+
+      <h3 id="t2d">演化 vs 更正：唯一区别是动不动 $\tau_t$</h3>
+      <p>设新记录 $m'=(e,p,v_{\text{new}},[t_a,\infty),[t_t,\infty))$，其中 $t_t$ 为当前事务时间。两种语义的写入操作是：</p>
+      <div class="formula">
+        <div class="cap">TWO WRITE PATHS</div>
+        $$
+        \begin{aligned}
+        \textbf{演化}\quad & m.\tau_v \leftarrow [v_s,\;t_a), \qquad m.\tau_t \ \text{不变}\\[6pt]
+        \textbf{更正}\quad & m.\tau_v \leftarrow \varnothing, \qquad m.\tau_t \leftarrow [t_s,\;t_t)
+        \end{aligned}
+        $$
+      </div>
+      <table>
+        <thead><tr><th>语义</th><th>含义</th><th>历史认知</th></tr></thead>
+        <tbody>
+          <tr><td><strong>演化</strong></td><td>旧值曾为真，只是当时不知道后续发展</td><td>保留（$\tau_t$ 未动）</td></tr>
+          <tr><td><strong>更正</strong></td><td>旧值从未为真</td><td>撤销（$\tau_t$ 封口，历史快照仍可查）</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <span class="tag">可操作检验</span>
+        <p>改完之后，在 $t_v &lt; t_a$ 且事务时间取较早值时查询 $\mathrm{Value}(e,p,t_v,t_t)$：<br>
+        <strong>演化</strong>返回旧值 $v$；<strong>更正</strong>返回空集 $\varnothing$。<br>
+        这两种回答对应完全不同的题型——所以这个检验同时也是自测手段。</p>
+      </div>
+
+      <h3 id="t2t">判定速查表</h3>
+      <table>
+        <thead><tr><th>谓词基数</th><th>锚点位置</th><th>语言标记</th><th>语义</th><th>写入操作</th></tr></thead>
+        <tbody>
+          <tr><td>单值</td><td>$\in$ 区间</td><td>有</td><td><strong>更正</strong></td><td class="mono">封口 τ_v 与 τ_t，新增记录</td></tr>
+          <tr><td>单值</td><td>$\in$ 区间</td><td>无</td><td><strong>演化</strong></td><td class="mono">只封口 τ_v，新增记录</td></tr>
+          <tr><td>单值</td><td>$\notin$ 区间</td><td>—</td><td>并存</td><td class="mono">直接新增</td></tr>
+          <tr><td>多值</td><td>任意</td><td>—</td><td>追加</td><td class="mono">直接新增</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <span class="tag">最常见的错误</span>
+        <p>无标记时<strong>默认按演化</strong>，而不是"新值取代旧值"。
+        直觉上人们会把所有更新都当成更正——那等于每次都丢掉历史，temporal-reasoning 里"某时刻的状态"那一类会全线崩溃。</p>
+      </div>
+    </section>
+
+    <section id="t3">
+      <h2><span class="num">03</span>题型映射</h2>
+      <p>前两个概念不是自说自话，它可以直接解释分数分布。下面是 LongMemEval 500 题按题型的构成：</p>
+
+      <div class="dist">
+        <div class="dist-row">
+          <span class="dist-name hi">temporal-reasoning</span>
+          <div class="dist-track"><div class="dist-fill amber" style="width:100%"></div></div>
+          <span class="dist-val">133</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-name">multi-session</span>
+          <div class="dist-track"><div class="dist-fill blue" style="width:100%"></div></div>
+          <span class="dist-val">133</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-name hi">knowledge-update</span>
+          <div class="dist-track"><div class="dist-fill amber" style="width:58.6%"></div></div>
+          <span class="dist-val">78</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-name">single-session-user</span>
+          <div class="dist-track"><div class="dist-fill blue" style="width:52.6%"></div></div>
+          <span class="dist-val">70</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-name">single-session-assistant</span>
+          <div class="dist-track"><div class="dist-fill blue" style="width:42.1%"></div></div>
+          <span class="dist-val">56</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-name">single-session-preference</span>
+          <div class="dist-track"><div class="dist-fill blue" style="width:22.6%"></div></div>
+          <span class="dist-val">30</span>
+        </div>
+        <div class="dist-sum">
+          <strong>temporal-reasoning + knowledge-update = 211 题 = 42.2%</strong><br>
+          <span style="font-size:13px;color:var(--text-dim)">这两类直接由双时间轴与更新语义决定，代码写成什么样，分数就是什么样。</span>
+        </div>
+      </div>
+
+      <h3 id="t3op">各题型所需算子</h3>
+      <table>
+        <thead><tr><th>题型</th><th>题数</th><th>所需算子</th><th>形式</th></tr></thead>
+        <tbody>
+          <tr><td>single-session-user / -assistant</td><td>126</td><td>定值</td><td class="mono">Value(e,p,t_v,now)</td></tr>
+          <tr><td>single-session-preference</td><td>30</td><td>多值并集</td><td class="mono">⋃ 多值槽</td></tr>
+          <tr><td>multi-session</td><td>133</td><td>聚合</td><td class="mono">count / sum / union</td></tr>
+          <tr><td>knowledge-update</td><td>78</td><td>当前值</td><td class="mono">Current(e,p)</td></tr>
+          <tr><td>temporal-reasoning</td><td>133</td><td>区间算术</td><td class="mono">端点相减 / 区间求交</td></tr>
+          <tr><td>_abs 拒答</td><td>30</td><td>否定查询</td><td class="mono">∄ m ∈ M|now 满足条件</td></tr>
+        </tbody>
+      </table>
+
+      <p>其中 $\mathrm{Current}$ 要写准，它和 $\mathrm{Value}$ 是两个不同的算子：</p>
+      <div class="formula">
+        <div class="cap">CURRENT</div>
+        $$\mathrm{Current}(e,p)=\Big(\!\!\arg\max_{m\in M|_{\text{now}},\;m.e=e,\;m.p=p}\mathrm{right}\big(\tau_v(m)\big)\Big).v$$
+      </div>
+
+      <p>temporal-reasoning 里其实有两类子问题，需要不同的算子：</p>
+      <table>
+        <thead><tr><th>子类</th><th>例子</th><th>正确算子</th></tr></thead>
+        <tbody>
+          <tr><td>某时刻的状态</td><td>"那时候我住哪？"</td><td class="mono">Value(e,p,t_v,now)</td></tr>
+          <tr><td>时间差</td><td>"A 和 B 之间隔了多久？"</td><td class="mono">取 τ_v 端点相减</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <span class="tag">关键失败模式</span>
+        <p>如果只实现 $\mathrm{Current}$（取最新值），第一类子问题会全错——
+        因为它会把"当时住成都"这个正确答案覆盖成"现在住北京"。
+        这类题在 133 道 temporal-reasoning 里占相当比例，加上 knowledge-update 的 78 道，
+        就是"只做覆盖"要付的量化代价。</p>
+      </div>
+    </section>
+
+    <section id="t4">
+      <h2><span class="num">04</span>自检清单</h2>
+      <p>用这四个问题过一遍自己的设计。每一条不只是自查工具——它都能在答辩里展开成一个设计决策，
+      正好对应代码质量里的"机制真实性 6 分"与"理解深度 2 分"。</p>
+
+      <ol class="checklist">
+        <li>
+          <span class="q">记忆记录里有没有<strong>两个独立的时间区间</strong>？</span>
+          <span class="bad">否 → 表达力已退化，S2/S3 那种快照差别无法表示</span>
+        </li>
+        <li>
+          <span class="q">冲突检测是<strong>几何判定</strong>（$t_a\in\tau_v$）还是让 LLM 决定？</span>
+          <span class="bad">LLM 决定 → 不可复现、不可解释，违反"确定性算子"原则</span>
+        </li>
+        <li>
+          <span class="q">演化与更正<strong>走不同代码路径</strong>吗？</span>
+          <span class="bad">共用一条 → 历史认知会被错误撤销，temporal-reasoning 部分子类全错</span>
+        </li>
+        <li>
+          <span class="q">查询时<strong>显式区分「当前值」与「某时刻的值」</strong>吗？</span>
+          <span class="bad">只有前者 → 第一类时间子问题必然答错</span>
+        </li>
+      </ol>
+
+      <div class="callout">
+        <span class="tag">便宜的自测</span>
+        <p>从 oracle 数据里抽 knowledge-update 与 temporal-reasoning 各 5 题，<strong>不看答案</strong>，
+        手工写下"要答对这道题，我的记忆库必须能表达出什么"。写得出来，概念就通了；
+        写不出来，卡在哪一条就是哪一块没内化。</p>
+      </div>
+    </section>
+
+    <hr class="sep">
+
+    <footer>
+      <div>第二层 · 记忆表示的数据结构（槽位 schema、版本链结构）—— 未开讲</div>
+      <div>第三层 · 时间表达归一化算法（相对时间 → 绝对区间）—— 未开讲</div>
+      <div style="margin-top:14px;opacity:.7">D.I.V.E. × 赛诺菲 · 个人赛 · LongMemEval Oracle</div>
+    </footer>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+/* ============ KaTeX ============ */
+window.addEventListener('DOMContentLoaded', function () {
+  if (typeof renderMathInElement === 'function') {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false }
+      ],
+      throwOnError: false
+    });
+  }
+});
+
+/* ============ CRT 开关 ============ */
+document.getElementById('crtBtn').addEventListener('click', function () {
+  document.body.classList.toggle('crt');
+  this.classList.toggle('on');
+});
+
+/* ============ 演示 1：事务时间游标 ============ */
+var SESSIONS = [
+  { id: 'S1', date: '2026-01-05', text: '我住在成都。' },
+  { id: 'S2', date: '2026-02-10', text: '（本次未涉及居住信息）' },
+  { id: 'S3', date: '2026-03-20', text: '我搬到北京了。' },
+  { id: 'S4', date: '2026-04-28', text: '其实我一直住在重庆。' }
+];
+
+var NOTES = {
+  1: "<b>S1</b> — 刚记录「成都」。此刻还不知道后续，所以有效区间开放到无穷：τ_v = [T1, ∞)。事务区间同为 [T1, ∞)。",
+  2: "<b>S2</b> — 本次会话没有涉及居住信息，记忆库不变。注意：如果只维护一条时间轴，S1 与 S2 的快照会永远相同，无法区分「事实没变」与「我们还没发现变化」。",
+  3: "<b>S3</b> — 新陈述「我搬到北京了」。锚点 t_a = T3 落在成都的有效区间内，谓词单值，构成冲突。语言里没有否定标记 → 判定为<b>演化</b>：只封口 τ_v（成都 → [T1, T3)），τ_t 不动，历史认知保留。北京写入 [T3, ∞)。",
+  4: "<b>S4</b> — 新陈述「其实我一直住在重庆」。带更正标记「其实」→ 判定为<b>更正</b>：成都与北京两条记录<b>同时</b>封口 τ_v 与 τ_t，从当前快照中被撤销。重庆的写入是追溯性的——「一直」意味着有效区间从 T1 开始，而不是从 T4。这正是两条轴独立的体现：事务区间是 [T4, ∞)，有效区间是 [T1, ∞)。"
+};
+
+/* 有效时间坐标：T1=0% T2=25% T3=50% T4=75% ∞=100% */
+function pct(pos) { return (pos - 1) / 4 * 100; }
+
+function recordsAt(snap) {
+  var recs = [];
+  if (snap < 4) {
+    recs.push({
+      label: '居住城市',
+      value: '成都',
+      start: 1,
+      end: (snap >= 3 ? 3 : null),
+      state: 'active',
+      kind: 'active'
+    });
+  } else {
+    recs.push({ label: '居住城市', value: '成都', start: 1, end: 3, state: '已撤销', kind: 'revoked', tx: 'τ_t = [T1, T4)' });
+  }
+  if (snap >= 3) {
+    if (snap < 4) {
+      recs.push({ label: '居住城市', value: '北京', start: 3, end: null, state: 'active', kind: 'active' });
+    } else {
+      recs.push({ label: '居住城市', value: '北京', start: 3, end: 4, state: '已撤销', kind: 'revoked', tx: 'τ_t = [T3, T4)' });
+    }
+  }
+  if (snap >= 4) {
+    recs.push({ label: '居住城市', value: '重庆', start: 1, end: null, state: '活跃', kind: 'retro', tx: 'τ_v 起源于 T1（追溯）' });
+  }
+  return recs;
+}
+
+function renderSessions(snap) {
+  var host = document.getElementById('sessions');
+  host.innerHTML = '';
+  SESSIONS.forEach(function (s, i) {
+    var idx = i + 1;
+    var btn = document.createElement('button');
+    btn.className = 'sess' + (idx === snap ? ' active' : '');
+    btn.type = 'button';
+    btn.innerHTML = '<span class="sess-id">' + s.id + ' · ' + s.date + '</span>' +
+                    '<span class="sess-text">' + s.text + '</span>';
+    btn.addEventListener('click', function () { setSnap(idx); });
+    host.appendChild(btn);
+  });
+}
+
+function renderAxis() {
+  var axis = document.getElementById('axis');
+  var marks = [
+    { p: 1, t: 'T1' }, { p: 2, t: 'T2' }, { p: 3, t: 'T3' }, { p: 4, t: 'T4' }
+  ];
+  var html = '';
+  marks.forEach(function (m) {
+    var x = pct(m.p);
+    html += '<span class="tick" style="left:' + x + '%"></span>';
+    html += '<span style="left:' + x + '%;bottom:8px">' + m.t + '</span>';
+  });
+  html += '<span style="right:0;bottom:8px">∞</span>';
+  axis.innerHTML = html;
+}
+
+function renderRecords(snap) {
+  var host = document.getElementById('records');
+  var recs = recordsAt(snap);
+  if (!recs.length) {
+    host.innerHTML = '<div class="rec-empty">（空）</div>';
+    return;
+  }
+  var html = '';
+  recs.forEach(function (r) {
+    var left = pct(r.start);
+    var right = r.end === null ? 100 : pct(r.end);
+    var width = Math.max(right - left, 6);
+    var rangeText = '[' + r.start + (r.end === null ? ',∞)' : ',' + r.end + ')');
+    html += '<div class="rec-row">';
+    html += '<span class="rec-label">' + r.value + '</span>';
+    html += '<div class="rec-track">';
+    html += '<div class="rec-bar ' + r.kind + '" style="left:' + left + '%;width:' + width + '%">τ_v ' + rangeText + '</div>';
+    html += '</div>';
+    html += '<span class="rec-state' + (r.kind === 'revoked' ? ' rev' : '') + '">' + r.state + '</span>';
+    html += '</div>';
+  });
+  host.innerHTML = html;
+}
+
+var currentSnap = 1;
+function setSnap(n) {
+  currentSnap = n;
+  document.getElementById('txSlider').value = n;
+  document.getElementById('cursorRead').textContent = '事务时间 = S' + n;
+  renderSessions(n);
+  renderRecords(n);
+  document.getElementById('demoNote').innerHTML = NOTES[n];
+}
+
+document.getElementById('txSlider').addEventListener('input', function () {
+  setSnap(parseInt(this.value, 10));
+});
+renderAxis();
+setSnap(1);
+
+/* ============ 演示 2：冲突判定器 ============ */
+var VERDICTS = {
+  correct: {
+    cls: 'amber',
+    name: '更正  correction',
+    desc: '旧值从未为真。两条区间都封口，历史认知被撤销。这是唯一会动 τ_t 的分支——正因为动了 τ_t，旧记录在后续快照中不可见，但历史快照仍可查，可追溯性由此保证。',
+    code: 'm.τ_v  ← ∅\nm.τ_t  ← [t_s, t_t)           // 关键：事务区间也封口\n新增 m′ = (e, p, v_new, [t_a, ∞), [t_t, ∞))',
+    probe: '检验 → Value(e, p, t_v &lt; t_a, 较早事务时间) 返回 <code>∅</code>（那时就是错的）'
+  },
+  evolve: {
+    cls: '',
+    name: '演化  evolution',
+    desc: '旧值曾为真，只是当时不知道后续发展。只封口有效区间，事务区间保留——所以"我是什么时候改变看法的"这件事本身也被记录下来了。',
+    code: 'm.τ_v  ← [v_s, t_a)          // 只封口有效区间\nm.τ_t  不变                    // 历史认知保留\n新增 m′ = (e, p, v_new, [t_a, ∞), [t_t, ∞))',
+    probe: '检验 → Value(e, p, t_v &lt; t_a, 较早事务时间) 返回旧值 <code>v_old</code>'
+  },
+  coexist: {
+    cls: 'cyan',
+    name: '并存  no conflict',
+    desc: '锚点落在现有有效区间之外，两段区间不重叠。两条记录都是真的，各自覆盖不同时间段。查询时按 t_v 落在哪个区间决定返回哪个值。',
+    code: '新增 m = (e, p, v_new, [t_a, ∞), [t_a, ∞))\n// 旧记录不动，无需封口',
+    probe: '检验 → Value(e, p, t_v, now) 按 <code>t_v</code> 落在哪个区间决定返回哪个值'
+  },
+  append: {
+    cls: 'cyan',
+    name: '追加  append（多值槽）',
+    desc: '谓词基数为多值，多个值可以同时为真、时间区间重叠，因此不构成冲突。注意这与「并存」的实现动作相同（都是新增），但查询语义不同：并存在时间上筛选，追加取全集。',
+    code: '新增 m = (e, p, v_new, [t_a, ∞), [t_a, ∞))\n// 多值槽：不检测区间重叠，直接追加',
+    probe: '检验 → Value(e, p, t_v, now) 返回<code>集合</code>，包含全部活跃值'
+  }
+};
+
+function updateVerdict() {
+  var card = document.getElementById('selCard').value;
+  var anchor = document.getElementById('selAnchor').value;
+  var mark = document.getElementById('selMark').value;
+
+  var key;
+  if (card === 'multi') {
+    key = 'append';
+  } else if (anchor === 'out') {
+    key = 'coexist';
+  } else {
+    key = (mark === 'corr') ? 'correct' : 'evolve';
+  }
+
+  var v = VERDICTS[key];
+  var nameEl = document.getElementById('vName');
+  nameEl.textContent = v.name;
+  nameEl.className = 'verdict-name ' + v.cls;
+  document.getElementById('vDesc').textContent = v.desc;
+  document.getElementById('vCode').textContent = v.code;
+  document.getElementById('vProbe').innerHTML = v.probe;
+}
+
+['selCard', 'selAnchor', 'selMark'].forEach(function (id) {
+  document.getElementById(id).addEventListener('change', updateVerdict);
+});
+updateVerdict();
+</script>
+</body>
+</html>

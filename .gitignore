@@ -1,0 +1,17 @@
+# 凭证：绝不提交
+.env
+*.env
+
+# 数据与结果：体积大，且官方数据不应再分发
+ref/
+data/
+results/
+*.jsonl
+*.eval-results-*
+
+# 运行产物
+__pycache__/
+*.pyc
+*.log
+.venv/
+venv/
