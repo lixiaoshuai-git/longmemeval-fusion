@@ -525,3 +525,15 @@ Zep 71.2。学术结构化系：EverMemOS 83.0（2.8k tok）、MemOS 77.8。
   SS-A 92.9 与最佳 98-100 的差距正是 v3.6 近逐字证据层的靶子。
 - 全场没有人公布 Oracle 档分题型数——我们这套 500 题 Oracle 逐题型数据
   本身就是差异化的评测资产。
+
+**思考模式披露状态（答辩 Q&A 预案）**：官方/学术协议线全部用**非思考**
+模型——LongMemEval 官方 reader=gpt-4o-mini、judge=gpt-4o；TiMem/MemOS
+协议同 mini 级；Mem0 P50 延迟 ≤1.1s（深度思考不可能）。2026 新 SOTA
+（Agent Zero 95.6 / M-1 96.4）用思考系 backbone（gpt-5.5 / Gemini 3 Flash /
+deepseek-v4-pro），但论文未披露开关与 budget（WebFetch 核实：reasoning
+设置、judge 模型名、档位、解码参数全部缺失，单次运行无方差报告）。
+间接线索：glm5.2fast 全流程中位 6.16s——深思考下不可能，更像关闭/轻思考。
+**对照我们的实验**：glm-5.3-flash（强制思考）把同一份全上下文代码从
+87.0 抬到 95.2（+8.2pp）——reader 的思考能力对分数的影响大于记忆架构的
+全部改进空间。答辩口径：reader 决定上限，记忆机制决定逼近上限的程度
+与成本；跨系统分数比较必须同时披露 reader/judge/档位/思考开关。
