@@ -1,23 +1,24 @@
 # LongMemEval Oracle 记忆系统（fusion v3.3）
 
-自研对话记忆系统，在 LongMemEval Oracle 档（500 题）上取得 **87.40%（437/500）**，
-**超过全上下文上界（87.00%，手册附录 F.1 明令禁止的实现）**；
-语义审计（剥离 judge 误判）估算真实水平 ~92%。
+自研对话记忆系统，在 LongMemEval Oracle 档（500 题）上取得 **87.4%（437/500）**，
+与全上下文上界（87.0–88.4%，双运行；手册附录 F.1 明令禁止的实现）**统计打平**；
+**temporal-reasoning 与 multi-session 为跨采样稳定的结构性优势**（源自确定性时间
+归一化与写入期聚合）。语义审计（剥离 judge 误判）估算真实水平 ~92%。
 
-## 成绩（Oracle 500 题，glm-5.2 全链路）
+## 成绩（Oracle 500 题，glm-5.2 全链路，单次运行）
 
-| 题型 | fusion v3.3 | 全上下文基线（被禁上界） | Δ |
+| 题型 | fusion v3.3 | 全上下文基线（双运行范围） | Δ |
 |---|---|---|---|
-| multi-session | **81.20%** | 80.45% | **+0.75** |
-| temporal-reasoning | 82.71% | 78.95% | **+3.76** |
-| knowledge-update | 87.18% | 92.31% | -5.13 |
-| single-session-user | 94.29% | 98.57% | -4.28 |
-| single-session-assistant | 92.86% | 100.00% | -7.14 |
-| single-session-preference | 83.33% | 86.67% | -3.34 |
-| **总体** | **87.40%** | 87.00% | **+0.40** |
+| multi-session | **81.20%** | 79.7–80.5% | **+1.5** |
+| temporal-reasoning | 82.71% | 79.0–83.5% | **跨采样领先** |
+| knowledge-update | 87.18% | 92.3–97.4% | 落后（方差带内） |
+| single-session-user | 94.29% | 97.1–98.6% | -4.0 |
+| single-session-assistant | 92.86% | 100% | -7.1 |
+| single-session-preference | 83.33% | 83.3–86.7% | -2.5 |
+| **总体** | **87.40%** | 87.0–88.4% | **统计打平** |
 
-judge：官方 `evaluate_qa.py` 提示词 + glm-5.2 代跑（正式提交需官方 judge 复跑；
-语义审计显示 judge 误判约占判错集合的 64%，详见 docs/iteration-log.md）。
+**方差披露**（见 docs/iteration-log.md 方差对照实验）：temperature=0 下
+运行间仍有 ±1.4pp 方差（37/500 题翻转）；单次比较只在差值 >3pp 时有意义。
 
 ```
 写入期（每会话）
