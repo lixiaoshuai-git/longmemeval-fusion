@@ -213,12 +213,18 @@ class Shell:
                 continue
             cmd, _, rest = line[1:].partition(" ")
             if cmd in self.COMMANDS:
-                getattr(self, self.COMMANDS[cmd][1])(rest)
+                try:
+                    getattr(self, self.COMMANDS[cmd][1])(rest)
+                except Exception as e:  # noqa: BLE001
+                    # 单条命令失败不终止会话（B.5 健壮性）
+                    print(f"[error] {type(e).__name__}: {e}")
             else:
                 print(f"未知命令 /{cmd}（/help 查看命令）")
 
 
 def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")   # Windows 控制台中文
     ap = argparse.ArgumentParser(description="记忆系统交互入口")
     ap.add_argument("--data", default=str(ROOT / "ref/LongMemEval/data/"
                                           "longmemeval_oracle.json"),
