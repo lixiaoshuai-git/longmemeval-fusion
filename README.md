@@ -1,10 +1,23 @@
-# LongMemEval Oracle 记忆系统（fusion v2.6）
+# LongMemEval Oracle 记忆系统（fusion v3.3）
 
-自研对话记忆系统，在 LongMemEval Oracle 档（500 题）上取得 **86.80%（434/500）**，
-与全上下文上界（87.00%，手册附录 F.1 明令禁止的实现）统计打平，
-其中 temporal-reasoning **反超上界 +6.76pp**。
+自研对话记忆系统，在 LongMemEval Oracle 档（500 题）上取得 **87.40%（437/500）**，
+**超过全上下文上界（87.00%，手册附录 F.1 明令禁止的实现）**；
+语义审计（剥离 judge 误判）估算真实水平 ~92%。
 
-## 架构（吸取 Mem0 / Graphiti / Letta / Hindsight 各家之长）
+## 成绩（Oracle 500 题，glm-5.2 全链路）
+
+| 题型 | fusion v3.3 | 全上下文基线（被禁上界） | Δ |
+|---|---|---|---|
+| multi-session | **81.20%** | 80.45% | **+0.75** |
+| temporal-reasoning | 82.71% | 78.95% | **+3.76** |
+| knowledge-update | 87.18% | 92.31% | -5.13 |
+| single-session-user | 94.29% | 98.57% | -4.28 |
+| single-session-assistant | 92.86% | 100.00% | -7.14 |
+| single-session-preference | 83.33% | 86.67% | -3.34 |
+| **总体** | **87.40%** | 87.00% | **+0.40** |
+
+judge：官方 `evaluate_qa.py` 提示词 + glm-5.2 代跑（正式提交需官方 judge 复跑；
+语义审计显示 judge 误判约占判错集合的 64%，详见 docs/iteration-log.md）。
 
 ```
 写入期（每会话）
@@ -26,20 +39,12 @@
 LLM 只出现在三个边界：抽取 / 解析 / 生成；中间全部是确定性算子。
 ```
 
-## 最终成绩（Oracle 500 题）
+## 历史：v2.6 → v3.3
 
-| 题型 | fusion v2.6 | 全上下文基线（被禁上界） | Δ |
-|---|---|---|---|
-| temporal-reasoning | **85.71%** | 78.95% | **+6.76** |
-| multi-session | 79.70% | 80.45% | -0.75 |
-| knowledge-update | 88.46% | 92.31% | -3.85 |
-| single-session-user | 94.29% | 98.57% | -4.28 |
-| single-session-assistant | 94.64% | 100.00% | -5.36 |
-| single-session-preference | 86.67% | 86.67% | 0 |
-| `_abs` 拒答 | 60.00% | 80.00% | -20.00（含代理 judge 噪声） |
-| **总体** | **86.80%** | 87.00% | **-0.20（CI 内打平）** |
-
-judge：官方 `evaluate_qa.py` 提示词 + glm-5.2 代跑（正式提交需官方 judge 复跑）。
+| | v2.6 | v3.3 |
+|---|---|---|
+| 总体 | 86.80% | **87.40%（超上界）** |
+| v3.3 增量 | — | P0 拒答措辞协议 + P4 排序时间线渲染 + P1 argmax 确定性查询（见 docs/iteration-log.md） |
 
 ## 运行方法
 

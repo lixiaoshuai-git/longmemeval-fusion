@@ -130,7 +130,7 @@ CRITICAL disambiguation:
 PARSE_PROMPT_V2 = """Convert the question into a retrieval plan over a temporal memory of fact sentences.
 
 Output ONLY JSON:
-{{"intent":"agg_count|agg_sum|fact_current|fact_at_time|list_events|lookup|unknown","topic":"<rich free-text key phrase for fuzzy retrieval, 5-15 words, e.g. 'babies born to friends and family members', 'pre-1920 American coin collection how many I have'>","category":"<one of: {cats}> or null","count_kind":"events|stated_total|either|none","window_days":<int or null>,"month":"<YYYY-MM or null>","at_text":"<date expression for fact_at_time, or null>","before_text":"<verbatim event text for 'before X' comparison, or null>","entities":["<nouns the question presumes to exist>"]}}
+{{"intent":"agg_count|agg_sum|fact_current|fact_at_time|list_events|argmax|lookup|unknown","topic":"<rich free-text key phrase for fuzzy retrieval, 5-15 words, e.g. 'babies born to friends and family members', 'pre-1920 American coin collection how many I have'>","category":"<one of: {cats}> or null","count_kind":"events|stated_total|either|none","window_days":<int or null>,"month":"<YYYY-MM or null>","at_text":"<date expression for fact_at_time, or null>","before_text":"<verbatim event text for 'before X' comparison, or null>","entities":["<nouns the question presumes to exist>"]}}
 
 Guides:
 - "How many X did I <verb> (during <period>)" -> intent=agg_count, count_kind=events, topic="X <verb> by me <period>".
@@ -138,6 +138,7 @@ Guides:
 - "How much money ..." -> agg_sum, count_kind=events.
 - "What is / What was my <state>" -> fact_current (fact_at_time if "back then / at that time", with at_text).
 - "Which came first / order of events" -> list_events. NEVER fact_at_time.
+- "Which X did I <verb/spend> the MOST on / the most money at / the largest" -> intent=argmax, topic="X I <verb/spend> per item with amounts".
 - "What did you (assistant) say/recommend" -> lookup, topic="<the thing asked about>".
 - "last month" -> window_days=31; "last few months" -> 120; "past two weeks" -> 14; "in December" -> month if the year is inferable, else put "December" in topic.
 - entities = nouns the question assumes exist (for existence checking).

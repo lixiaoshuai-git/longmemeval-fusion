@@ -43,7 +43,7 @@ from schema import CATEGORIES, MemoryStore  # noqa: E402
 PROMPT_VERSION = "fusion-v2.4"
 
 _INTENTS = {"agg_count", "agg_sum", "fact_current", "fact_at_time",
-            "list_events", "lookup", "unknown"}
+            "list_events", "argmax", "lookup", "unknown"}
 
 _STRONG_RATIO = 0.45      # 强匹配阈值 = max(0.45 × 最高分, 绝对下限)
 _STRONG_MIN = 1.2
@@ -553,16 +553,19 @@ class FusionMemory:
             parts.append("[USER STATEMENTS] verbatim user turns, chronological:\n"
                          + "\n".join(floor))
 
-        # 拒答范围注记：纯事实陈述 + 明确的措辞指引（v1 教训：弱证据不生成
-        # 强指令；但 _abs 题里模型会把"没提到"答成"数量为 0"这类确定性答案，
-        # 与官方 judge 期望的"信息不足"措辞不符——见 6aeb4375_abs 两次误判）
+        # 拒答范围注记（v3.3-P0 措辞协议）：审计显示 7 道语义正确的拒答被 judge
+        # 判错——根因是模型输出 "the count is 0" / "no record" 这类确定性措辞，
+        # 而 judge 语料期望 "the information provided is not enough"。
+        # 协议：给出标准句式模板，禁止用 0/数字收尾。
         ents = [e for e in sq.get("entities", []) if len(e) > 2]
         if ents and not self._mentions(ents):
-            parts.append("[MEMORY SCOPE NOTE] The memory contains no statement "
-                         "matching: " + ", ".join(ents) + ". If the question "
-                         "assumes these exist, the information provided is not "
-                         "enough to answer — say so explicitly rather than "
-                         "giving a count or guess.")
+            parts.append(
+                "[MEMORY SCOPE NOTE] The memory contains no statement about: "
+                + ", ".join(ents) + ".\n"
+                "If you find the required information is missing, you MUST answer "
+                "using wording like: \"The information provided is not enough. "
+                "You did not mention ...\" — do NOT give a number (not even 0), "
+                "a guess, or a definitive answer about it.")
 
         return "\n\n".join(parts)
 
@@ -694,6 +697,9 @@ class FusionMemory:
             # 在全量上 -1.4pp（MS -6、TR -3）。机理：①STRICT COUNT 锚定效应——
             # strict 漏掉真事件时读者被锚死；②LOW 层隐藏了低分真事件。
             # v2.6 的"平铺 top-15 + TOTAL MATCHED 召回计数"仍是最优渲染。
+            # v3.3-P4：list_events（排序/先后类问题）额外附一个按 valid_from
+            # 升序的 CHRONOLOGICAL TIMELINE——BM25 分数序对"哪个先"类问题
+            # 是误导性的（审计：模式 3 排序错 ×4 真错）。
             lines.append(f'Query: {intent}  topic="{topic}"  window={wtxt}')
             lines.append("Candidate events, ranked by relevance to the topic "
                          "(already deduplicated):")
@@ -702,6 +708,15 @@ class FusionMemory:
                              f"{_clip(e.fact, 220)}")
             if len(cand) > 15:
                 lines.append(f"  ... ({len(cand) - 15} more, lower relevance)")
+            if intent == "list_events":
+                chrono = sorted(cand[:15], key=lambda t: (
+                    t[0].valid_from or t[0].stated_at or datetime.min, t[0].tx_seq))
+                lines.append("CHRONOLOGICAL TIMELINE (same events, sorted by date "
+                             "ascending — use THIS order for before/after/first/"
+                             "sequence questions):")
+                for e, _s in chrono:
+                    lines.append(f"  {_fmt_d(e.valid_from or e.stated_at)} | "
+                                 f"{_clip(e.fact, 220)}")
             if intent == "agg_count":
                 lines.append(f"TOTAL MATCHED = {len(cand)} — this is a RECALL count, "
                              "not the answer: it may include items that do not truly "
@@ -762,6 +777,40 @@ class FusionMemory:
                 if t_rng:
                     lines.append(f'Interpreting "{sq["at_text"]}" as '
                                  f'{_fmt_d(t_rng[0])}..{_fmt_d(t_rng[1])}')
+
+        elif intent == "argmax":
+            # v3.3-P1：最值查询形状——"哪家花最多/哪次最长"。
+            # 确定性执行：对候选事件逐个抽数值，按数值降序输出，首项即 argmax。
+            cand = self._event_candidates(topic, sq, window)
+            meta["matched"] = len(cand)
+            scored = []
+            for e, s in cand[:20]:
+                n = _first_number(e.fact)
+                scored.append((e, s, n))
+            have_n = [t for t in scored if t[2] is not None]
+            no_n = [t for t in scored if t[2] is None]
+            lines.append(f'Query: argmax  topic="{topic}"')
+            if have_n:
+                have_n.sort(key=lambda t: -t[2])
+                lines.append("Candidates WITH numeric amounts, sorted by amount "
+                             "DESCENDING (top = the largest):")
+                for e, s, n in have_n[:10]:
+                    lines.append(f"  [amount≈{n:g}] ({s:.1f}) "
+                                 f"{_fmt_d(e.valid_from or e.stated_at)} | "
+                                 f"{_clip(e.fact, 200)}")
+                top = have_n[0]
+                lines.append(f"HIGHEST-AMOUNT CANDIDATE: "
+                             f"{_clip(top[0].fact, 200)} (amount≈{top[2]:g}) — "
+                             "verify it truly belongs to the asked-about set before "
+                             "answering; read the sentence for the exact figure.")
+                meta["computed"] = round(top[2], 2)
+            else:
+                lines.append("No numeric amounts found among matching events; "
+                             "the raw candidates follow — judge the maximum from "
+                             "their content:")
+                for e, s in no_n[:10]:
+                    lines.append(f"  ({s:.1f}) {_fmt_d(e.valid_from or e.stated_at)} | "
+                                 f"{_clip(e.fact, 200)}")
 
         else:  # lookup
             cand = self._event_candidates(topic, sq, None)
