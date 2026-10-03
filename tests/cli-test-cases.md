@@ -5,19 +5,21 @@ C 组会产生少量真实调用（已标注）。执行完在末尾记录表打
 
 ## 准备
 
-```bash
-cd dive
+```powershell
+cd C:\Users\Administrator\WorkBuddy\2026-09-23-10-57-19\dive
 # 复制一份缓存，避免污染评测缓存原件（provenance）
 copy results\fusfull345-fusion-cache.json results\cli-test-cache.json
-# 启动（Git Bash / cmd 均可；.env 须存在）
-python cli.py --cache results\cli-test-cache.json
+# 启动（注意：必须用托管 venv 的 python，系统 python 没装 openai）
+& "C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\python.exe" cli.py --cache results\cli-test-cache.json
 ```
 
 启动成功标志：出现横幅 `D.I.V.E. 记忆系统 CLI —— /help 查看命令，/quit 退出`，
 提示符 `mem>`。
 
 > 不带 `--cache` 直接启动也可以，但 TC-03 的 `/load` 会触发真实抽取
-> （约 25 次 LLM 调用/会话），慢且花钱。
+> （约 25 次 LLM 调用/会话），慢且花钱。下文所有 `python` 均指上面的
+> venv 全路径，简写为 `%PY%`；PowerShell 里可先执行
+> `$PY = "C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\python.exe"`。
 
 ---
 
@@ -149,29 +151,12 @@ python cli.py --cache results\cli-test-cache.json
 
 ---
 
-## 进阶验证（可选，退出后命令行执行）
+## 进阶验证（可选，退出后执行）
 
 验证"归档事件退出当前召回、但历史时刻仍可审计"：
 
-```bash
-python - << 'EOF'
-import sys, argparse
-sys.path.insert(0, 'scripts'); sys.path.insert(0, '.')
-sys.stdout.reconfigure(encoding='utf-8')
-import cli
-sh = cli.Shell(argparse.Namespace(
-    data='ref/LongMemEval/data/longmemeval_oracle.json',
-    cache='results/cli-test-cache.json'))
-sh.cmd_load('3a704032')
-sh.cmd_forget('--ttl 365 --capacity 25 --compact 180')
-arch = [e for e in sh.memory.store.events if e.status == 'archived']
-e0 = arch[0]
-slot = sh.memory.store.slot(e0.subject, e0.predicate)
-t = e0.valid_from or e0.stated_at
-hit = slot.value_at(t)
-print(f"archived={len(arch)}, value_at({t:%Y-%m-%d}) -> "
-      f"{'命中(可审计)' if hit else '未命中'}")
-EOF
+```powershell
+& $PY tests\audit-after-forget.py
 ```
 
 预期：`archived=34`，`value_at(...) -> 命中(可审计)`。
