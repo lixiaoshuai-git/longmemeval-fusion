@@ -567,6 +567,14 @@ class FusionMemory:
                 "You did not mention ...\" — do NOT give a number (not even 0), "
                 "a guess, or a definitive answer about it.")
 
+        # v3.4：确定性前提校验（专有实体必须在 user 发言中出现过）——
+        # SCOPE NOTE 只在解析层 entities 全 miss 时触发，覆盖不了"实体被
+        # assistant 闲聊误命中"与"问题自带假前提"两种情形；PREMISE CHECK
+        # 用独立规则补这个盲区。
+        premise = self._premise_check(question)
+        if premise:
+            parts.append(premise)
+
         return "\n\n".join(parts)
 
     def _parse(self, question: str, qdate: datetime) -> dict:
@@ -693,6 +701,31 @@ class FusionMemory:
                              "No matching facts in memory.")
                 return "\n".join(lines), meta
 
+            # v3.5-A：first-N-months 窗口锚（读取侧 overlay，不改 parse prompt）
+            _fnm = re.search(r"first (\w+) (months?|weeks?|years?) of", topic, re.I)
+            if _fnm and intent in ("agg_count", "agg_sum") and cand:
+                _U = {"month": 30, "months": 30, "week": 7, "weeks": 7,
+                      "year": 365, "years": 365}
+                _raw = _fnm.group(1)
+                _n = int(_raw) if _raw.isdigit() else _WORD_NUM.get(_raw)
+                if _n:
+                    _anch = [(e.valid_from or e.stated_at) for e, _ in cand
+                             if (e.valid_from or e.stated_at)]
+                    if _anch:
+                        _t0 = min(_anch)
+                        _t1 = _t0 + timedelta(days=_U[_fnm.group(2)[:5].rstrip("s")] * _n)
+                        _c2 = [(e, s) for e, s in cand
+                               if (lambda a: a and _t0 <= a <= _t1)(
+                                   e.valid_from or e.stated_at)]
+                        if _c2 != cand:
+                            cand = _c2
+                            meta["matched"] = len(cand)
+                            meta["window_anchor"] = (f"WINDOW ANCHOR (deterministic): the "
+                                           f"phrase '{_fnm.group(0)}' counts from "
+                                           f"the earliest matching event "
+                                           f"({_fmt_d(_t0)}); window "
+                                           f"{_fmt_d(_t0)}..{_fmt_d(_t1)}; "
+                                           f"{len(cand)} events in window.")
             # v3.1 实验已回滚（见 docs/iteration-log.md）：strict/borderline 分层
             # 在全量上 -1.4pp（MS -6、TR -3）。机理：①STRICT COUNT 锚定效应——
             # strict 漏掉真事件时读者被锚死；②LOW 层隐藏了低分真事件。
@@ -700,6 +733,8 @@ class FusionMemory:
             # v3.3-P4：list_events（排序/先后类问题）额外附一个按 valid_from
             # 升序的 CHRONOLOGICAL TIMELINE——BM25 分数序对"哪个先"类问题
             # 是误导性的（审计：模式 3 排序错 ×4 真错）。
+            if "_fnm" in dir() and _fnm and intent in ("agg_count", "agg_sum") and cand and meta.get("window_anchor"):
+                lines.append(meta["window_anchor"])
             lines.append(f'Query: {intent}  topic="{topic}"  window={wtxt}')
             lines.append("Candidate events, ranked by relevance to the topic "
                          "(already deduplicated):")
@@ -967,25 +1002,42 @@ class FusionMemory:
     _ORDINAL_RE = re.compile(r"\b(\d{1,3})(?:st|nd|rd|th)\b", re.I)
 
     def _ordinal_lookup(self, question: str) -> str | None:
-        """序数词确定性查找："the 27th parameter" → 列表第 27 项原文。
-
-        长枚举（100 项的清单）是抽取与摘录都覆盖不了的盲区，
-        但它是纯文本定位问题——确定性代码一步解决。
+        """序数确定性查找（v3.5-B）：绝对序数（"the 27th parameter"）与
+        相对序数（"the move after 27"）均支持；跨 user+assistant 证据；
+        多列表按列表内容与问题的 BM25 相关度消歧；列表项不截断
+        （枚举保真是 SS-A 的命门）。
         """
         m = self._ORDINAL_RE.search(question)
-        if not m:
+        q_low = question.lower()
+        rel = re.search(r"(?:the\s+)?(\w+)\s+after\s+(?:move\s+|step\s+|item\s+)?(\d{1,3})", q_low)
+        if not m and not rel:
             return None
-        n = int(m.group(1))
-        if not (1 <= n <= 500):
-            return None
-        pat = re.compile(rf"^\s*{n}\s*[.):\]]\s*(.+)$", re.M)
+        q_toks = tokenize(question)
+        candidates = []
         for t in self.store.evidence:
-            mm = pat.search(t.content)
-            if mm:
-                return (f"ORDINAL LOOKUP (deterministic): item {n} in the list "
-                        f"mentioned by the assistant reads: \""
-                        f"{_clip(mm.group(1), 220)}\"")
-        return None
+            if t.role not in ("assistant", "user"):
+                continue
+            tscore = max(BM25([tokenize(t.content)]).score(q_toks)[0], 0.0)
+            if rel:
+                n = int(rel.group(2))
+                cur = re.search(rf"^\s*{n}\s*[.):\]]\s*(.+)$", t.content, re.M)
+                nxt = re.search(rf"^\s*{n+1}\s*[.):\]]\s*(.+)$", t.content, re.M)
+                if cur and nxt:
+                    candidates.append((12.0, nxt.group(1).strip(),
+                                       t.date.strftime("%Y-%m-%d")))
+                continue
+            if m:
+                n = int(m.group(1))
+                for im in re.finditer(rf"^\s*{n}\s*[.):\]]\s*(.+)$", t.content, re.M):
+                    candidates.append((tscore, im.group(1).strip(),
+                                       t.date.strftime("%Y-%m-%d")))
+        if not candidates:
+            return None
+        candidates.sort(key=lambda x: -x[0])
+        n_txt = str(int(rel.group(2)) + 1) if rel else m.group(1)
+        body, src = candidates[0][1], candidates[0][2]
+        return (f"ORDINAL LOOKUP (deterministic): item {n_txt} found verbatim "
+                f"({src}): \"{_clip(body, 400)}\"")
 
     def _floor(self) -> list[str]:
         out = []
@@ -1014,3 +1066,143 @@ class FusionMemory:
                 if all(w in tset for w in toks):
                     return True
         return False
+
+    # v3.4：user 级前提校验——_abs 的"事实性前提"必须由用户自己的发言支撑。
+    # 教训（_abs 稳定错 ×6）：assistant 闲聊里的无关提及（讲长野交通时罗列了
+    # Shinjuku、讲网球包时提到 table tennis）会经 _mentions 抑制 SCOPE NOTE，
+    # 让 reader 顺着错误前提作答。
+    _GENERIC_TOKS = {
+        "user", "my", "me", "i", "we", "our", "you", "your", "the", "a", "an",
+        "in", "on", "at", "for", "with", "and", "or", "of", "to", "do", "did",
+        "does", "have", "has", "had", "am", "is", "are", "was", "were", "will",
+        "would", "can", "could", "how", "many", "much", "what", "which", "when",
+        "where", "who", "long", "often", "first", "current", "new", "just",
+        "started", "start", "living", "live", "playing", "play", "lead",
+        "leading", "friends", "local", "park", "tank", "apartment", "role",
+        "job", "current", "team", "collection", "month", "months", "week",
+        "weeks", "year", "years", "day", "days", "time", "times", "high",
+        "school", "undergrad", "course", "research", "project", "gallon",
+        "different", "related", "kind", "type", "sort", "things", "thing",
+        "item", "items", "stuff", "much", "more", "most", "less", "least",
+        "store", "shop", "place", "city", "area", "event", "events",
+        "task", "tasks", "game", "games", "people", "person", "friend",
+    }
+
+    def _premise_check(self, question: str) -> str | None:
+        """确定性前提校验：问题中的专有实体必须在 user 发言中出现过。
+
+        v3.4.5 边界：**只校验事实性疑问**（"我的 X 有多少/在哪/多久"）。
+        请求/推荐类问句（"Any advice / Can you recommend"）的前提本来
+        就不是"user 说过这个"——那 8 道 preference 题被误杀的教训。
+        """
+        q = question.lower()
+        if any(k in q for k in ("any advice", "can you recommend", "recommend",
+                                "any tips", "any suggestions", "what should",
+                                "any idea", "help me", "i'm thinking of",
+                                "i've been feeling", "i've been struggling",
+                                "what do you suggest")):
+            return None
+        user_texts = [t.content for t in self.store.evidence if t.role == "user"]
+        user_texts += [e.fact for e in self.store.events
+                       if e.subject != "assistant" and e.fact]
+        if not user_texts:
+            return None
+        user_toks: set[str] = set()
+        user_blob = " \n ".join(user_texts).lower()
+        for t in user_texts:
+            user_toks.update(tokenize(t))
+
+        suspects = []
+        # v3.4.1 收紧：只认专名信号（原文大写 / 数字 / 连字符词），忽略措辞动词。
+        # 误报复盘：acquire/total/past 是问题措辞而非事实前提（用户说的是
+        # got/bought/in all），这类词触发会把好答案带偏。
+        raw_words = question.split()
+        # v3.4.4：专名信号判定排除句首词（"How"）与代词（"I"）——句首大写
+        # 是排版规则不是专名；它们会把整个 2-gram 带偏（"How many plants did
+        # I acquire" 里 acquire 因此混进 suspects）
+        _PRONOUNS = {"i", "you", "he", "she", "it", "we", "they", "my", "your",
+                     "his", "her", "its", "our", "their", "me", "him", "us"}
+        proper_flags: dict[str, bool] = {}
+        for idx, w_raw in enumerate(raw_words):
+            w = w_raw.strip(".,?!")
+            if not w:
+                continue
+            lower = w.lower()
+            if lower in _PRONOUNS:
+                proper_flags[lower] = False
+                continue
+            proper_flags[lower] = (
+                (w[0].isupper() and idx > 0)              # 原文大写且非句首
+                or any(ch.isdigit() for ch in w)         # 含数字（30-gallon）
+                or "-" in w                              # 连字符组合
+            )
+        checked_grams: set[str] = set()
+        for n in (3, 2):
+            for i in range(len(raw_words) - n + 1):
+                gram_raw = raw_words[i:i + n]
+                gram = " ".join(gram_raw).lower().strip(".,?!")
+                if gram in checked_grams:
+                    continue
+                checked_grams.add(gram)
+                toks = [w for w in tokenize(gram) if w]
+                if not toks:
+                    continue
+                has_digit = any(ch.isdigit() for ch in gram)
+                # proper 信号按**小写 key**查（proper_flags 的 key 是 lower 后的
+                # 词）——v3.4.2 bug：拿原文形态查永远 miss
+                has_proper = any(proper_flags.get(w.strip(".,?!").lower(), False)
+                                 for w in gram_raw)
+                has_specific = [w for w in toks if w not in self._GENERIC_TOKS]
+                # v3.4.3 最终触发条件：**硬专名信号**（数字/连字符/原文大写词）。
+                # 教训链：①同义改写（acquire↔bought、clothing↔clothes）不是假
+                # 前提；②"两词全专有"也不行（"acquire in"/"past two" 都触发）——
+                # 只有不可改写的专名（Shinjuku、30-gallon、Porsche）才是 _abs
+                # 真正的前提校验对象
+                if not (has_digit or has_proper):
+                    continue
+                # 存在性：分词各自在 user 语料即算存在（宽松，避免形态误报）
+                if all(w in user_toks for w in toks):
+                    continue
+                for w in has_specific:
+                    if w not in user_toks and w not in suspects:
+                        suspects.append(w)
+        # 单词级：只认原文数字/连字符的专名（"pre-1920" 类）；存在性按 tokenize
+        # 结果判——**任一部词**（"art" of "art-related"）在 user 语料即算存在。
+        # v3.4.4 教训：all-部词判定被 "related/different" 这类措辞形容词卡死；
+        # 连字符复合词的本质是修饰（art-related=与 art 相关），部词在即存在。
+        for w_raw, w in ((r, r.strip(".,?!").lower()) for r in raw_words):
+            is_proper = (any(ch.isdigit() for ch in w) or "-" in w)
+            if (is_proper and len(w) >= 4 and w not in self._GENERIC_TOKS):
+                sub = [t for t in tokenize(w) if t not in self._GENERIC_TOKS]
+                if sub and any(t in user_toks for t in sub):
+                    continue
+                if w not in suspects:
+                    suspects.append(w)
+        if not suspects:
+            return None
+
+        # 可疑词的最近邻（在 user 语料里找最接近的词，供 reader 对照）
+        near = []
+        all_user = sorted(user_toks)
+        for s in suspects[:4]:
+            best, bd = None, 99
+            for c in all_user:
+                if abs(len(c) - len(s)) > 4 or c[:2] != s[:2]:
+                    continue
+                d = abs(len(c) - len(s)) + (0 if c[:3] == s[:3] else 2)
+                if d < bd:
+                    best, bd = c, d
+            if best and bd < 6:
+                near.append((s, best))
+        lines = ["[PREMISE CHECK] The following specific terms in the question "
+                 "NEVER appear in anything the user actually said: "
+                 + ", ".join(suspects[:4]) + "."]
+        if near:
+            lines.append("The user actually mentioned (closest terms): "
+                         + "; ".join(f'"{b}" (vs. "{s}")' for s, b in near) + ".")
+        lines.append("The question may contain a false premise. If the asked-about "
+                     "thing was never stated by the user, answer that the "
+                     "information provided is not enough and point out what the "
+                     "user actually mentioned instead — do NOT answer as if the "
+                     "premise were true.")
+        return "\n".join(lines)

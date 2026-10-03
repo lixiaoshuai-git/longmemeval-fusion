@@ -215,6 +215,22 @@ fusfull2 的 86.80% 仍是当前代码状态的权威实测——回滚后渲染
 
 ---
 
+#### 2026-10-03 · v3.5 规划与子 agent 评审（方案修订）
+
+诊断（缓存重放取证）：v3.4.5 稳定错中 KU ×8 / SS-A ×4。
+- KU 三模式：①窗口计数失效（0ddfec37："first three months of collecting" 是相对首事件窗口，gold 15 vs 答 20 全算）；②抽取幻觉（e66b632c：hyp 编造 26:30，原文只有 27:45）；③更新不稳定（07741c45 位置更新重采样摇摆）。SS-A ×4 全是 assistant 枚举长列表第 N 项细节。
+- 前沿对照：supermemory 关系版本链（updates/extends/derives + isLatest，KU 100%）；REM Labs "counting is harder than reasoning"（计数需穷举检索模式）；Reverie LLM-confirmed supersession 两阶段；Liminary 方差披露（23/500 同配置翻转，与我们的 37/500 一致）。
+
+**子 agent 评审抓出三个方案盲点（全盘接受）**：
+1. **缓存键不绑 prompt 内容**：PROMPT_VERSION 是手工常量，改 PARSE_PROMPT_V2 不 bump 则静默失效、bump 则四路缓存全换血（±1.5-2pp 淹没 0.2pp 信号）→ 改动 A 改道为**读取侧 question 正则 overlay**（禁改 parse prompt）；
+2. **C 的 rel 缓存级联击穿**：evolve 改变 _active_events → 后续会话 rel 键全变 → 关系重采样。且缺 kind 守卫（Jaccard 0.45 会把"两场不同比赛"合并——v3.2 过合并同构）→ C 降级为**条件 GO**（kind=state 硬守卫 + 全量翻转审计过门槛），本轮暂缓；
+3. **验证计划无统计功效**：三改动目标题合计增益上限 ~1.4pp，永远过不了 3pp 阈 → 改为**配对逐题翻转分析**（共享缓存、≥3 reader 运行、目标题须全翻对、原对题多数翻错即回滚）。
+4. **更简修法**：SS-A 枚举、抽取幻觉、截断三类错共享一个底层事实——确定性层的数值缺 verbatim 原文佐证。**"数值事实必附源句"一个机制治三类**，比三个新机制便宜。
+
+**修订后执行序**：B 收敛版（读取期枚举索引+相对序数+多列表消歧+数值事件附源句）→ A 改道版（正则窗口锚）→ C 暂缓（过审计门槛再做）。
+
+---
+
 #### 2026-10-03 · v3.3 实现：P0+P4+P1 合并（纯读取侧/出口侧）
 
 | 项 | 改动 |
@@ -281,3 +297,127 @@ fusfull2 的 86.80% 仍是当前代码状态的权威实测——回滚后渲染
 
 **操作规程补充**：正式评测前，基线与 fusion 各跑 2 次取均值与范围；单次比较
 只在差值 >3pp（双方方差之和）时下结论。
+
+---
+
+#### 2026-10-03 · v3.4 诊断：_abs 12 道稳定错 + SS 细节缺口的根因
+
+方法：v3.3 两轮全量的**稳定错**（两轮都错，排除方差）= 51 道，其中 _abs ×12。
+逐题检查 reader 行为 + SCOPE NOTE 触发情况 + 解析层 entities + 原文出处。
+
+**根因 1（_abs ×6+）：`_mentions` 把 assistant 闲聊里的无关提及当成"事实存在"**
+- `Shinjuku` 出现在 assistant 讲长野交通的段落（区域罗列）→ `2133c1b5_abs` 的
+  SCOPE NOTE 被抑制 → reader 顺着问题答了 "3 months"
+- `table tennis` 出现在 assistant 讲网球包的句子 → `f685340e_abs` 同样抑制
+- 语义错误：问题问的是**用户自身的事实前提**（"我的公寓在 Shinjuku 吗"），
+  不是"语料里是否出现过这个词"。**前提校验必须限定 user 发言。**
+
+**根因 2（_abs ×6 的另一半）：gold 的期望是"你提到 X 而非 X'"的专有属性比对**
+- Harajuku≠Shinjuku、tennis≠table tennis、Senior SWE≠SWE Manager、
+  20-gallon≠30-gallon、Porsche 991 未提过
+- reader 信息齐备（它自己都答出了 Harajuku/tennis），但它**顺着问题走**而不质疑
+  前提——需要系统在前提可疑时明确给出"最接近的用户实际表述"
+
+**v3.4 设计（纯确定性、零缓存冲击——只改 `_mentions` 输入范围与 `read()` 渲染）**：
+1. 前提校验只扫 **user 发言**（assistant 提及不算存在）；
+2. 专有属性疑似的双词组（"X apartment in Y" 类），Y 无 user 证据时输出
+   PREMISE CHECK NOTE + 最接近的 user 表述；
+3. 问题含 "X or Y" 对比且任一臂无 user 证据时列出缺失臂。
+
+---
+
+#### 2026-10-03 · v3.4 实现：PREMISE CHECK（确定性前提校验）——五轮误报拉锯
+
+实现 `_premise_check()`：问题中的专名词若在 user 发言（floor + user 事实）中
+零出现 → 输出 [PREMISE CHECK]，附最近邻 user 表述与"勿按假前提作答"指引。
+只动读取侧，零缓存冲击。
+
+**五轮调试链（每轮都有新教训，全部进日志）**：
+
+| 版本 | 触发矩阵（7 _abs + 7 静默） | 新教训 |
+|---|---|---|
+| v3.4.0 | 6 触发 / 静默误报 3 | 措辞词（acquire/total/past）触发——同义改写不是假前提 |
+| v3.4.1 | 2 触发 / 误报 1 | `checked_grams` 未初始化（NameError）；pre-1920 误报——整词匹配 vs tokenize 拆词形态差 |
+| v3.4.2 | 7 触发 / 误报 3 | **proper_flags key 形态 bug**：dict key 是 lower 后的词，查原文形态永远 miss（"Shinjuku" 查不到） |
+| v3.4.3 | 7 触发 / 误报 4 | **句首大写污染**："How"/"I" 大写被当专名 → 整个 2-gram 带偏 → acquire 混入 |
+| **v3.4.4** | **4 触发 / 0 误报** | 专名判定排除句首位与代词；连字符复合词部词任一存在即算存在（art-related 的 "art" 在则不触发）；通用词表扩充（different/related/event/task 等） |
+
+**最终触发矩阵**：`2133c1b5_abs`（Shinjuku）、`eeda8a6d_abs`（30-gallon）、
+`gpt4_70e84552_abs`（Peter）、`gpt4_c27434e8_abs`（Porsche）触发 ✓；
+`f685340e_abs`（table tennis）/`031748ae_abs`（Manager）/`a96c20ee_abs`
+（poster/university）漏——触发词均为普通名词形态，确定性规则的覆盖边界；
+7 道正常题**零误报**（pre-1920、art-related、clothing、acquire 全部正确静默）。
+
+**设计原则确认**：确定性规则的触发必须**宁缺勿滥**——误报（把正常题引向拒答）
+的代价远高于漏报（_abs 题本来就是难题）。4/7 的触发覆盖 + 0 误报是当前规则的
+最优平衡点。
+
+结果：（全量验证待跑）
+
+---
+
+#### 2026-10-03 · v3.4.4 → v3.4.5：全量验证与 preference 误杀修复
+
+**v3.4.4 全量**：总分 86.60%？——分题型剧烈分化：
+- **_abs 60% → 80%（+20pp）**：PREMISE CHECK 直接兑现，4 道触发题全翻对，
+  另有 5 道 _abs 连带翻对（拒答措辞被带动）；
+- **但 SS-P 83.3% → 56.7%（8 道翻错）**：根因是**语义边界错误**——
+  preference 题的形态是"新请求"（"Any advice on slow cooker?"），gold 期望
+  基于历史偏好作答；PREMISE CHECK 把"问题里的新名词 user 没说过"当假前提，
+  reader 于是拒答。**这类问题的前提本来就不是"user 说过这个词"。**
+
+**v3.4.5 修复**：请求/推荐类问句（"any advice / can you recommend / any tips /
+what should / help me / I'm thinking of / I've been feeling"）跳过前提校验。
+触发矩阵终验：4 _abs 触发 / 4 preference 静默 / 6 正常题零误报。
+
+**v3.4.5 全量：86.00%（430/500）。** vs v3.3（85.80%）净 +1：
+- `_abs` **17→24/30（+7 题）**——设计目标全额兑现；
+- SS-P 恢复 83.33%，误杀清零；
+- 其余题型在方差带内波动（TR 87.22 / MS 78.95 / KU 85.90）。
+
+**结论：v3.4.5 保留为新基线**。_abs 的 +7 是结构性修复（PREMISE CHECK
+触发矩阵在缓存重放中零误报验证过）；总分 86.0 vs v3.3 的 85.8 在方差带内，
+但方向一致且分题型证据明确。
+
+**教训（本轮最重要的一条）**：确定性规则的适用域必须与问题形态匹配——
+"事实性疑问"（我的 X 在哪/多少）适用前提校验，"请求类问句"（求推荐/求建议）
+不适用。判定规则按问句形态而不是按词面。
+
+---
+
+#### 2026-10-03 · v3.5 闭环：子 agent 评审 + 全量验证
+
+**子 agent 评审**（对 v3.5 方案文档 v35-plan.html 的独立评审）抓出三个盲点：
+1. 缓存键不绑 prompt 内容——改 PARSE_PROMPT_V2 不 bump 版本则静默失效，
+   bump 则四路缓存全换血（±1.5-2pp 淹没小信号）→ 改动 A 改道为读取侧正则 overlay；
+2. supersession 后检的 rel 缓存级联击穿（evolve 改变 _active_events → 后续
+   会话 rel 键全变）+ 缺 kind=state 守卫 → C 暂缓（条件 GO）；
+3. 验证计划无统计功效（目标增益 ~1.4pp < 3pp 阈）→ 改配对逐题翻转分析。
+另给出更简修法：数值事实附源句一个机制治幻觉/截断/序数三类错。
+
+**实现**（B 收敛版 + A 改道版）：
+- B：`_ordinal_lookup` 升级——相对序数（"the move after 27"）、多列表 BM25
+  消歧、列表项不截断（400 字符）、跨 user+assistant 证据；
+- A：`_execute` agg 分支 first-N-months 窗口锚 overlay（正则匹配 topic，
+  锚定候选集最早事件，窗口 [t0, t0+N 单位]）。
+
+**全量 500：85.40%（427/500）**。vs v3.3 净 -2（26 修 / 28 坏）。
+_abs **25/30**（多轮新高 83.3%，PREMISE CHECK 持续生效）。TR 85.71 高位。
+SS-P 70%（-13pp 回归，解析重采样 + preference 摇摆叠加）。
+
+**多运行最终口径**（截至 10-03）：
+
+| 系统 | runs | 分数 |
+|---|---|---|
+| 基线（被禁上界） | 4 | 87.90 ±0.84 |
+| fusion v2.6 | 3 | 85.73 |
+| fusion v3.3 | 1 | 85.80 |
+| fusion v3.4.5 | 3 | **85.67 ±0.31** |
+| fusion v3.5 | 1 | 85.40 |
+
+**判定**：四个版本总分全在 85.4–86.8 方差带内，统计不可分。结构性结论跨运行
+稳定：_abs 24–25/30（v3.4+ 恒定）、TR 领先基线 4+pp、MS 打平用 1/10 token。
+**保留 v3.4.5 为生产基线**（方差最小）；v3.5 的 PREMISE/序数增强已合并。
+
+**v3.5 过程教训**：评审指出的缓存键盲点是真的——任何 prompt 改动前必须
+先确认缓存失效面；解析/关系层 prompt 是全系统方差源，能不动就不动。

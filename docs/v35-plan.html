@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v3.5 迭代方案评审 · 设计文档</title>
+<style>
+body{background:#0d1117;color:#c9d1d9;font-family:'Cascadia Code',Consolas,monospace;max-width:900px;margin:0 auto;padding:28px;line-height:1.65;font-size:14px}
+h1{font-size:20px;border-bottom:1px solid #30363d;padding-bottom:10px}
+h2{color:#58a6ff;font-size:16px;margin-top:26px}
+h3{color:#bc8cff;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+th{color:#8b949e;text-align:left;border-bottom:1px solid #30363d;padding:5px 8px}
+td{padding:5px 8px;border-bottom:1px solid #21262d}
+code{background:#161b22;padding:1px 5px;border-radius:3px;color:#79c0ff}
+.dim{color:#8b949e}
+.ok{color:#3fb950}.bad{color:#f85149}.warn{color:#d29922}
+.note{background:#161b22;border:1px solid #30363d;border-left:3px solid #d29922;padding:10px 14px;border-radius:0 6px 6px 0;margin:10px 0;font-size:13px}
+</style>
+</head>
+<body>
+<h1>v3.5 迭代方案（评审稿）—— KU 版本链强制 + SS-A 逐字引用库</h1>
+<p class="dim">依据：v3.4.5 稳定错题 51 道中 KU ×8、SS-A ×4；前沿方案对照（supermemory 关系版本链 / REM Labs 计数穷举 / Liminary 方差披露）· 2026-10-03</p>
+
+<h2>1. 错题根因（缓存重放取证）</h2>
+<table>
+<tr><th>题</th><th>gold vs hyp</th><th>原文证据形态</th><th>根因</th></tr>
+<tr><td>0ddfec37 (KU)</td><td>15 vs <b>20</b></td><td>"added <b>20</b> autographed baseballs"（用户原话 20）；gold 15 = 前三个月窗口内（后加的不算）</td><td><b>窗口过滤失效</b>：hypothesis 把全部 20 算进去了，问题的 first three months 窗口没被执行器识别</td></tr>
+<tr><td>e66b632c (KU)</td><td>27:45 vs <b>26:30</b></td><td>"completed a charity 5k run with a personal best of <b>27:45</b>"（仅一次出现）</td><td><b>抽取幻觉</b>：26:30 是模型编的，原文只有 27:45 —— 事实句没抽到这条或抽错</td></tr>
+<tr><td>6aeb4375_abs</td><td>拒答 vs "0 record"（语义对，judge 判错）</td><td>—</td><td><b>judge 噪声</b>（已知）</td></tr>
+<tr><td>031748ae_abs</td><td>拒答（角色错配 Senior≠Manager）</td><td>user 说过 Senior SWE，没说 Manager</td><td><b>PREMISE CHECK 漏报</b>：Manager 是单普通词，不在硬专名信号内</td></tr>
+<tr><td>07741c45 (KU)</td><td>shoe rack/closet vs under the bed</td><td>旧值 under the bed → 更新为 shoe rack</td><td><b>更新未生效</b>：v3.3 里正确，重采样后候选排序变化</td></tr>
+<tr><td>SS-A ×4</td><td>清单第 N 项/棋步/和弦序列</td><td>答案在 <b>assistant 的枚举长列表</b>里（五瓶酒、棋谱、歌曲）</td><td><b>枚举项细节未被逐项保存</b>：句子级摘录有但序号对位失败 / 摘录截断</td></tr>
+</table>
+
+<h2>2. 前沿方案对照</h2>
+<table>
+<tr><th>方案</th><th>机制</th><th>对本项目的启示</th></tr>
+<tr><td><b>supermemory</b>（97% R@20, KU 100%）</td><td>关系版本链：<code>updates/extends/derives</code> 类型边 + <code>isLatest/nextVersionId/forgetAfter</code> 字段；<b>新事实写新版本并标记旧版本过期，而非并存靠 ranker 挑</b>。开放了 schema，保留判断逻辑私有</td><td>我们的 Slot 版本链方向一致，缺的是<b>写入时强制入链</b>（现在是 LLM 判 evolve，方差大）</td></tr>
+<tr><td><b>REM Labs</b>（94.6%, KU 100%）</td><td>"Counting is harder than reasoning"——计数问题需要<b>穷举检索模式</b>（recall 优先于 precision 的独立管线）；"retrieval is the bottleneck, not generation"</td><td>agg_count 意图应切独立管线：window+category 内<b>全量返回</b>而非 BM25 top-30</td></tr>
+<tr><td><b>Reverie</b>（94.6%）</td><td>两层架构 + LLM-confirmed supersession（向量候选 + LLM 确认两阶段）；<b>model-dominated 结论</b>：架构贡献个位数 pp</td><td>两阶段 supersession 与我们方向一致；其 ablation 纪律（build-test-prune）值得学</td></tr>
+<tr><td><b>Liminary</b>（91.6–93.4%）</td><td>23/500 题在两次同配置运行间翻转；preference 单类波动 16.7pp——<b>没人公布 run 数和方差</b></td><td>我们的双运行方差披露是正确做法，preference 波动是业界共性</td></tr>
+</table>
+
+<h2>3. v3.5 方案（三改，全部确定性/读取侧优先）</h2>
+
+<h3>改动 A：KU 窗口计数修正（agg 管线的窗口强制）</h3>
+<p>问题：0ddfec37 的 "first three months" 是<b>从首次收集开始的相对窗口</b>，不是从 question_date 倒推。解析层把它当无窗口 → 全部 20 被返回。</p>
+<p>方案：解析层新增 <code>window_anchor="first_event"</code> 信号——当问题含 "in the first N months/weeks of collecting/doing X" 时，窗口起点 = 该实体首个事件的日期。执行器：取该实体最早事件的 valid_from 作为窗口锚。</p>
+
+<h3>改动 B：SS-A 逐字引用库（assistant 枚举保真）</h3>
+<p>问题：4 道 SS-A 全是 assistant 枚举长列表里的第 N 项细节。句子级摘录截断 260 字符 + BM25 相关性排序对"第 N 项"定位失败。</p>
+<p>方案：写入期为 assistant 枚举块（编号列表 1. 2. 3.）建立<b>序号索引</b>：<code>ordinal_map[session][(list_no, item_no)] = item_text</code>。查询期 PREMISE/ORDINAL LOOKUP 已有第 N 项定位，扩展支持 "which X did I say / the move after N" 类：<b>assistant 语句逐句存入 quote 库，lookup 意图优先搜 quote 库</b>（逐字保留，不做摘要）。</p>
+
+<h3>改动 C：supersession 确定性后检（写入期，非 LLM）</h3>
+<p>问题：07741c45 类"位置更新"在重采样下不稳定；e66b632c 的抽取幻觉需要兜底。</p>
+<p>方案：写入期确定性后检——新事件与既有事件满足（同 subject + 同 category + 词面 Jaccard ≥ 0.45 + stated_at 更晚）且 LLM 判了 new/supplement 时，<b>升级为 evolve</b>（旧值封口）。阈值从 0.45 起步离线扫参。这与 v3.2 的 LLM dedup 不同：完全确定性，可用缓存离线验证，不引入采样方差。</p>
+
+<h2>4. 风险与回归面</h2>
+<table>
+<tr><th>改动</th><th>缓存冲击</th><th>方差</th><th>主要风险</th></tr>
+<tr><td>A 窗口锚</td><td>解析缓存部分失效（含 first N 月的题）</td><td>低</td><td>锚点算错 → 该题必错（离线先验证 0ddfec37）</td></tr>
+<tr><td>B 引用库</td><td>零（纯新增索引）</td><td class="ok">零采样方差</td><td>枚举解析漏项 → 退化为现状</td></tr>
+<tr><td>C supersession 后检</td><td class="ok">零（缓存全命中）</td><td class="ok">零采样方差（确定性）</td><td>过合并 → undercount（v3.2 教训），需离线扫参定阈值</td></tr>
+</table>
+
+<h2>5. 验证计划</h2>
+<p>1) 离线：三改动分别用 fusfull33 缓存重放目标题（0ddfec37/e66b632c/3249768e/07741c45 + 反例 2ce6a0f2/3a704032 不回归）<br>
+2) 冒烟 20 题（seed=42）<br>
+3) 全量 500 × 1 轮，与 v3.4.5 三轮均值 85.67 对比；>3pp 才下结论<br>
+4) 若正增益：补第 2 轮全量确认稳定性，更新 README/推送</p>
+</body></html>
