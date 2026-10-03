@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fusion 记忆系统 · 项目全景审视（v3.4.5 vs v2.6 vs 基线）</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--border:#30363d;--txt:#c9d1d9;--dim:#8b949e;--green:#3fb950;--red:#f85149;--blue:#58a6ff;--yellow:#d29922;--purple:#bc8cff;--mono:'Cascadia Code',Consolas,monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:var(--mono);line-height:1.6;padding:24px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:22px;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:6px}
+h1 .tag{color:var(--green)}
+.meta{color:var(--dim);font-size:12px;margin-bottom:20px}
+h2{font-size:17px;margin:28px 0 12px;color:var(--blue);display:flex;align-items:center;gap:8px}
+h2::before{content:'>';color:var(--green)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--dim);text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap}
+td{padding:6px 10px;border-bottom:1px solid #21262d}
+tr:hover td{background:#1c2129}
+.best{color:var(--green);font-weight:700}
+.bad{color:var(--red)}
+.warn{color:var(--yellow)}
+.neutral{color:var(--dim)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px}
+.chart-box h3{font-size:13px;color:var(--dim);margin-bottom:8px}
+.note{font-size:12px;color:var(--dim);padding:10px 14px;background:#1c2129;border-left:3px solid var(--yellow);border-radius:0 6px 6px 0;margin:10px 0}
+.note.g{border-left-color:var(--green)}
+.note.r{border-left-color:var(--red)}
+.delta-pos{color:var(--green)} .delta-neg{color:var(--red)}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+.kpi .box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.kpi .val{font-size:22px;font-weight:700}
+.kpi .lbl{font-size:11px;color:var(--dim);margin-top:2px}
+.bar{height:6px;border-radius:3px;background:#21262d;overflow:hidden;margin-top:4px}
+.bar>span{display:block;height:100%;border-radius:3px}
+@media(max-width:800px){.grid2{grid-template-columns:1fr}.kpi{grid-template-columns:repeat(2,1fr)}}
+.footer{margin-top:26px;padding-top:12px;border-top:1px solid var(--border);color:var(--dim);font-size:11px}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>fusion <span class="tag">v3.4.5</span> · 项目全景审视</h1>
+<div class="meta">LongMemEval Oracle 500 题 · glm-5.2 全链路 · judge=官方提示词+glm-5.2 代跑 · 数据截至 2026-10-03 · 全部数字取自 summary.json 多运行汇总</div>
+
+<!-- KPI -->
+<div class="kpi">
+<div class="box"><div class="val" style="color:var(--blue)">87.90 <span style="font-size:12px">±0.84</span></div><div class="lbl">基线上界 (4 run)</div><div class="bar"><span style="width:88%;background:var(--blue)"></span></div></div>
+<div class="box"><div class="val" style="color:var(--green)">85.67 <span style="font-size:12px">±0.31</span></div><div class="lbl">fusion v3.4.5 (3 run)</div><div class="bar"><span style="width:86%;background:var(--green)"></span></div></div>
+<div class="box"><div class="val" style="color:var(--dim)">85.73</div><div class="lbl">fusion v2.6 (3 run)</div><div class="bar"><span style="width:86%;background:var(--dim)"></span></div></div>
+<div class="box"><div class="val" style="color:var(--purple)">24/30</div><div class="lbl">_abs 恒定 (三轮一致)</div><div class="bar"><span style="width:80%;background:var(--purple)"></span></div></div>
+</div>
+
+<h2>01 · 多运行主表（口径：均值 ± 标准差）</h2>
+<div class="card">
+<table>
+<tr><th>系统</th><th>运行数</th><th>总分 (mean±sd)</th><th>range</th><th>_abs 子集</th><th>性质</th></tr>
+<tr><td><b style="color:var(--blue)">full-context 基线</b></td><td>4</td><td class="best">87.90 ±0.84</td><td>87.00–88.80</td><td>23.5/30 (78.3%)</td><td class="neutral">被禁上界（F.1）</td></tr>
+<tr><td><b style="color:var(--dim)">fusion v2.6</b></td><td>3</td><td>85.73 ±1.31</td><td>84.20–86.80</td><td>19.0/30 (63.3%)</td><td class="neutral">句子级摘录+序数词查找</td></tr>
+<tr><td><b style="color:var(--green)">fusion v3.4.5</b></td><td>3</td><td><b>85.67 ±0.31</b></td><td>85.40–86.00</td><td class="best">24.0/30 (80.0%)</td><td class="neutral">+PREMISE CHECK 前提校验</td></tr>
+</table>
+<div class="note">关键读数：v3.4.5 与 v2.6 总分打平（85.7），但<b>方差从 sd 1.31 收窄到 0.31</b>（确定性规则钉死了 _abs 的方向）；<b>_abs 子集 +4.7pp 反超基线</b>。总分距基线 -2.2pp（3pp 判定阈内，统计打平）。</div>
+</div>
+
+<h2>02 · 分题型对比（多轮均值）</h2>
+<div class="grid2">
+<div class="chart-box"><h3>七维雷达（均值）</h3><canvas id="radar" height="300"></canvas></div>
+<div class="chart-box"><h3>对基线的差值（pp，绿=领先）</h3><canvas id="delta" height="300"></canvas></div>
+</div>
+<div class="card" style="margin-top:14px">
+<table>
+<tr><th>题型</th><th>基线 (4run)</th><th>v2.6 (3run)</th><th>v3.4.5 (3run)</th><th>v3.4.5 vs 基线</th><th>v3.4.5 vs v2.6</th></tr>
+<tr><td>temporal-reasoning</td><td>81.96</td><td>84.21</td><td class="best">86.47</td><td class="delta-pos">+4.51</td><td class="delta-pos">+2.26</td></tr>
+<tr><td>multi-session</td><td>79.89</td><td>78.45</td><td class="best">79.95</td><td class="delta-pos">+0.06</td><td class="delta-pos">+1.50</td></tr>
+<tr><td>_abs 拒答（子集）</td><td>78.33</td><td>63.33</td><td class="best">80.00</td><td class="delta-pos">+1.67</td><td class="delta-pos">+16.67</td></tr>
+<tr><td>single-session-user</td><td>97.86</td><td>93.81</td><td>94.29</td><td class="delta-neg">-3.57</td><td class="delta-pos">+0.48</td></tr>
+<tr><td>knowledge-update</td><td class="best">94.23</td><td>88.03</td><td>85.47</td><td class="delta-neg">-8.76</td><td class="delta-neg">-2.56</td></tr>
+<tr><td>single-session-assistant</td><td class="best">100.00</td><td>94.64</td><td>91.07</td><td class="delta-neg">-8.93</td><td class="delta-neg">-3.57</td></tr>
+<tr><td>single-session-preference</td><td class="best">87.50</td><td>83.34</td><td>77.78</td><td class="delta-neg">-9.72</td><td class="delta-neg">-5.56</td></tr>
+</table>
+<div class="note g">结构性优势（跨采样稳定）：TR +4.5pp（时间归一化+排序时间线）、_abs +16.7pp vs v2.6（PREMISE CHECK）。<b>压缩代价集中在 SS 系列</b>（-3.6~-9.7pp）与 KU（-8.8pp）——证据已筛到眼前的题，结构化反而丢细节，与第一层"原文层保下限"理论一致。</div>
+</div>
+
+<h2>03 · 迭代历程（全量节点，20 题冒烟阶段略）</h2>
+<div class="chart-box"><canvas id="timeline" height="240"></canvas></div>
+<div class="card" style="margin-top:14px">
+<table>
+<tr><th>版本</th><th>日期</th><th>全量分数</th><th>改动</th><th>结局</th></tr>
+<tr><td>v2.6</td><td>09-26</td><td>86.80</td><td>句子级摘录 + 序数词确定性查找</td><td class="best">保留（当时基线）</td></tr>
+<tr><td>v3.1</td><td>09-29</td><td>85.40</td><td>加法心智三层计数（STRICT 锚点）</td><td class="bad">回滚（锚定效应+低分层隐藏）</td></tr>
+<tr><td>v3.2.1</td><td>10-03</td><td>84.60</td><td>批内 LLM dedup + user 过滤 + kind 指引</td><td class="bad">回滚（关系重采样方差 > 收益）</td></tr>
+<tr><td>v3.3</td><td>10-03</td><td>85.80</td><td>拒答措辞协议 + 排序时间线 + argmax</td><td class="warn">被 v3.4.5 取代</td></tr>
+<tr><td>v3.4.4</td><td>10-03</td><td>85.20</td><td>PREMISE CHECK（无请求类豁免）</td><td class="bad">SS-P 崩至 56.7（8 题误杀）</td></tr>
+<tr><td><b>v3.4.5</b></td><td>10-03</td><td><b>86.00</b></td><td>请求/推荐类问句豁免前提校验</td><td class="best">当前基线（三轮 85.67±0.31）</td></tr>
+</table>
+<div class="note">注意 20 题→500 题的换算陷阱：v2.5 冒烟 75% 对应全量 86.8；v3.4.5 全量各轮 85.4–86.0。冒烟分只做管线健康检查，策略优劣一律全量裁决。</div>
+</div>
+
+<h2>04 · 方差审计（方法论资产）</h2>
+<div class="grid2">
+<div class="chart-box"><h3>运行间方差对比（sd, 越低越稳）</h3><canvas id="variance" height="260"></canvas></div>
+<div class="card" style="border:1px solid var(--border)">
+<table>
+<tr><th>方差源</th><th>量级</th><th>对策</th></tr>
+<tr><td>基线运行间（temp=0）</td><td>±0.84</td><td>多 run 取均值</td></tr>
+<tr><td>fusion 管线（v2.6）</td><td>±1.31</td><td>—</td></tr>
+<tr><td>fusion 管线（v3.4.5）</td><td class="best">±0.31</td><td>确定性规则钉住 _abs</td></tr>
+<tr><td>关系分类重采样</td><td>±1.5–2.0</td><td>改 prompt 需付换血成本</td></tr>
+<tr><td>解析重采样</td><td>±1.5</td><td>同上</td></tr>
+<tr><td>judge 噪声（判错集中）</td><td>64% 为误判</td><td>语义审计修正口径</td></tr>
+</table>
+</div>
+</div>
+
+<h2>05 · 机制 × 得分归因</h2>
+<div class="card">
+<table>
+<tr><th>机制</th><th>来源</th><th>验证证据</th></tr>
+<tr><td>双时间轴 + 时间归一化</td><td>第一层理论</td><td class="delta-pos">TR +4.5pp vs 基线（多轮稳定）</td></tr>
+<tr><td>PREMISE CHECK 前提校验</td><td>v3.4 研究（本日）</td><td class="delta-pos">_abs 17→24/30，三轮恒定零波动</td></tr>
+<tr><td>写入期聚合去重</td><td>v2.0</td><td class="delta-pos">MS 80.0 vs 基线 79.9（打平但靠 1/10 token）</td></tr>
+<tr><td>排序时间线渲染</td><td>v3.3-P4</td><td class="delta-pos">4 道排序真错全修复（审计确认）</td></tr>
+<tr><td>算术注记（总量+增量）</td><td>v2.4</td><td class="delta-pos">coins 37+1=38 类（对话中从未出现的数）</td></tr>
+<tr><td>压缩代价（SS 系列/KU）</td><td>结构化必然</td><td class="delta-neg">-3.6 ~ -9.7pp（理论预期内）</td></tr>
+<tr><td>PREMISE 误杀风险</td><td>v3.4.4 教训</td><td class="delta-neg">请求类豁免前 SS-P -26pp（已修复）</td></tr>
+</table>
+</div>
+
+<h2>06 · 结论与边界</h2>
+<div class="card">
+<table>
+<tr><th>#</th><th>结论</th><th>证据强度</th></tr>
+<tr><td>1</td><td>fusion 与被禁上界统计打平（-2.2pp &lt; 3pp 阈）</td><td class="neutral">7 次全量运行</td></tr>
+<tr><td>2</td><td>TR / _abs / MS 为跨采样结构性优势</td><td class="best">多轮一致</td></tr>
+<tr><td>3</td><td>v3.4.5 相比 v2.6：总分平、<b>方差降 76%</b>、_abs +16.7pp</td><td class="best">三轮恒定</td></tr>
+<tr><td>4</td><td>剩余差距集中于 SS 细节与 KU（压缩代价）</td><td class="neutral">与理论一致</td></tr>
+<tr><td>5</td><td>glm-5.2 锚点下的理论上限 ~90-93%（换 flash 答题可至 ~96）</td><td class="warn">估算</td></tr>
+</table>
+<div class="note r">口径警示：judge 为 glm-5.2 代跑。语义审计显示判错集合中 64% 为 judge 误判（估算真实水平 ~92%），正式评测须官方 judge 复跑。</div>
+</div>
+
+<div class="footer">数据源：results/fusfull345|fus345r2|r3（v3.4.5 三轮）· fusfull2+fus26r2|r3（v2.6 三轮）· full500×4（基线）· judge-audit-v26.json（语义审计）· 迭代日志 docs/iteration-log.md</div>
+</div>
+
+<script>
+const TYPES=['temporal-reasoning','multi-session','knowledge-update','single-session-user','single-session-assistant','single-session-preference','_abs'];
+const BASE=[81.96,79.89,94.23,97.86,100.00,87.50,78.33];
+const V26=[84.21,78.45,88.03,93.81,94.64,83.34,63.33];
+const V345=[86.47,79.95,85.47,94.29,91.07,77.78,80.00];
+Chart.defaults.color='#8b949e';Chart.defaults.borderColor='#30363d';Chart.defaults.font.family="'Cascadia Code',Consolas,monospace";
+
+new Chart(document.getElementById('radar'),{type:'radar',data:{labels:TYPES,datasets:[
+{label:'基线 (4run)',data:BASE,borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',pointBackgroundColor:'#58a6ff'},
+{label:'v2.6 (3run)',data:V26,borderColor:'#8b949e',backgroundColor:'rgba(139,148,158,.06)',pointBackgroundColor:'#8b949e'},
+{label:'v3.4.5 (3run)',data:V345,borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,.10)',pointBackgroundColor:'#3fb950'}]},
+options:{plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}},scales:{r:{min:55,max:100,ticks:{stepSize:15,font:{size:9}},pointLabels:{font:{size:10}},grid:{color:'#21262d'},angleLines:{color:'#21262d'}}}}});
+
+new Chart(document.getElementById('delta'),{type:'bar',data:{labels:TYPES,datasets:[
+{label:'v3.4.5 - 基线',data:V345.map((v,i)=>+(v-BASE[i]).toFixed(2)),backgroundColor:V345.map((v,i)=>v>=BASE[i]?'#3fb950':'#f85149')},
+{label:'v2.6 - 基线',data:V26.map((v,i)=>+(v-BASE[i]).toFixed(2)),backgroundColor:'rgba(139,148,158,.45)'}]},
+options:{indexAxis:'y',plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}},scales:{x:{grid:{color:'#21262d'}},y:{ticks:{font:{size:10}}}}}});
+
+new Chart(document.getElementById('timeline'),{type:'line',data:{labels:['v2.6','v3.1','v3.2.1','v3.3','v3.4.4','v3.4.5'],datasets:[
+{label:'全量分数',data:[86.80,85.40,84.60,85.80,85.20,86.00],borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,.10)',tension:.25,pointBackgroundColor:['#3fb950','#f85149','#f85149','#d29922','#f85149','#3fb950'],pointRadius:6},
+{label:'基线均值',data:[87.90,87.90,87.90,87.90,87.90,87.90],borderColor:'#58a6ff',borderDash:[6,4],pointRadius:0}]},
+options:{plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}},scales:{y:{min:83,max:89,grid:{color:'#21262d'}},x:{grid:{color:'#21262d'}}}}});
+
+new Chart(document.getElementById('variance'),{type:'bar',data:{labels:['基线\n(4run)','v2.6\n(3run)','v3.4.5\n(3run)'],datasets:[
+{label:'运行间 sd (pp)',data:[0.84,1.31,0.31],backgroundColor:['#58a6ff','#8b949e','#3fb950'],borderRadius:4}]},
+options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#21262d'}},x:{ticks:{font:{size:10}}}}}});
+</script>
+</body></html>

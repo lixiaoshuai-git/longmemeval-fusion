@@ -293,6 +293,18 @@ class FusionMemory:
                 "evidence": len(self.store.evidence),
                 **self.store.stats}
 
+    def forget(self, *, now=None, ttl_days=None, capacity=None,
+               compact_days=None) -> dict:
+        """遗忘/生命周期（手册 B.1）：软归档，不改检索逻辑本身。
+
+        实现委托给独立的 memory_sys/lifecycle.py（只操作 store 公开形状，
+        与本类零逻辑耦合）。默认不启用——评测流水线不调用；
+        归档事件退出"当前事实"召回，但 value_at 时刻查询仍可审计。
+        """
+        from memory_sys.lifecycle import apply_lifecycle
+        return apply_lifecycle(self.store, now=now, ttl_days=ttl_days,
+                               capacity=capacity, compact_days=compact_days)
+
     # ------------------------------------------------------------------
     # 写入期
     # ------------------------------------------------------------------
@@ -878,7 +890,8 @@ class FusionMemory:
                 rng = (f"[{_fmt_d(e.valid_from)} .. "
                        f"{_fmt_d(e.valid_to) if e.valid_to else 'now'}]")
                 tag = {"active": "current", "superseded": "was true until then",
-                       "invalidated": "corrected, was never true"}[e.status]
+                       "invalidated": "corrected, was never true",
+                       "archived": "forgotten, kept for audit"}[e.status]
                 lines.append(f"  {rng} {_clip(e.fact or e.value, 200)} ({tag})")
             note = self._arithmetic_note(evs)
             if note:

@@ -88,7 +88,7 @@ class Event:
     valid_from: datetime | None
     valid_to: datetime | None      # None = 开放（现仍有效）
     tx_seq: int
-    status: str = "active"         # active | superseded | invalidated
+    status: str = "active"         # active | superseded | invalidated | archived(遗忘, 见 lifecycle.py)
     amount: float | None = None
     date_text: str = ""            # 原始时间表述（回显给出口 LLM）
     corrects: bool = False
