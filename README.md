@@ -70,6 +70,7 @@ judge 误判——正式口径以官方 `evaluate_qa.py` + gpt-4o 复跑为准�
 ## 运行方法
 
 依赖：Python 3.10+，`pip install -r requirements.txt`（openai / tiktoken / backoff / numpy / tqdm；judge 另需官方仓库依赖）。
+自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（39 例，纯离线，<1s；CI 见 `.github/workflows/tests.yml`）。
 
 1. 配置 `.env`（参考 `.env.example`）：OpenAI 兼容接口的 `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL`。
 2. 数据：LongMemEval 官方仓库（github.com/xiaowu0162/LongMemEval），

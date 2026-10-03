@@ -122,8 +122,13 @@ class Slot:
         return max(act, key=lambda e: (e.valid_to or datetime.max, e.tx_seq))
 
     def value_at(self, t: datetime) -> Event | None:
-        """Value(e,p,t_v,now)：时刻状态，与 current 是不同算子。"""
-        hits = [e for e in self.events if e.covers(t)]
+        """Value(e,p,t_v,now)：时刻状态，与 current 是不同算子。
+
+        invalidated（更正）的事件在任何时刻都不可见——更正封 τ_v、τ_t
+        两轴（"旧值从未为真"）；superseded/archived 保留（历史可审计）。
+        """
+        hits = [e for e in self.events
+                if e.status != "invalidated" and e.covers(t)]
         return hits[-1] if hits else None
 
 
