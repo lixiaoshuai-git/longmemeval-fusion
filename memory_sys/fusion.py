@@ -48,6 +48,7 @@ _INTENTS = {"agg_count", "agg_sum", "fact_current", "fact_at_time",
 _STRONG_RATIO = 0.45      # 强匹配阈值 = max(0.45 × 最高分, 绝对下限)
 _STRONG_MIN = 1.2
 _EXCERPT_K = 6            # assistant 相关轮次条数
+_VERBATIM_CHARS = 1500    # v3.6 近逐字证据层：源轮次全文引用上限
 _FACT_CAP = 80            # 事实清单上限
 _TURN_CHARS = 240         # 地板轮次截断
 
@@ -547,6 +548,15 @@ class FusionMemory:
             parts.append("[RELEVANT EXCERPTS] most query-relevant assistant "
                          "sentences:\n" + "\n".join(exc))
 
+        # v3.6 近逐字证据层：仅单会话型意图（lookup/unknown）生效——
+        # 检索最强命中的源轮次全文引用，治 SS-A/SS-U 的摘录信息损失；
+        # MS/TR/KU 走确定性路由，渲染不动（v3.1 教训）。
+        if sq.get("intent") in ("lookup", "unknown"):
+            verb = self._verbatim_turn(question)
+            if verb:
+                parts.append("[VERBATIM SOURCE TURN] the single most "
+                             "query-relevant turn, quoted in full:\n" + verb)
+
         # 序数词确定性查找（"the 27th parameter" 类长清单盲区）
         ord_hit = self._ordinal_lookup(question)
         if ord_hit:
@@ -713,31 +723,8 @@ class FusionMemory:
                              "No matching facts in memory.")
                 return "\n".join(lines), meta
 
-            # v3.5-A：first-N-months 窗口锚（读取侧 overlay，不改 parse prompt）
-            _fnm = re.search(r"first (\w+) (months?|weeks?|years?) of", topic, re.I)
-            if _fnm and intent in ("agg_count", "agg_sum") and cand:
-                _U = {"month": 30, "months": 30, "week": 7, "weeks": 7,
-                      "year": 365, "years": 365}
-                _raw = _fnm.group(1)
-                _n = int(_raw) if _raw.isdigit() else _WORD_NUM.get(_raw)
-                if _n:
-                    _anch = [(e.valid_from or e.stated_at) for e, _ in cand
-                             if (e.valid_from or e.stated_at)]
-                    if _anch:
-                        _t0 = min(_anch)
-                        _t1 = _t0 + timedelta(days=_U[_fnm.group(2)[:5].rstrip("s")] * _n)
-                        _c2 = [(e, s) for e, s in cand
-                               if (lambda a: a and _t0 <= a <= _t1)(
-                                   e.valid_from or e.stated_at)]
-                        if _c2 != cand:
-                            cand = _c2
-                            meta["matched"] = len(cand)
-                            meta["window_anchor"] = (f"WINDOW ANCHOR (deterministic): the "
-                                           f"phrase '{_fnm.group(0)}' counts from "
-                                           f"the earliest matching event "
-                                           f"({_fmt_d(_t0)}); window "
-                                           f"{_fmt_d(_t0)}..{_fmt_d(_t1)}; "
-                                           f"{len(cand)} events in window.")
+            # v3.5-A 窗口锚已回滚（见 docs/iteration-log.md 2026-10-03 验证轮）：
+            # 三轮无正证据且 MS/SS 走低，按"无正证据不保留"原则退回 v2.6 渲染。
             # v3.1 实验已回滚（见 docs/iteration-log.md）：strict/borderline 分层
             # 在全量上 -1.4pp（MS -6、TR -3）。机理：①STRICT COUNT 锚定效应——
             # strict 漏掉真事件时读者被锚死；②LOW 层隐藏了低分真事件。
@@ -745,8 +732,6 @@ class FusionMemory:
             # v3.3-P4：list_events（排序/先后类问题）额外附一个按 valid_from
             # 升序的 CHRONOLOGICAL TIMELINE——BM25 分数序对"哪个先"类问题
             # 是误导性的（审计：模式 3 排序错 ×4 真错）。
-            if "_fnm" in dir() and _fnm and intent in ("agg_count", "agg_sum") and cand and meta.get("window_anchor"):
-                lines.append(meta["window_anchor"])
             lines.append(f'Query: {intent}  topic="{topic}"  window={wtxt}')
             lines.append("Candidate events, ranked by relevance to the topic "
                          "(already deduplicated):")
@@ -1014,43 +999,48 @@ class FusionMemory:
 
     _ORDINAL_RE = re.compile(r"\b(\d{1,3})(?:st|nd|rd|th)\b", re.I)
 
+    def _verbatim_turn(self, question: str) -> str | None:
+        """v3.6 近逐字证据层：检索最强命中的源轮次全文引用（单条）。
+
+        动机（对标公开数据）：SS-A/SS-U 的答案逐字躺在一个轮次里，摘录
+        （句子级、260 字符）是有损的——Mem0 新版把 assistant 事实一等公民
+        化后在 SS-A 上 +51.8，公开天花板 98-100。记忆 ≠ 压缩：事实层压缩，
+        源轮次引用保真。仅由 read() 在 lookup/unknown 意图下调用，
+        MS/TR/KU 的确定性路由不受影响（v3.1 教训：不碰它们的渲染）。
+        """
+        turns = self.store.evidence
+        if not turns:
+            return None
+        idx = BM25([tokenize(t.content) for t in turns])
+        hits = idx.topk(question, k=1, min_score=0.5)
+        if not hits:
+            return None
+        i, s = hits[0]
+        t = turns[i]
+        return (f"- {_fmt_d(t.date)} {t.role} (verbatim, relevance {s:.1f}):\n"
+                f"  {_clip(t.content, _VERBATIM_CHARS)}")
+
     def _ordinal_lookup(self, question: str) -> str | None:
-        """序数确定性查找（v3.5-B）：绝对序数（"the 27th parameter"）与
-        相对序数（"the move after 27"）均支持；跨 user+assistant 证据；
-        多列表按列表内容与问题的 BM25 相关度消歧；列表项不截断
-        （枚举保真是 SS-A 的命门）。
+        """序数确定性查找："the 27th parameter" → 列表第 27 项原文。
+
+        长枚举（100 项的清单）是抽取与摘录都覆盖不了的盲区，
+        但它是纯文本定位问题——确定性代码一步解决。
+        （v3.5-B 的相对序数/多列表消歧升级已回滚：三轮无正证据。）
         """
         m = self._ORDINAL_RE.search(question)
-        q_low = question.lower()
-        rel = re.search(r"(?:the\s+)?(\w+)\s+after\s+(?:move\s+|step\s+|item\s+)?(\d{1,3})", q_low)
-        if not m and not rel:
+        if not m:
             return None
-        q_toks = tokenize(question)
-        candidates = []
+        n = int(m.group(1))
+        if not (1 <= n <= 500):
+            return None
+        pat = re.compile(rf"^\s*{n}\s*[.):\]]\s*(.+)$", re.M)
         for t in self.store.evidence:
-            if t.role not in ("assistant", "user"):
-                continue
-            tscore = max(BM25([tokenize(t.content)]).score(q_toks)[0], 0.0)
-            if rel:
-                n = int(rel.group(2))
-                cur = re.search(rf"^\s*{n}\s*[.):\]]\s*(.+)$", t.content, re.M)
-                nxt = re.search(rf"^\s*{n+1}\s*[.):\]]\s*(.+)$", t.content, re.M)
-                if cur and nxt:
-                    candidates.append((12.0, nxt.group(1).strip(),
-                                       t.date.strftime("%Y-%m-%d")))
-                continue
-            if m:
-                n = int(m.group(1))
-                for im in re.finditer(rf"^\s*{n}\s*[.):\]]\s*(.+)$", t.content, re.M):
-                    candidates.append((tscore, im.group(1).strip(),
-                                       t.date.strftime("%Y-%m-%d")))
-        if not candidates:
-            return None
-        candidates.sort(key=lambda x: -x[0])
-        n_txt = str(int(rel.group(2)) + 1) if rel else m.group(1)
-        body, src = candidates[0][1], candidates[0][2]
-        return (f"ORDINAL LOOKUP (deterministic): item {n_txt} found verbatim "
-                f"({src}): \"{_clip(body, 400)}\"")
+            mm = pat.search(t.content)
+            if mm:
+                return (f"ORDINAL LOOKUP (deterministic): item {n} in the list "
+                        f"mentioned by the assistant reads: \""
+                        f"{_clip(mm.group(1), 220)}\"")
+        return None
 
     def _floor(self) -> list[str]:
         out = []

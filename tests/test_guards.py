@@ -63,11 +63,11 @@ def test_ordinal_absolute_hits_verbatim():
     assert out and "ORDINAL LOOKUP" in out and "parameter-27" in out
 
 
-def test_ordinal_relative_after_n():
+def test_ordinal_relative_after_n_rolled_back():
+    # v3.5-B 相对序数已回滚（三轮无正证据）——锁定回滚状态防回归复现
     m = mem_with([{"role": "assistant",
                    "content": "27. move the rook\n28. castle the king"}])
-    out = m._ordinal_lookup("What is the move after 27?")
-    assert out and "castle the king" in out and "28" in out
+    assert m._ordinal_lookup("What is the move after 27?") is None
 
 
 def test_ordinal_miss_returns_none():
