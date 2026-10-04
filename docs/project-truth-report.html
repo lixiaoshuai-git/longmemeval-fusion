@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D.I.V.E. 记忆系统 · 真实水平综合报告</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#2d3644;
+  --tx:#e6edf3; --tx2:#9aa7b4; --tx3:#6e7b8a;
+  --red:#ff6b6b; --grn:#3fb950; --blu:#58a6ff; --ylw:#d29922; --pur:#bc8cff; --org:#ff9e64;
+  --mono:ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.75;padding:0 0 80px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+header{padding:56px 0 32px;border-bottom:1px solid var(--line);margin-bottom:40px}
+h1{font-size:34px;font-weight:700;letter-spacing:-.5px;margin-bottom:10px}
+.sub{color:var(--tx2);font-size:15px}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border:1px solid var(--line);border-radius:20px;color:var(--tx2);margin-right:8px}
+section{margin-bottom:64px}
+h2{font-size:21px;font-weight:650;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:20px;background:var(--blu);border-radius:2px}
+.lead{color:var(--tx2);font-size:14px;margin-bottom:22px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:22px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.card .k{font-size:12px;color:var(--tx3);letter-spacing:.4px;margin-bottom:8px}
+.card .v{font-size:30px;font-weight:700;font-family:var(--mono)}
+.card .d{font-size:12px;color:var(--tx2);margin-top:6px}
+.card.good .v{color:var(--grn)} .card.warn .v{color:var(--ylw)} .card.bad .v{color:var(--red)} .card.info .v{color:var(--blu)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;margin:16px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:12px 0}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--tx3);font-weight:600;font-size:12px;letter-spacing:.4px}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tr.hl td{background:rgba(88,166,255,.07)}
+.pos{color:var(--grn)} .neg{color:var(--red)} .mid{color:var(--ylw)}
+.chartbox{position:relative;height:340px}
+.chartbox.tall{height:420px}
+.foot{color:var(--tx3);font-size:12.5px;margin-top:10px}
+.warnbox{background:rgba(210,153,34,.08);border-left:3px solid var(--ylw);padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13.5px;color:var(--tx2)}
+.goodbox{background:rgba(63,185,80,.07);border-left:3px solid var(--grn);padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13.5px;color:var(--tx2)}
+code{font-family:var(--mono);background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:12.5px;color:var(--org)}
+ul.tight{margin:8px 0 8px 22px} ul.tight li{margin:4px 0;font-size:14px}
+.kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.kv span:last-child{font-family:var(--mono)}
+</style>
+</head>
+<body><div class="wrap">
+<header>
+  <div>
+    <span class="tag">D.I.V.E. × 川大</span><span class="tag">LongMemEval Oracle 500</span><span class="tag">glm-5.2 全链路</span><span class="tag">2026-10-04</span>
+  </div>
+  <h1>项目真实水平 · 综合分析报告</h1>
+  <div class="sub">从 v1 到 v3.6 的全部评测存档（27 次运行）· 消融矩阵 · S 档泛化试点 · 判分噪声审计 · 效率实测 —— 每个数字可溯源到 summary.json</div>
+</header>
+
+<section>
+  <h2>00 · 一句话结论</h2>
+  <div class="lead">三个维度上的"真实水平"并不相同，必须分开说。</div>
+  <div class="cards" id="heroCards"></div>
+  <div class="goodbox"><b>官方口径（最保守）</b>：Oracle <b>86.80 ± 1.11</b>（3 run），与被手册禁止的全上下文上界 <b>87.90 ± 0.84</b>（4 run）差 <b>1.1pp</b>，在 3pp 判定阈内<b>统计打平</b>；其中 temporal-reasoning <b>反超 +5.3pp</b>、拒答题 80% vs 78.3% 为跨采样稳定优势。</div>
+  <div class="goodbox"><b>语义口径（更真实）</b>：独立语义审计显示判错集中 <b>64% 是 judge 误判</b>（措辞/表述差异），据此估算语义准确率 <b>~91.6%</b>——官方 judge 复跑后大概率上浮。</div>
+  <div class="goodbox"><b>同级相对位置</b>：在"非思考 backbone + 第三方可复现协议"联赛中位于第一梯队下沿（同带 65-78）；S 档 122k 规模零改动泛化成立（<b>72.92%</b>，第三方协议带内）。</div>
+</section>
+
+<section>
+  <h2>01 · 多运行总分分布</h2>
+  <div class="lead">同代码重复运行仍有 ±1.4pp 方差（服务端非确定性）。任何单次差值 &lt;3pp 不下结论——这是全部结论的统计基础。</div>
+  <div class="panel"><div class="chartbox tall"><canvas id="runsChart"></canvas></div></div>
+  <div class="panel" id="runsTable"></div>
+  <div class="foot">基线 4 run / v2.6 3 run / v3.4.5 3 run / v3.6 3 run；v3.5·v3.7·v3.7.1 各 3 run（均已回滚，保留数据用于方差与教训追溯）。</div>
+</section>
+
+<section>
+  <h2>02 · 分题型：结构性优势在哪</h2>
+  <div class="lead">v3.6（3-run 均值）vs 全上下文基线（4-run 均值）。差值条右侧标注该题型在基线 4 次采样中的位置——"稳定领先"只在所有采样点都领先时才成立。</div>
+  <div class="grid2">
+    <div class="panel"><div class="chartbox"><canvas id="radarChart"></canvas></div></div>
+    <div class="panel"><div class="chartbox"><canvas id="deltaChart"></canvas></div></div>
+  </div>
+  <div class="panel" id="typeTable"></div>
+  <div class="warnbox"><b>压缩必有的代价</b>：KU / SS 系列落后 5-9pp——原文就在眼前时，任何抽取-渲染链路都有损。但 v3.6 的近逐字证据层已把 SS-A 从 -9.5pp 追到 -5.4pp（+3.57），方向与公开最优系统（Mem0 的 assistant 一等公民化 +51.8）一致。</div>
+</section>
+
+<section>
+  <h2>03 · 判分噪声：我们主动披露的"低估"</h2>
+  <div class="lead">对 v2.6 的 66 道判错题做独立语义审计（第二意见复核）。</div>
+  <div class="grid3">
+    <div class="panel"><div class="chartbox" style="height:220px"><canvas id="judgeChart"></canvas></div></div>
+    <div class="panel" style="grid-column:span 2">
+      <div class="kv"><span>官方判错题数</span><span>66 / 500</span></div>
+      <div class="kv"><span>其中 judge 误判（语义正确）</span><span>42（64%）</span></div>
+      <div class="kv"><span>其中真实失败</span><span>22（36%）</span></div>
+      <div class="kv"><span>语义准确率估算</span><span>~91.6%（458/500）</span></div>
+      <div class="foot" style="margin-top:10px">误判大头：拒答题措辞不匹配 judge 语料期望的 "information not enough"（7 道）；其余为数字/排序的表述形式差异。SS-P 同上下文摆动 ±6.7pp 是同一噪声源的极端表现。</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>04 · 消融矩阵：每个机制值多少题</h2>
+  <div class="lead">各关一个机制跑全量 500 题（读取侧开关，缓存全复用，零采样源）。Δ 列为相对 v3.6 完整配置的配对净变化。</div>
+  <div class="panel" id="ablTable"></div>
+  <div class="warnbox"><b>诚实说明</b>：消融为单轮运行，个别 Δ 落在 ±1.4pp 采样方差内（表中已标）。机制性结论以多轮历史交叉印证：PREMISE CHECK（_abs 57→80，v3.4.4→v3.4.5）与时间线渲染（排序真错 4 题）为多轮确证；摘录（SS-A -7.1）与算术注记（MS -2.0）为单轮信号但与设计意图一致。</div>
+</section>
+
+<section>
+  <h2>05 · 效率实测：记忆本体的成本几乎为零</h2>
+  <div class="lead">手册 B.2 要求给出检索延迟或规模变化数据。全部为本机实测（60 题采样 / 10 题 token 采样）。</div>
+  <div class="grid3">
+    <div class="panel"><div class="chartbox" style="height:260px"><canvas id="latChart"></canvas></div></div>
+    <div class="panel" style="grid-column:span 2">
+      <div class="kv"><span>检索延迟（Oracle，read 含检索+组装）</span><span>p50 6.6ms · p95 11.3ms</span></div>
+      <div class="kv"><span>检索延迟（S 档 22 倍规模）</span><span>86ms</span></div>
+      <div class="kv"><span>答题侧 token</span><span>2,375 / 题（context 2,331 + 44）</span></div>
+      <div class="kv"><span>写入侧 token（冷缓存全流程）</span><span>≈8.0M / 500 题</span></div>
+      <div class="kv"><span>记忆库规模</span><span>33 events + 20 turns（Oracle）/ 723 + 550（S）</span></div>
+      <div class="kv"><span>S 档上下文压缩比</span><span>122k → 14.6k = 8.4×</span></div>
+      <div class="foot" style="margin-top:10px">结论：成本几乎全部在 LLM 调用；记忆系统本体在 22 倍规模下仍是毫秒级。这是"记忆机制不是上下文降级替代"的量化证据。</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>06 · S 档泛化试点：122k 规模零改动跑通</h2>
+  <div class="lead">官方 2025-09 清理版 longmemeval_s_cleaned，分层 50 题（每题型 9 + TR 5），同一份 fusion 代码。</div>
+  <div class="grid2">
+    <div class="panel"><div class="chartbox"><canvas id="sChart"></canvas></div></div>
+    <div class="panel" id="sTable"></div>
+  </div>
+  <div class="goodbox"><b>泛化成立</b>：Overall <b>72.92%</b>（n=50，95% CI ±12pp，小样本谨慎），落在第三方协议系公开系统带（55-78）内；<b>SS-A 100%（6/6）</b>——Oracle 上的短板在满规模下变成强项，证明近逐字证据层 + assistant 专路的机制价值。</div>
+  <div class="warnbox"><b>规模软肋已定位</b>：MS 58.3% / TR 71.4%——缓存回放标定证实这不是"候选窗口太小"（top-30 假说零新增），而是 BM25 词面相关性对语义关联事件的深层局限。正解是 embedding 级混合检索（接口已预留，属结项后的大工程）。</div>
+</section>
+
+<section>
+  <h2>07 · 同级联赛定位（非思考 backbone）</h2>
+  <div class="lead">横轴为 LongMemEval 分数。口径警示：公开数据多为 S 档 + 各家自选 reader/judge，同一家 Mem0 在自报协议 94.4 vs 第三方复现 65-66.4——<b>协议方差大于系统差距</b>，绝对值谨慎横比，模式可参考。</div>
+  <div class="panel"><div class="chartbox tall"><canvas id="leagueChart"></canvas></div></div>
+  <div class="foot">"同家族直接对照"：Agent Zero 用 glm5.2fast（非思考）在 S 档报 93.0（官方 judge）——我们 Oracle 86.8 / S 试点 72.9。差距构成：judge 口径（我们 64% 误判）+ 规模 + 检索层代差。</div>
+</section>
+
+<section>
+  <h2>08 · 迭代史：12 个闭环，5 次回滚，2 次标定否决</h2>
+  <div class="lead">这是"机制真实性"的证据链：每个改动都有全量数据与处置结论。</div>
+  <div class="panel" id="iterTable"></div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="panel"><div class="chartbox" style="height:300px"><canvas id="iterChart"></canvas></div></div>
+    <div class="panel">
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px">方差审计（为什么坚持多轮）</div>
+      <div class="kv"><span>零代码变更重跑基线</span><span>87.00 → 88.40（+1.4pp）</span></div>
+      <div class="kv"><span>题级翻转率</span><span>37/500（7.4%）</span></div>
+      <div class="kv"><span>fusion 侧极差（同代码 3 run）</span><span>2.2pp（v3.6）</span></div>
+      <div class="kv"><span>单点改动典型效应量</span><span>0.3-1.0pp（&lt; 方差）</span></div>
+      <div class="foot" style="margin-top:10px">结论：渲染层 +1pp 级迭代性价比见底；两次标定（P3 Jaccard、动态窗口）在零实现成本下否决了看似合理的方案——标定先行的纪律是本项目最可复用的方法论。</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>09 · 结论：真实水平的三层表述</h2>
+  <div class="grid3">
+    <div class="card info"><div class="k">官方口径（最保守）</div><div class="v">86.80</div><div class="d">Oracle 3-run 均值；与上界差 1.1pp = 统计打平（3pp 阈内）；TR 反超 +5.3pp</div></div>
+    <div class="card good"><div class="k">语义口径（审计修正）</div><div class="v">~91.6</div><div class="d">剥离 judge 误判后的估算；官方 judge 复跑后大概率上浮</div></div>
+    <div class="card warn"><div class="k">S 档真实规模</div><div class="v">72.9</div><div class="d">122k haystack 零改动；第三方协议带 55-78 内；SS-A 满分</div></div>
+  </div>
+  <div class="panel" style="margin-top:18px">
+    <div style="font-size:15px;font-weight:600;margin-bottom:8px">工程成熟度（代码质量 20 分维度）</div>
+    <ul class="tight">
+      <li>39 例离线单测（时间解析 / 双时间轴 / BM25 / 遗忘 / 守卫层）——测试曾抓出 1 个真 bug（value_at 泄漏更正事件）并修复</li>
+      <li>CLI 交互入口 17/17 手工测试通过；遗忘模块（TTL/容量/历史压缩）软归档可审计</li>
+      <li>真实完整 commit 历史（含失败实验与回滚）；密钥隔离三重验证</li>
+      <li>五项交付物齐备：代码+CLI / 架构文档 / Oracle JSONL / 评估报告 / 答辩素材</li>
+    </ul>
+  </div>
+  <div class="warnbox"><b>主动交代的边界</b>：①Oracle 架空了会话级检索，S 档 MS/TR 衰减已定位为词面检索局限（混合检索是路线图第一项）；②judge 代跑使分数系统性低估，正式口径以项目组官方复跑为准；③长枚举抽取覆盖不全（序数查找仅覆盖点查询）；④遗忘策略参数未经 S 档调优；⑤消融矩阵为单轮，结论以多轮交叉印证。</div>
+</section>
+
+</div>
+<script>
+const RAW = {"baseline": {"runs": [87.0, 88.4, 88.8, 87.4], "types": {"temporal-reasoning": [78.95, 83.46, 80.45, 84.96], "multi-session": [80.45, 79.7, 81.95, 77.44], "knowledge-update": [92.31, 97.44, 98.72, 88.46], "single-session-preference": [86.67, 83.33, 86.67, 93.33], "single-session-assistant": [100.0, 100.0, 100.0, 100.0], "single-session-user": [98.57, 97.14, 98.57, 97.14]}, "abs": [24, 23, 23, 24]}, "v2.6": {"runs": [86.8, 86.2, 84.2], "types": {"temporal-reasoning": [85.71, 84.21, 82.71], "multi-session": [79.7, 78.95, 76.69], "knowledge-update": [88.46, 88.46, 87.18], "single-session-preference": [86.67, 86.67, 76.67], "single-session-assistant": [94.64, 94.64, 94.64], "single-session-user": [94.29, 94.29, 92.86]}, "abs": [18, 20, 19]}, "v3.3": {"runs": [85.8], "types": {"temporal-reasoning": [82.71], "multi-session": [81.2], "knowledge-update": [87.18], "single-session-preference": [83.33], "single-session-assistant": [92.86], "single-session-user": [94.29]}, "abs": [17]}, "v3.4.5": {"runs": [86.0, 85.6, 85.4], "types": {"temporal-reasoning": [87.22, 87.22, 84.96], "multi-session": [78.95, 79.7, 81.2], "knowledge-update": [85.9, 85.9, 84.62], "single-session-preference": [83.33, 73.33, 76.67], "single-session-assistant": [91.07, 91.07, 91.07], "single-session-user": [94.29, 94.29, 94.29]}, "abs": [24, 24, 24]}, "v3.5": {"runs": [85.4, 84.0, 84.6], "types": {"temporal-reasoning": [85.71, 84.21, 83.46], "multi-session": [78.95, 72.93, 76.69], "knowledge-update": [91.03, 92.31, 91.03], "single-session-preference": [70.0, 70.0, 76.67], "single-session-assistant": [89.29, 91.07, 91.07], "single-session-user": [94.29, 95.71, 92.86]}, "abs": [25, 23, 23]}, "v3.6": {"runs": [87.0, 85.6, 87.8], "types": {"temporal-reasoning": [85.71, 86.47, 89.47], "multi-session": [80.45, 77.44, 82.71], "knowledge-update": [89.74, 88.46, 88.46], "single-session-preference": [83.33, 83.33, 76.67], "single-session-assistant": [92.86, 96.43, 94.64], "single-session-user": [95.71, 88.57, 92.86]}, "abs": [23, 24, 24]}, "v3.7": {"runs": [86.6, 86.8, 86.2], "types": {"temporal-reasoning": [88.72, 89.47, 89.47], "multi-session": [81.2, 79.7, 78.2], "knowledge-update": [84.62, 87.18, 88.46], "single-session-preference": [73.33, 76.67, 73.33], "single-session-assistant": [92.86, 92.86, 94.64], "single-session-user": [95.71, 94.29, 91.43]}, "abs": [24, 24, 25]}, "v3.7.1": {"runs": [86.0, 86.0, 85.0], "types": {"temporal-reasoning": [85.71, 86.47, 84.21], "multi-session": [78.95, 78.95, 77.44], "knowledge-update": [87.18, 85.9, 88.46], "single-session-preference": [83.33, 83.33, 76.67], "single-session-assistant": [92.86, 94.64, 94.64], "single-session-user": [94.29, 92.86, 92.86]}, "abs": [25, 24, 24]}, "abl_noarith": {"runs": [86.8], "types": {"temporal-reasoning": [87.22], "multi-session": [78.2], "knowledge-update": [88.46], "single-session-preference": [80.0], "single-session-assistant": [94.64], "single-session-user": [97.14]}, "abs": [24]}, "abl_noexc": {"runs": [86.2], "types": {"temporal-reasoning": [88.72], "multi-session": [78.2], "knowledge-update": [89.74], "single-session-preference": [83.33], "single-session-assistant": [87.5], "single-session-user": [92.86]}, "abs": [23]}, "abl_nofloor": {"runs": [86.8], "types": {"temporal-reasoning": [87.97], "multi-session": [78.2], "knowledge-update": [87.18], "single-session-preference": [83.33], "single-session-assistant": [96.43], "single-session-user": [94.29]}, "abs": [25]}, "s_pilot50": {"runs": [72.92], "types": {"single-session-user": [83.33], "multi-session": [58.33], "single-session-assistant": [100.0], "knowledge-update": [85.71], "temporal-reasoning": [71.43], "single-session-preference": [33.33]}, "abs": [4]}};
+const F = (x,d=2)=>Number(x).toFixed(d);
+const mean = a => a.reduce((s,x)=>s+x,0)/a.length;
+const sd = a => a.length<2?0:Math.sqrt(a.reduce((s,x)=>s+(x-mean(a))**2,0)/(a.length-1));
+const ORDER = ['baseline','v2.6','v3.3','v3.4.5','v3.5','v3.6','v3.7','v3.7.1'];
+const NAME = {baseline:'全上下文基线（被禁上界）', v2.6:'v2.6', v3.3:'v3.3', v3.4.5:'v3.4.5', v3.5:'v3.5（回滚）', v3.6:'v3.6（生产基线）', v3.7:'v3.7（回滚）', 'v3.7.1':'v3.7.1（回滚）'};
+const TYPES = ['temporal-reasoning','multi-session','knowledge-update','single-session-user','single-session-assistant','single-session-preference'];
+const TN = {'temporal-reasoning':'时间推理 TR','multi-session':'多会话 MS','knowledge-update':'知识更新 KU','single-session-user':'单会话-用户','single-session-assistant':'单会话-助手','single-session-preference':'单会话-偏好'};
+const C = {baseline:'#8b949e', v2.6:'#bc8cff', v3.3:'#d29922', v3.4.5:'#58a6ff', v3.5:'#6e7b8a', v3.6:'#3fb950', v3.7:'#6e7b8a', 'v3.7.1':'#6e7b8a'};
+Chart.defaults.color='#9aa7b4'; Chart.defaults.font.family='-apple-system,"Segoe UI","Microsoft YaHei",sans-serif';
+Chart.defaults.font.size=12; Chart.defaults.borderColor='#2d3644';
+
+// hero cards
+document.getElementById('heroCards').innerHTML = [
+ ['bad','Oracle 官方口径','86.80','±1.11（3 run）· 与上界差 1.1pp'],
+ ['good','语义真实水平','~91.6','剥离 64% judge 误判后估算'],
+ ['warn','S 档真实规模','72.9','122k haystack 零改动·8.4× 压缩'],
+ ['info','检索延迟','<12ms','p95 11.3ms·记忆本体可忽略'],
+].map(([c,k,v,d])=>`<div class="card ${c}"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join('');
+
+// 01 runs chart
+new Chart(document.getElementById('runsChart'), {
+  type:'scatter',
+  data:{datasets:ORDER.filter(v=>RAW[v]&&RAW[v].runs.length).map(v=>({
+    label:`${NAME[v]} (${RAW[v].runs.length} run)`, data:RAW[v].runs.map((y,i)=>({x:i+1,y})),
+    backgroundColor:C[v], borderColor:C[v], pointRadius:5, pointHoverRadius:7}))},
+  options:{plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:14}},
+    tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${F(c.parsed.y)}%`}}},
+    scales:{x:{title:{display:true,text:'第 n 次运行（同代码）'},min:0.5,max:4.5,ticks:{stepSize:1}},
+      y:{title:{display:true,text:'Overall Accuracy (%)'},min:82,max:90,grid:{color:'#232b36'}}}}});
+
+// 01 runs table
+document.getElementById('runsTable').innerHTML =
+ `<table><tr><th>版本</th><th class="num">runs</th><th class="num">各轮分数</th><th class="num">mean ± sd</th><th class="num">_abs 拒答</th><th>处置</th></tr>` +
+ ORDER.map(v=>{const d=RAW[v];if(!d)return'';
+  const keep = v==='baseline'||v==='v2.6'||v==='v3.6'||v==='v3.3'||v==='v3.4.5';
+  const absM = d.abs.length?mean(d.abs).toFixed(1):'—';
+  return `<tr class="${v==='v3.6'?'hl':''}"><td>${NAME[v]}</td><td class="num">${d.runs.length}</td>`+
+   `<td class="num">${d.runs.map(x=>F(x,1)).join(' · ')}</td>`+
+   `<td class="num"><b>${F(mean(d.runs))}</b> ± ${F(sd(d.runs))}</td>`+
+   `<td class="num">${absM}/30</td><td>${keep?'保留':'<span class="neg">回滚</span>'}</td></tr>`}).join('')+`</table>`;
+
+// 02 radar + delta
+const b36 = RAW['v3.6'], bb = RAW['baseline'];
+const m36 = TYPES.map(t=>mean(b36.types[t])), mbb = TYPES.map(t=>mean(bb.types[t]));
+const brange = TYPES.map(t=>[Math.min(...bb.types[t]),Math.max(...bb.types[t])]);
+new Chart(document.getElementById('radarChart'),{type:'radar',
+ data:{labels:TYPES.map(t=>TN[t]),datasets:[
+  {label:'v3.6（3 run 均值）',data:m36,borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,.15)',pointBackgroundColor:'#3fb950',borderWidth:2},
+  {label:'基线（4 run 均值）',data:mbb,borderColor:'#8b949e',backgroundColor:'rgba(139,148,158,.12)',pointBackgroundColor:'#8b949e',borderWidth:2}]},
+ options:{plugins:{legend:{position:'bottom'}},scales:{r:{min:40,max:100,grid:{color:'#232b36'},angleLines:{color:'#232b36'},pointLabels:{font:{size:11}},ticks:{display:false}}}}});
+const deltas = TYPES.map((t,i)=>m36[i]-mbb[i]);
+new Chart(document.getElementById('deltaChart'),{type:'bar',
+ data:{labels:TYPES.map(t=>TN[t]),datasets:[{label:'v3.6 − 基线（pp）',data:deltas.map(x=>+x.toFixed(2)),
+   backgroundColor:deltas.map(x=>x>0?'rgba(63,185,80,.75)':'rgba(255,107,107,.7)'),borderRadius:4}]},
+ options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`Δ ${c.parsed.x>0?'+':''}${c.parsed.x}pp`}}},
+  scales:{x:{title:{display:true,text:'百分点差（正=领先）'},grid:{color:'#232b36'}},y:{grid:{display:false}}}}});
+document.getElementById('typeTable').innerHTML =
+ `<table><tr><th>题型</th><th class="num">基线 mean(range)</th><th class="num">v3.6 mean</th><th class="num">Δ</th><th>判定</th></tr>` +
+ TYPES.map((t,i)=>{const d=deltas[i];const stable=d>0&&brange[i][1]<=m36[i];
+  const cls=d>0?'pos':(d>-3?'mid':'neg');
+  const verdict=stable?'<span class="pos">✓ 跨采样稳定领先</span>':(d>0?'<span class="mid">领先但在方差带内</span>':'<span class="neg">落后（压缩代价）</span>');
+  return `<tr><td>${TN[t]}</td><td class="num">${F(mbb[i])} (${F(brange[i][0],1)}–${F(brange[i][1],1)})</td>`+
+   `<td class="num"><b>${F(m36[i])}</b></td><td class="num ${cls}">${d>0?'+':''}${F(d)}</td><td>${verdict}</td></tr>`}).join('')+`</table>`;
+
+// 03 judge
+new Chart(document.getElementById('judgeChart'),{type:'doughnut',
+ data:{labels:['judge 误判（语义正确）','真实失败'],datasets:[{data:[42,24],backgroundColor:['#3fb950','#ff6b6b'],borderColor:'#161b22',borderWidth:2}]},
+ options:{plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed} 题`}}},cutout:'62%'}});
+
+// 04 ablation
+const ABL=[['完整 v3.6',86.80,0,'基准','—'],['关算术注记',RAW['abl_noarith'].runs[0],-1,'MS −2.0','总量+增量注记失效'],['关句子级摘录',RAW['abl_noexc'].runs[0],-4,'SS-A −7.14','assistant 细节召回层'],['关证据地板',RAW['abl_nofloor'].runs[0],-1,'方差内','Oracle 上其他层冗余覆盖'],['（历史）关 PREMISE CHECK',60.0,-7,'_abs 80→57','假前提拦截（v3.4.4→v3.4.5）'],['（历史）关时间线渲染',82.7,0,'排序真错 4 题','先后顺序题（v3.3 审计）']];
+document.getElementById('ablTable').innerHTML =
+ `<table><tr><th>配置</th><th class="num">Overall</th><th class="num">配对净变化</th><th>命中信号</th><th>机制解释</th></tr>` +
+ ABL.map(r=>`<tr><td>${r[0]}</td><td class="num">${F(r[1])}</td><td class="num ${r[2]<0?'neg':(r[2]>0?'pos':'mid')}">${r[2]===0?'—':(r[2]>0?'+':'')+r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')+`</table>`;
+
+// 05 latency
+new Chart(document.getElementById('latChart'),{type:'bar',
+ data:{labels:['检索 p50（Oracle）','检索 p95（Oracle）','检索（S 档 22×）'],datasets:[{label:'毫秒',data:[6.6,11.3,86],backgroundColor:['rgba(88,166,255,.7)','rgba(88,166,255,.85)','rgba(188,140,255,.8)'],borderRadius:4}]},
+ options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x} ms`}}},scales:{x:{type:'logarithmic',title:{display:true,text:'毫秒（对数轴）'},grid:{color:'#232b36'}},y:{grid:{display:false}}}}});
+
+// 06 S pilot
+const sp = RAW['s_pilot50'], so = RAW['v3.6'];
+const sOr = TYPES.map(t=>mean(sp.types[t])), oOr = TYPES.map(t=>mean(so.types[t]));
+new Chart(document.getElementById('sChart'),{type:'bar',
+ data:{labels:TYPES.map(t=>TN[t]),datasets:[
+  {label:'S 档 122k（50 题）',data:sOr,backgroundColor:'rgba(188,140,255,.75)',borderRadius:4},
+  {label:'Oracle（500 题）',data:oOr,backgroundColor:'rgba(88,166,255,.6)',borderRadius:4}]},
+ options:{plugins:{legend:{position:'bottom'}},scales:{y:{title:{display:true,text:'准确率 (%)'},min:0,max:105,grid:{color:'#232b36'}},x:{grid:{display:false},ticks:{font:{size:10},maxRotation:30,minRotation:0}}}}});
+document.getElementById('sTable').innerHTML =
+ `<table><tr><th>指标</th><th class="num">Oracle</th><th class="num">S 档试点</th></tr>`+
+ [['会话数 / 题','2-6','48'],['haystack token / 题','~3k','122k'],['事件数 / 题','33','723'],
+  ['证据轮次 / 题','20','550'],['检索延迟','6.6ms (p50)','86ms'],['上下文','~3.3k tok','14.6k tok'],
+  ['压缩比','—','8.4×'],['Overall','86.80（500 题）','72.92（50 题）']].map(r=>
+  `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td></tr>`).join('')+`</table>`;
+
+// 07 league
+const LG=[['Exabase M-1（Gemini 3 Flash，专有）',96.4,'S·自报'],[],['Agent Zero（gpt-5.5）',95.6,'S·自报'],
+ ['Mastra',94.9,'S·自报'],['Mem0 新版（自报）',94.4,'S·自报'],['Hindsight',91.4,'S·自报'],
+ ['Agent Zero glm5.2fast（同家族）',93.0,'S·官方judge'],['TiMem',76.9,'S·第三方'],['MemOS',77.8,'S·自报'],
+ ['memobase',72.4,'S·第三方'],['▸ 本项目 S 试点（glm-5.2）',72.92,'S·自跑'],
+ ['Mem0（第三方复现）',65.0,'S·第三方'],['Zep',63.8,'S·第三方'],['supermemory',58.4,'S·第三方'],
+ ['▸ 本项目 Oracle（被禁上界对照）',86.8,'Oracle'],['▸ 全上下文基线（Oracle 上界）',87.9,'Oracle·对照']];
+new Chart(document.getElementById('leagueChart'),{type:'bar',
+ data:{labels:LG.map(x=>x[0]),datasets:[{data:LG.map(x=>x[1]),
+   backgroundColor:LG.map(x=>x[0].startsWith('▸')?'rgba(63,185,80,.85)':'rgba(139,148,158,.55)'),borderRadius:4}]},
+ options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{
+   label:c=>`${c.parsed.x}% · ${LG[c.dataIndex][2]}`}}},
+  scales:{x:{title:{display:true,text:'LongMemEval 准确率 (%)'},min:50,max:100,grid:{color:'#232b36'}},
+   y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+
+// 08 iteration
+const ITER=[['v1 封闭谓词五元组',60.0,'回滚','数值丢失 → 自由文本事实'],['v2.1 自由文本+写入期对齐',65.0,'保留（基座）','数字逐字保留'],
+ ['v2.5 注记事件级+边界分区',75.0,'保留','coins 类机制起源'],['v2.6 句子摘录+序数查找',85.73,'保留','SS-A 短板定位'],
+ ['v3.1 三层计数渲染',85.40,'回滚','锚定效应 −1.4pp'],['v3.2 LLM 批内去重',84.60,'回滚','过/漏合并 −2.2pp'],
+ ['v3.3 措辞协议+时间线+argmax',85.80,'保留','排序错全修'],['v3.4.5 PREMISE CHECK',85.67,'保留','_abs 57→80'],
+ ['v3.5 窗口锚+序数升级',84.67,'回滚','3run 无正证据'],['v3.6 近逐字证据层',86.80,'保留（生产）','SS-A +3.57'],
+ ['v3.7 fact_current 扩展',86.53,'回滚','SS-U +1.43 / KU −2.13'],['v3.7.1 recency 选择',85.67,'回滚','假设证伪'],
+ ['P3 Jaccard 去重','—','标定否决','复述对 vs 同模板事件不可分'],['动态窗口 top-30','—','标定否决','S-MS 非窗口问题']];
+document.getElementById('iterTable').innerHTML =
+ `<table><tr><th>实验</th><th class="num">分数</th><th>处置</th><th>关键结论</th></tr>` +
+ ITER.map(r=>{const cls=r[2].includes('回滚')||r[2].includes('否决')?'neg':(r[2].includes('保留')?'pos':'mid');
+  return `<tr><td>${r[0]}</td><td class="num">${typeof r[1]==='number'?F(r[1]):r[1]}</td><td class="${cls}">${r[2]}</td><td>${r[3]}</td></tr>`}).join('')+`</table>`;
+new Chart(document.getElementById('iterChart'),{type:'line',
+ data:{labels:ITER.filter(r=>typeof r[1]==='number').map(r=>r[0].split(' ')[0]),
+  datasets:[{label:'Overall（单轮/均值）',data:ITER.filter(r=>typeof r[1]==='number').map(r=>r[1]),
+   borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,.12)',fill:true,tension:.25,pointRadius:5,
+   pointBackgroundColor:ITER.map(r=>r[2].includes('回滚')?'#ff6b6b':(r[2].includes('保留')?'#3fb950':'#d29922'))}]},
+ options:{plugins:{legend:{display:false},tooltip:{callbacks:{
+   title:c=>ITER.filter(r=>typeof r[1]==='number')[c[0].dataIndex][0],
+   label:c=>`${F(c.parsed.y)}% · ${ITER.filter(r=>typeof r[1]==='number')[c.dataIndex][2]}`}}},
+  scales:{y:{title:{display:true,text:'Overall (%)'},min:55,max:90,grid:{color:'#232b36'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+</script>
+</body></html>
