@@ -548,9 +548,12 @@ class FusionMemory:
             parts.append("[RELEVANT EXCERPTS] most query-relevant assistant "
                          "sentences:\n" + "\n".join(exc))
 
-        # v3.6 近逐字证据层：仅单会话型意图（lookup/unknown）生效——
-        # 检索最强命中的源轮次全文引用，治 SS-A/SS-U 的摘录信息损失；
-        # MS/TR/KU 走确定性路由，渲染不动（v3.1 教训）。
+        # v3.6 近逐字证据层：lookup/unknown 意图（SS-A 56/56、SS-P 30/30
+        # 全覆盖）。v3.7 的 fact_current 扩展与 v3.7.1 的 recency 选择均已
+        # 回滚（各 3-run：86.53 / 85.67 vs v3.6 86.80，KU 修复假设被证伪
+        # ——KU 波动属采样方差，recency 引用反而挤掉 fact_current 所需的
+        # 旧上下文）。MS/TR/KU 的 agg/list/fact_at_time/fact_current 路由
+        # 渲染零接触（v3.1 教训）。
         if sq.get("intent") in ("lookup", "unknown"):
             verb = self._verbatim_turn(question)
             if verb:
@@ -1006,7 +1009,9 @@ class FusionMemory:
         （句子级、260 字符）是有损的——Mem0 新版把 assistant 事实一等公民
         化后在 SS-A 上 +51.8，公开天花板 98-100。记忆 ≠ 压缩：事实层压缩，
         源轮次引用保真。仅由 read() 在 lookup/unknown 意图下调用，
-        MS/TR/KU 的确定性路由不受影响（v3.1 教训：不碰它们的渲染）。
+        MS/TR/KU 的确定性路由不受影响（v3.1 教训）。
+        （v3.7 的 fact_current 扩展与 v3.7.1 的 recency 选择已回滚：
+        各 3-run 86.53 / 85.67 vs v3.6 86.80，均无正证据。）
         """
         turns = self.store.evidence
         if not turns:
