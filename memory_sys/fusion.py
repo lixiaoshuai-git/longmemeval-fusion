@@ -260,6 +260,13 @@ class FusionMemory:
         self._sess_n = 0
         self._lock = threading.Lock()
         self._dirty = False
+        # 消融开关（仅评测实验用，默认全开）：ABL_ARITH / ABL_EXCERPTS /
+        # ABL_FLOOR 置 0 分别关闭算术注记 / 句子级摘录 / 证据地板。
+        # 机制真实性消融矩阵的执行面——每个开关对应一条可归因的机制。
+        import os as _os
+        self.enable_arith = _os.environ.get("ABL_ARITH", "1") == "1"
+        self.enable_excerpts = _os.environ.get("ABL_EXCERPTS", "1") == "1"
+        self.enable_floor = _os.environ.get("ABL_FLOOR", "1") == "1"
         self.last_meta: dict = {}
 
     # -- 缓存 --
@@ -542,8 +549,8 @@ class FusionMemory:
         if result:
             parts.append("[DETERMINISTIC QUERY RESULT]\n" + result)
 
-        # 相关摘录（assistant 轮次的句子级相关句）
-        exc = self._excerpts(question)
+        # 相关摘录（assistant 轮次的句子级相关句）——消融开关 ABL_EXCERPTS
+        exc = self._excerpts(question) if self.enable_excerpts else None
         if exc:
             parts.append("[RELEVANT EXCERPTS] most query-relevant assistant "
                          "sentences:\n" + "\n".join(exc))
@@ -572,8 +579,8 @@ class FusionMemory:
                          "(each line is a deduplicated atomic fact):\n"
                          + "\n".join(facts))
 
-        # 证据地板（全部 user 轮次）
-        floor = self._floor()
+        # 证据地板（全部 user 轮次）——消融开关 ABL_FLOOR
+        floor = self._floor() if self.enable_floor else None
         if floor:
             parts.append("[USER STATEMENTS] verbatim user turns, chronological:\n"
                          + "\n".join(floor))
@@ -789,7 +796,8 @@ class FusionMemory:
             # 算术注记：总量声明 + 后续增量（不依赖槽位绑定，直接在匹配事件上算）
             if intent in ("agg_count", "agg_sum") or sq.get("count_kind") in (
                     "stated_total", "either"):
-                note = self._arithmetic_note_events([e for e, _ in cand])
+                note = (self._arithmetic_note_events([e for e, _ in cand])
+                        if self.enable_arith else None)
                 if note:
                     lines.append(note)
 
@@ -804,7 +812,8 @@ class FusionMemory:
             # 跨槽位算术注记：总量与增量可能被分进不同槽位（分类器方差），
             # 在话题 BM25 匹配的事件并集上再算一遍
             top_evs = [e for e, _ in self._event_candidates(topic, sq, None)[:20]]
-            note = self._arithmetic_note_events(top_evs)
+            note = (self._arithmetic_note_events(top_evs)
+                    if self.enable_arith else None)
             if note and not any("ARITHMETIC NOTE" in ch for ch in chains[:2]):
                 lines.append(note)
             if intent == "fact_at_time" and sq.get("at_text"):
@@ -881,7 +890,7 @@ class FusionMemory:
                        "invalidated": "corrected, was never true",
                        "archived": "forgotten, kept for audit"}[e.status]
                 lines.append(f"  {rng} {_clip(e.fact or e.value, 200)} ({tag})")
-            note = self._arithmetic_note(evs)
+            note = self._arithmetic_note(evs) if self.enable_arith else None
             if note:
                 # 注记即确定性的"当前值"，取代字面 CURRENT VALUE 行——
                 # 否则 "CURRENT VALUE: 37" 会把读者锚定在过期总量上
