@@ -716,3 +716,29 @@ overall 上限 87-88%（v3.6 基座 86.80 起步）。全部改动守 fusion 哲
 （方差 ±0.72 优于 v3.6 ±1.11）。#1 LEDGER 保留（无回退、语义正确、
 S/M 档复用价值），但其 KU 增益未获证明。#3 实体倒排留给 v3.9。
 交付 JSONL 更新为 fusfull38-hyp.jsonl。
+
+---
+
+## hindsight 对照 + v3.9 实体倒排（2026-10-09）
+
+**hindsight 复现对照（同基准同 judge）**：`--strategy hindsight` 全量 500 →
+**82.80%（414/500）** vs fusion v3.8 **86.80 ± 0.72**（+4.0pp）。分题型：
+hindsight KU 94.87（Reflect/心智模型层强）、SS-P 90.00 持平、SS-A 75.00 与
+TR 78.95 弱于我们（assistant 专路 + 确定性时间的价值实证）。代码已移至
+experiments/hindsight/（gitignore，独立于项目），接线还原，fusion 零改动。
+复现报告：experiments/hindsight/hindsight-repro-report.html。
+
+**v3.9 实现（#3 实体倒排 + 一跳扩展，读侧，Oracle 零行为变化）**：
+- `_entity_index`/`_entity_toks`：确定性实体倒排（分词去通用词，惰性构建，
+  write 时失效）；`_one_hop(seeds)`：种子事件 top-5 的**稀有实体**（库内
+  df≤8）共现事件，cap 12。
+- 挂钩：agg/agg_sum/list_events 渲染尾段 + fact_current 路由（S 档 MS
+  三道诊断题中两道走此路由）。独立 ONE-HOP RELATED 段落，不计入
+  TOTAL MATCHED，reader 自行取舍（v3.1 教训：不锚定不隐藏）。
+- **门控 store>100 events：Oracle（≈33）零行为变化，生产口径零风险**。
+- 机制回放：三道 S 档 MS 诊断题（tanks/cucumbers/festivals）one-hop 全部
+  触发，缺失的集合成员（quarantine tank、种植信息、Portland Film
+  Festival——疑似第 4 个电影节）全部拉进上下文。
+- 修复过程 bug：_one_hop 接口统一为裸事件列表（agg 传 (e,s) 元组、
+  fact_current 传裸 Event 导致 TypeError）。
+- 验证：S 档 50 题同样本重跑（spilot50v39），靶子 MS 58.33% → ?

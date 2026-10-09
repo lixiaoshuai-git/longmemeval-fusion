@@ -317,9 +317,54 @@ class FusionMemory:
     # 写入期
     # ------------------------------------------------------------------
 
+    def _entity_index(self) -> dict[str, list]:
+        """v3.9 #3：确定性实体倒排——事实句分词去通用词，稀有词 → 事件列表。
+
+        惰性构建；write() 时置 None 失效。用途：agg/lookup 的一跳实体扩展
+        （大事件池下 BM25 词面 topical 匹配漏掉的集合成员）。只索引
+        active 事件。
+        """
+        if getattr(self, "_eidx", None) is not None:
+            return self._eidx
+        idx: dict[str, list] = {}
+        for e in self._active_events():
+            for t in self._entity_toks(e):
+                idx.setdefault(t, []).append(e)
+        self._eidx = idx
+        return idx
+
+    def _entity_toks(self, e) -> set[str]:
+        toks = tokenize(e.fact or e.value)
+        return {t for t in toks if len(t) >= 3 and t not in self._GENERIC_TOKS}
+
+    def _one_hop(self, seeds: list, cap: int = 12) -> list:
+        """v3.9 #3：一跳实体扩展——种子事件（裸 Event 列表）的**稀有**实体
+        （库内 df≤8）共现事件补进候选。仅在 store>100 events（S/M 规模）
+        时调用，Oracle（≈33 events）零行为变化。返回 (event, score=0) 列表，
+        渲染时带 one-hop 标记由 reader 自行取舍。"""
+        eidx = self._entity_index()
+        if not eidx or not seeds:
+            return []
+        df = {t: len(v) for t, v in eidx.items()}
+        seen = {id(e) for e in seeds}
+        extra: list = []
+        for e in seeds[:5]:
+            toks = sorted(self._entity_toks(e), key=lambda x: df.get(x, 999))
+            for t in toks[:4]:
+                if df.get(t, 999) > 8:
+                    continue
+                for e2 in eidx.get(t, []):
+                    if e2.status == "active" and id(e2) not in seen:
+                        seen.add(id(e2))
+                        extra.append((e2, 0.0))
+                        if len(extra) >= cap:
+                            return extra
+        return extra
+
     def write(self, session: list[dict], session_date: str) -> None:
         from lme_core import parse_dt
         self._sess_n += 1
+        self._eidx = None                    # v3.9：事件池变化，实体倒排失效
         sid = f"s{self._sess_n}"
         sdate = parse_dt(session_date) or datetime(2023, 1, 1)
         self.store.add_evidence(sid, sdate, session)
@@ -773,7 +818,24 @@ class FusionMemory:
             for e, s in cand[:15]:
                 lines.append(f"  ({s:.1f}) {_fmt_d(e.valid_from or e.stated_at)} | "
                              f"{_clip(e.fact, 220)}")
-            if len(cand) > 15:
+            # v3.9 #3：一跳实体扩展（仅 store>100 events 的 S/M 规模触发，
+            # Oracle ≈33 events 零行为变化）。独立段落 + 不计入 TOTAL MATCHED，
+            # 由 reader 自行取舍——避免 v3.1 式的锚定/计数污染。
+            if len(self.store.events) > 100 and intent in (
+                    "agg_count", "agg_sum", "list_events"):
+                extras = self._one_hop([e for e, _ in cand[:5]])
+                if extras:
+                    cand_main = cand
+                    cand = cand_main + extras
+                    meta["one_hop"] = len(extras)
+                    lines.append(
+                        f"ONE-HOP RELATED ({len(extras)}) — pulled in by shared "
+                        "rare entities with the top candidates; include each "
+                        "ONLY if it truly matches the question:")
+                    for e, _s in extras:
+                        lines.append(f"  {_fmt_d(e.valid_from or e.stated_at)} | "
+                                     f"{_clip(e.fact, 220)}")
+            if len(cand) > 15 and "one_hop" not in meta:
                 lines.append(f"  ... ({len(cand) - 15} more, lower relevance)")
             if intent == "list_events":
                 chrono = sorted(cand[:15], key=lambda t: (
@@ -841,6 +903,19 @@ class FusionMemory:
                     if self.enable_arith else None)
             if note and not any("ARITHMETIC NOTE" in ch for ch in chains[:2]):
                 lines.append(note)
+            # v3.9 #3：一跳实体扩展（fact_current 路由，仅 store>100 events
+            # 的 S/M 规模）——matched 槽位的稀有实体共现事件补录，治
+            # "集合成员被词面 topical 匹配漏掉"（S 档 MS 46a3abf7/6456829e）
+            if len(self.store.events) > 100 and top_evs:
+                extras = self._one_hop(top_evs[:5])
+                if extras:
+                    lines.append(
+                        f"ONE-HOP RELATED ({len(extras)}) — pulled in by shared "
+                        "rare entities with the matched slots; relevant to the "
+                        "question's collection/state — check each:")
+                    for e, _s in extras:
+                        lines.append(f"  {_fmt_d(e.valid_from or e.stated_at)} | "
+                                     f"{_clip(e.fact, 220)}")
             if intent == "fact_at_time" and sq.get("at_text"):
                 t_rng = resolve_when_expr(sq["at_text"], qdate)
                 if t_rng:
