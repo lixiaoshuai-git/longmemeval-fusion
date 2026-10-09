@@ -742,3 +742,22 @@ experiments/hindsight/（gitignore，独立于项目），接线还原，fusion 
 - 修复过程 bug：_one_hop 接口统一为裸事件列表（agg 传 (e,s) 元组、
   fact_current 传裸 Event 导致 TypeError）。
 - 验证：S 档 50 题同样本重跑（spilot50v39），靶子 MS 58.33% → ?
+
+### v3.9 S 档验证 + v3.9.1 路由修正（2026-10-09/10）
+
+**v3.9 S 档 50 题配对结果**：Overall 72.92% → **79.17%（+6.25pp，净 +3）**。
+- KU 85.71 → **100**（7/7）、SS-P 33.33 → **100**（3/3）、MS 58.33 → 66.67（7→8/12，靶子命中）、SS-A 100 持平
+- TR 71.43 → 64.29（-1 题）
+- **机制预言兑现**：gpt4_a56e767c（festivals 题）翻对——回放时 one-hop 拉进的 Portland Film Festival 正是缺失的第 4 个电影节；SS-P 两题同步翻对（v3.8 偏好分段在 S 档同样生效）
+- 3 道诊断题中 tanks/cucumbers 两题事件虽被拉进上下文但未翻对（reader 计数残差）
+
+**v3.9.1 路由修正（收支拆解驱动）**：one-hop 按路由的实测收支——
+fact_current **+1** / agg_count **±1 打平** / **list_events -1 纯亏**。
+且发现更深的干扰源：agg 挂钩把 extras **并进 cand**，list_events 的
+chrono 时间线排序也被污染（TR 日期差题 gpt4_59149c77 被 extras 带偏）。
+修正：one-hop 白名单去掉 list_events（TR 的日期差/排序场景 extras 是
+纯噪声，且污染时间线）。agg 保留（festivals 案例是设计原型）。v3.9.1
+S 档重跑验证中（spilot50v391，预期 TR 回收 +1 → ~81%）。
+
+**Oracle 生产口径风险**：零——one-hop 门控 store>100，Oracle ≈33 events
+零行为变化；v3.9.1 修正也只影响 S 规模。生产基线仍为 v3.8（86.80 ± 0.72）。

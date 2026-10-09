@@ -821,8 +821,12 @@ class FusionMemory:
             # v3.9 #3：一跳实体扩展（仅 store>100 events 的 S/M 规模触发，
             # Oracle ≈33 events 零行为变化）。独立段落 + 不计入 TOTAL MATCHED，
             # 由 reader 自行取舍——避免 v3.1 式的锚定/计数污染。
+            # v3.9.1：one-hop 收支按路由拆分（S 档 50 题配对实测）——
+            # fact_current +1 / agg_count ±1 打平 / **list_events -1 纯亏**
+            # （TR 日期差题需要精确两日期，extras 并进 cand 还会污染
+            # chrono 时间线排序）。list_events 移出 one-hop 白名单。
             if len(self.store.events) > 100 and intent in (
-                    "agg_count", "agg_sum", "list_events"):
+                    "agg_count", "agg_sum"):
                 extras = self._one_hop([e for e, _ in cand[:5]])
                 if extras:
                     cand_main = cand
