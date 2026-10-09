@@ -572,7 +572,20 @@ class FusionMemory:
         if ord_hit:
             parts.append("[DETERMINISTIC ORDINAL LOOKUP]\n" + ord_hit)
 
-        # 事实清单（主体记忆）
+        # v3.8 #1 CURRENT-STATE LEDGER：版本链槽位的当前值显式台账（治 KU 旧值锚定）
+        ledger = self._current_ledger()
+        if ledger:
+            parts.append("[CURRENT-STATE LEDGER] slots whose value changed over "
+                         "time — for 'currently/now' questions the CURRENT value "
+                         "below is authoritative:\n" + "\n".join(ledger))
+
+        # v3.8 #2 偏好/观点分段前置（从事实清单移出，治 SS-P 稀释）
+        prefs = self._preference_lines()
+        if prefs:
+            parts.append("[PREFERENCES & OPINIONS] the user's stated likes, "
+                         "dislikes and preferences:\n" + "\n".join(prefs))
+
+        # 事实清单（主体记忆；v3.8 #2 起不含偏好事实）
         facts = self._fact_lines()
         if facts:
             parts.append("[FACT MEMORY] all active facts, chronological "
@@ -591,13 +604,25 @@ class FusionMemory:
         # 协议：给出标准句式模板，禁止用 0/数字收尾。
         ents = [e for e in sq.get("entities", []) if len(e) > 2]
         if ents and not self._mentions(ents):
-            parts.append(
-                "[MEMORY SCOPE NOTE] The memory contains no statement about: "
-                + ", ".join(ents) + ".\n"
-                "If you find the required information is missing, you MUST answer "
-                "using wording like: \"The information provided is not enough. "
-                "You did not mention ...\" — do NOT give a number (not even 0), "
-                "a guess, or a definitive answer about it.")
+            if self._is_advice_form(question):
+                # v3.8 #4/#5：建议/推荐类问句不求"事实存在"，求"基于已陈述
+                # 偏好的推荐"——拒答措辞是误导（75832dbd "recommend
+                # publications" 被拒答的教训），改为处境 brief 指向偏好段。
+                parts.append(
+                    "[RECOMMENDATION HINT] This is a recommendation/advice "
+                    "request, not a factual lookup. Ground your answer in the "
+                    "user's stated interests, likes and past behavior (see "
+                    "PREFERENCES & OPINIONS, facts and verbatim turns) — do "
+                    "NOT refuse on the grounds that the exact item was never "
+                    "mentioned; recommend based on what the user likes.")
+            else:
+                parts.append(
+                    "[MEMORY SCOPE NOTE] The memory contains no statement about: "
+                    + ", ".join(ents) + ".\n"
+                    "If you find the required information is missing, you MUST answer "
+                    "using wording like: \"The information provided is not enough. "
+                    "You did not mention ...\" — do NOT give a number (not even 0), "
+                    "a guess, or a definitive answer about it.")
 
         # v3.4：确定性前提校验（专有实体必须在 user 发言中出现过）——
         # SCOPE NOTE 只在解析层 entities 全 miss 时触发，覆盖不了"实体被
@@ -969,7 +994,8 @@ class FusionMemory:
         return [c for c in chains if re.search(r"\d", c)][:1]
 
     def _fact_lines(self) -> list[str]:
-        evs = self._active_events()
+        evs = [e for e in self._active_events()
+               if e.predicate != "preference"]      # v3.8 #2：偏好移至独立分段
         evs.sort(key=lambda e: (e.valid_from or e.stated_at or datetime.min, e.tx_seq))
         out = []
         for e in evs[:_FACT_CAP]:
@@ -977,6 +1003,39 @@ class FusionMemory:
                        f"{_clip(e.fact, 240)}")
         if len(evs) > _FACT_CAP:
             out.append(f"- ... ({len(evs) - _FACT_CAP} more)")
+        return out
+
+    def _preference_lines(self) -> list[str]:
+        """v3.8 #2：偏好/观点单独成段——软信息混在事件事实里被稀释
+        （SS-P 病根）。从事实清单移出（_fact_lines 已过滤），前置渲染。"""
+        evs = [e for e in self._active_events() if e.predicate == "preference"]
+        evs.sort(key=lambda e: (e.valid_from or e.stated_at or datetime.min, e.tx_seq))
+        return [f"- {_fmt_d(e.valid_from or e.stated_at)} | {_clip(e.fact, 240)}"
+                for e in evs]
+
+    def _current_ledger(self) -> list[str]:
+        """v3.8 #1：CURRENT-STATE LEDGER——有版本历史的槽位显式标注当前值。
+
+        KU 病根：清单里新旧版本同场，reader 无"哪个是现在"的显式信号
+        （镜头题答旧焦距、租期题答旧租期）。台账用与 fact_current 相同的
+        确定性算子（current = max active by valid_to/tx_seq），只列发生过
+        superseded/invalidated 的槽位——无历史的槽位与事实清单重复，不列。
+        """
+        groups: dict[tuple, list] = {}
+        for e in self.store.events:
+            groups.setdefault((e.subject, e.predicate), []).append(e)
+        out = []
+        for (subj, pred), evs in sorted(groups.items()):
+            if not any(e.status in ("superseded", "invalidated") for e in evs):
+                continue
+            act = [e for e in evs if e.status == "active"]
+            if not act:
+                continue
+            cur = max(act, key=lambda e: (e.valid_to or datetime.max, e.tx_seq))
+            eff = cur.valid_from or cur.stated_at
+            n_old = sum(1 for e in evs if e.status == "superseded")
+            out.append(f"- {subj}.{pred}: CURRENT = {_clip(cur.fact or cur.value, 180)}"
+                       f" (effective {_fmt_d(eff)}; {n_old} older value(s) superseded)")
         return out
 
     def _excerpts(self, question: str) -> list[str]:
@@ -1105,6 +1164,23 @@ class FusionMemory:
         "task", "tasks", "game", "games", "people", "person", "friend",
     }
 
+    _ADVICE_KW = ("any advice", "can you recommend", "recommend", "any tips",
+                  "any suggestions", "what should", "any idea", "help me",
+                  "i'm thinking of", "i've been feeling", "i've been struggling",
+                  "what do you suggest", "should i", "what do you think",
+                  "do you think", "whether to", "i'm trying to decide", "advise")
+
+    def _is_advice_form(self, question: str) -> bool:
+        """建议/推荐/征求意见形态判定（v3.4.5 引入，v3.8 扩词表并共享）。
+
+        v3.8 #4 审计：SS-P 拒答型失分的主体是 "should I buy X" /
+        "what do you think" / "I'm trying to decide whether to" 形态——
+        均不在 v3.4.5 豁免清单。此类问句求的是"基于已陈述偏好的建议"，
+        前提本来就不是"user 说过这个词"。_abs 30 题零命中，扩展零回归。
+        """
+        q = question.lower()
+        return any(k in q for k in self._ADVICE_KW)
+
     def _premise_check(self, question: str) -> str | None:
         """确定性前提校验：问题中的专有实体必须在 user 发言中出现过。
 
@@ -1112,12 +1188,7 @@ class FusionMemory:
         请求/推荐类问句（"Any advice / Can you recommend"）的前提本来
         就不是"user 说过这个"——那 8 道 preference 题被误杀的教训。
         """
-        q = question.lower()
-        if any(k in q for k in ("any advice", "can you recommend", "recommend",
-                                "any tips", "any suggestions", "what should",
-                                "any idea", "help me", "i'm thinking of",
-                                "i've been feeling", "i've been struggling",
-                                "what do you suggest")):
+        if self._is_advice_form(question):
             return None
         user_texts = [t.content for t in self.store.evidence if t.role == "user"]
         user_texts += [e.fact for e in self.store.events
