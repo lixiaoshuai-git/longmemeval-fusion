@@ -148,7 +148,12 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 
 | 路径 | 说明 |
 |---|---|
-| `memory_sys/fusion.py` | **核心**：fusion 记忆策略（写入期对齐 + 确定性执行器 + BM25 召回 + 近逐字证据层 + 守卫层 + LEDGER/偏好分段 + S 档 one-hop） |
+| `memory_sys/fusion.py` | **组合根**：`FusionMemory` = 三个 mixin + 缓存 + 生命周期；对外符号全部 re-export（151 行，原 1521 行） |
+| `memory_sys/write_path.py` | 写入：抽取 → 定时 → BM25 找相似 → 关系分类 → 确定性落库（evolve/correct 双轴） |
+| `memory_sys/read_path.py` | 读取：解析计划 → 按意图算子 → 三层召回 → 一跳扩展 → 执行轨迹 |
+| `memory_sys/render.py` | 渲染：事实清单 / 台账 / 偏好段 / 摘录 / 证据地板 / 三道守卫 |
+| `memory_sys/temporal.py` | 时间：相对/绝对表达规则解析、粒度与合法性校验（±400 天） |
+| `memory_sys/config.py` | 可调常量：强匹配阈值、摘录/事实/地板上限 |
 | `memory_sys/bm25.py` | 纯 Python BM25 与分词（无第三方依赖；英文原逻辑 + 中文 OOD 单字/双字兜底） |
 | `memory_sys/schema.py` | 数据模型：Event（五元组 + fact/slot_id）、Slot 版本链、MemoryStore |
 | `memory_sys/lifecycle.py` | 遗忘/生命周期：TTL / 容量 / 历史压缩，软归档（独立模块，零核心耦合） |

@@ -1188,3 +1188,49 @@ CLI 行为不变。
 ② 解析类改动固定用 `--drop-parse` 小样本（8–12 题即可暴露措辞漂移）；
 ③ 若要压方差，先量化「同题重复解析的计划一致率」，再决定是否值得为解析
 加约束解码——本轮不做，因为没有证据表明白花这个成本能换来分数。
+
+---
+
+## infra-2026-11 · 阶段 F：fusion.py 拆分（2026-11-05）
+
+**自选方向**：不追分数、不碰写入成本。上一轮的回归基线让「纯重构」第一次
+变成可机械验证的操作，正好处理最大的维护负担：`memory_sys/fusion.py` 1521 行，
+写入、读取、渲染、时间、常量全在一个文件里，任何改动都要在 1500 行里定位。
+
+### 拆法
+
+| 文件 | 行数 | 职责 |
+| --- | --- | --- |
+| `fusion.py` | **151** | 组合根：`FusionMemory(WriteMixin, ReadMixin, RenderMixin)` + 缓存 + 生命周期；旧符号全部 re-export |
+| `write_path.py` | 245 | 抽取 → 定时 → 找相似 → 关系分类 → 确定性落库 |
+| `read_path.py` | 493 | 解析 → 算子 → 三层召回 → 一跳 → 执行轨迹 |
+| `render.py` | 417 | 事实清单 / 台账 / 偏好 / 摘录 / 地板 / 守卫 |
+| `temporal.py` | 228 | 相对/绝对时间解析与合法性校验 |
+| `textutil.py` | 45 | 截断、语言判定、字段清洗、数字提取 |
+| `config.py` | 16 | 阈值与上限常量 |
+
+- 方法按职责原样搬移（`WriteMixin` 7 个、`ReadMixin` 11 个、`RenderMixin` 14 个），
+  一行逻辑都没改；没有 `super()` 调用，MRO 不影响行为。
+- `memory_sys.fusion` 继续 re-export `resolve_when_expr / _valid_range /
+  _shift_month_keep_day / _looks_zh / _INTENTS / PROMPT_VERSIONS` 等，
+  `tests/`、`scripts/`、`cli.py` 零改动。
+- 总行数 1521 → 1595（多出的是 7 个模块头与导入），单文件最大 493 行。
+
+### 验证（机械等价，不靠人眼）
+
+- **500 题上下文指纹**：`regress --check` 语义漂移 0 / 格式漂移 0 / 缺失 0 /
+  新增 0，0 cache miss，退出码 0。
+- **55 个单测全绿**（0.86s），其中包含 15 题自包含基线。
+- 导入清理：AST 扫描出 2 处未使用的 `time`，已删除；`fusion.py` 的 re-export
+  带 `# noqa: F401` 并注明用途。
+
+### 判定
+
+**保留，零行为变化**。生产仍是 **v3.8（Oracle）/ v3.9.1（S 档）**，
+`infra-2026-11` 不占用 v3.10 编号。
+
+**收益**：后续改渲染只需打开 417 行的 `render.py`，改算子只需 493 行的
+`read_path.py`；时间规则集中在 228 行，可以单独做属性测试。
+**边界**：这是结构改动，不产生任何分数或速度收益；mixin 之间仍共享
+`self.store / self.client / self.last_trace`，没有引入接口约束——真要解耦，
+下一步是把 `_execute` 的入参从裸 dict 换成带 schema 校验的 `QueryPlan`。

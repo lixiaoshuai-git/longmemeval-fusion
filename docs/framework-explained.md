@@ -168,7 +168,11 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 | 文件 | 职责 |
 |---|---|
 | `memory_sys/schema.py` | Event/Slot/MemoryStore 数据模型与确定性存储算子 |
-| `memory_sys/fusion.py` | 主策略：写入期流程、查询期流程、守卫层、S 档扩展 |
+| `memory_sys/fusion.py` | 组合根：缓存、生命周期、对外 API（行为由三个 mixin 提供） |
+| `memory_sys/write_path.py` | 写入期流程（抽取 / 定时 / 关系 / 落库） |
+| `memory_sys/read_path.py` | 查询期流程（解析 / 算子 / 召回 / 一跳 / 轨迹） |
+| `memory_sys/render.py` | 上下文渲染与守卫（台账 / 偏好 / 摘录 / 地板 / 拒答） |
+| `memory_sys/temporal.py` | 相对时间规则解析与合法性校验 |
 | `memory_sys/bm25.py` | 纯 Python 的 BM25 检索与分词（无第三方依赖） |
 | `memory_sys/llm_io.py` | 四个 LLM 边界的提示词模板 + 稳健 JSON 解析 |
 | `memory_sys/lifecycle.py` | 遗忘/生命周期（默认关闭） |

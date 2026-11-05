@@ -375,7 +375,7 @@ v1 的 TR 83.33% 证明双时间轴 + 时间归一化方向正确；失败集中
 
 ## 9. v2（fusion 策略）实现与验证（2026-09-26）
 
-### 9.1 实现（`memory_sys/fusion.py` + `bm25.py`）
+### 9.1 实现（`memory_sys/fusion.py` 组合 + `write_path/read_path/render/temporal` 分模块 + `bm25.py`）
 
 按 §8.5 五条全部落地，融合各开源方案的对应机制：
 
