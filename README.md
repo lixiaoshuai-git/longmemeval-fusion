@@ -1,4 +1,4 @@
-# LongMemEval 记忆系统（fusion v3.12 当前代码 / v3.9.1 S 档检索扩展）
+# LongMemEval 记忆系统（fusion v3.13 当前代码 / v3.9.1 S 档检索扩展）
 
 自研对话记忆系统：把非结构化对话历史编译成"自由文本事实 + 确定性时间结构"的
 双层记忆，LLM 只在抽取 / 关系分类 / 解析 / 作答四个边界出现，中间全部是
@@ -22,7 +22,8 @@ S 档（122k tok/题，48 题样本）零架构改动泛化，89.58% 进入第�
 | **fusion v3.8（上一生产基线）** | 3 | **86.80 ± 0.72** | 86.2 – 87.6 | SS-P 结构性突破 |
 | **fusion v3.10（单轮）** | 1 | 88.40 | — | 修 `evolve` 丢时间；影响 36 题，因果 +2 |
 | **fusion v3.11（单轮）** | 1 | 87.40 | — | 收窄前提校验；影响 84 题，因果 +2。同批未改动 416 题自身漂移 -7，故**总分不可比**，以配对为准 |
-| **fusion v3.12（当前代码）** | 子集 24 | 16 → 23 | — | SCOPE NOTE 不再强制拒答；**7 修 0 坏**（三轮一致，含去题库例子版），未跑全量（其余 476 题上下文未变） |
+| fusion v3.12 | 子集 24 | 16 → 23 | — | SCOPE NOTE 不再强制拒答；**7 修 0 坏**（三轮一致，含去题库例子版） |
+| **fusion v3.13（当前代码）** | 1 | 88.80 | — | 解析提示词去题库示例（P5）：267 题上下文变化，因果 +2（12 修/10 坏）落在噪声内；未改动 233 题自身 +5 ⇒ **只主张"去泄漏不掉分"**，不主张提升 |
 
 **跨采样稳定的结论**（单次差值 <3pp 不作数，见方差披露）：
 
@@ -104,7 +105,7 @@ hindsight 强在 KU（Reflect 层 94.87），弱在 SS-A/TR，互相印证机制
 ## 运行方法
 
 依赖：Python 3.10+，`pip install -r requirements.txt`（openai / tiktoken / backoff / numpy / tqdm；judge 另需官方仓库依赖）。
-自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（66 例，纯离线，<2s；CI 见 `.github/workflows/tests.yml`）。
+自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（69 例，纯离线，<2s；CI 见 `.github/workflows/tests.yml`）。
 
 1. 配置 `.env`（参考 `.env.example`）：OpenAI 兼容接口的 `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL`。
 2. 数据：LongMemEval 官方仓库（github.com/xiaowu0162/LongMemEval），
@@ -164,12 +165,13 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | `memory_sys/llm_io.py` | LLM 边界提示词：抽取 / 关系分类 / 解析 + 稳健 JSON 解析（JSONL 兜底） |
 | `memory_sys/structured.py` | v1 结构化策略（留作消融对照） |
 | `cli.py` | **交互入口**：多轮跨会话 REPL（load / ingest / ask / context / stats / forget） |
-| `tests/` | 66 例离线单测（时间解析/执行器/BM25/遗忘/守卫/轨迹/调用可靠性/配对报告/中文 OOD/上下文基线/计划审计/写入期时间几何/守卫形态与措辞）+ CLI 手工用例（17 例全过） |
+| `tests/` | 69 例离线单测（时间解析/执行器/BM25/遗忘/守卫/轨迹/调用可靠性/配对报告/中文 OOD/上下文基线/计划审计/写入期时间几何/守卫形态与措辞/dev-test 切分）+ CLI 手工用例（17 例全过） |
 | `scripts/lme_core.py` | 数据加载（会话强制按时间排序）、LLM 客户端（思考开关、错误分类重试）、官方提示词模板 |
 | `scripts/memory.py` | 策略注册与接口（full-context / user-turn-only / structured / fusion） |
 | `scripts/run_eval.py` | 评测流水线：分层抽样、断点续跑、缓存落盘、`--trace` 执行轨迹、`--ids` 子集 |
 | `scripts/replay_trace.py` | 零 LLM 回放器：用既有缓存重建记忆与查询轨迹，cache miss 立即报错 |
 | `scripts/pair_report.py` | 配对报告：修好/修坏题号、分题型变化、子集替换后的预计全量分数 |
+| `scripts/splits.py` | 固定 dev/test 切分（按题型分层，251/249）；`run_eval/regress --split` 可直接用 |
 | `scripts/audit_leakage.py` | 泄漏审计：扫描提示词/词表里的评测集原句与领域词，报告题面命中数（`--strict` 可作门禁） |
 | `scripts/regress.py` | 上下文回归基线：500 题确定性上下文/计划/候选固化成指纹，`--check` 发现漂移即非零退出；`--dump-cache` 生成精简夹具，`--drop-parse` 生成去掉解析缓存的副本用于验证读侧改动；`--audit-plans` 汇总计划问题码 |
 | `scripts/check_zh_ood.py` | 中文 OOD 小样本确定性判定（expected_any 子串匹配，不调 LLM judge） |

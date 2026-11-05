@@ -69,7 +69,9 @@ PROMPT_VERSIONS = {
     "extract": PROMPT_VERSION,
     "assistant": PROMPT_VERSION,
     "relation": PROMPT_VERSION,
-    "parse": PROMPT_VERSION,
+    # 2026-11-05 P5：解析提示词里的题库示例换成抽象描述，英文解析缓存因此
+    # 需要重建（写入侧 extract/assistant/relation 三个 scope 不受影响）。
+    "parse": "fusion-v2.5-parse",
     "answer": PROMPT_VERSION,
     # 中文分支独立版本：新增语言支持不触碰上面五条英文缓存哈希。
     "extract_zh": "fusion-zh-v1",

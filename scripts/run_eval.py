@@ -119,6 +119,8 @@ def main() -> None:
                     help="落盘查询计划与算子执行轨迹 <tag>-trace.jsonl")
     ap.add_argument("--ids", default="",
                     help="只跑指定 question_id（逗号分隔），用于配对筛选")
+    ap.add_argument("--split", default="all", choices=["all", "dev", "test"],
+                    help="按 P8 的固定切分跑（dev 调参 / test 只报数）")
     args = ap.parse_args()
 
     env = load_env()
@@ -135,6 +137,10 @@ def main() -> None:
         insts = insts[: args.n]
     if args.ids:
         keep = {x.strip() for x in args.ids.split(",") if x.strip()}
+        insts = [x for x in insts if x.question_id in keep]
+    if args.split != "all":
+        from splits import ids_of
+        keep = ids_of(insts, args.split)
         insts = [x for x in insts if x.question_id in keep]
 
     RESULTS_DIR.mkdir(exist_ok=True)

@@ -202,7 +202,7 @@ PARSE_PROMPT_V2_ZH = """把问题转换成针对事实句记忆库的检索计�
 PARSE_PROMPT_V2 = """Convert the question into a retrieval plan over a temporal memory of fact sentences.
 
 Output ONLY JSON:
-{{"intent":"agg_count|agg_sum|fact_current|fact_at_time|list_events|argmax|lookup|unknown","topic":"<rich free-text key phrase for fuzzy retrieval, 5-15 words, e.g. 'babies born to friends and family members', 'pre-1920 American coin collection how many I have'>","category":"<one of: {cats}> or null","count_kind":"events|stated_total|either|none","window_days":<int or null>,"month":"<YYYY-MM or null>","at_text":"<date expression for fact_at_time, or null>","before_text":"<verbatim event text for 'before X' comparison, or null>","entities":["<nouns the question presumes to exist>"]}}
+{{"intent":"agg_count|agg_sum|fact_current|fact_at_time|list_events|argmax|lookup|unknown","topic":"<retrieval key phrase, 5-15 words: the objects or people asked about + the action + the time frame; copy the user's own wording where possible>","category":"<one of: {cats}> or null","count_kind":"events|stated_total|either|none","window_days":<int or null>,"month":"<YYYY-MM or null>","at_text":"<date expression for fact_at_time, or null>","before_text":"<verbatim event text for 'before X' comparison, or null>","entities":["<nouns the question presumes to exist>"]}}
 
 Guides:
 - "How many X did I <verb> (during <period>)" -> intent=agg_count, count_kind=events, topic="X <verb> by me <period>".

@@ -56,9 +56,18 @@
 
 ## P8 保留 dev/test 切分
 
-500 题按 `md5(question_id)` 固定切 250/250：**dev 用于找问题与调参，
-test 只在需要对外报数时跑一次**。历史结论（v3.10 之前）全部是在全集上
-选择并验证的，标注为 *in-sample*，不得当作外推证据。
+实现：`scripts/splits.py`（按题型分层，组内按 `md5(question_id)` 排序后交替）。
+当前 Oracle 500：**dev 251 / test 249**，每个题型的 dev/test 数量差 ≤1。
+
+```bash
+python scripts/splits.py                    # 查看划分
+python scripts/run_eval.py ... --split dev  # 只在 dev 上跑
+python scripts/regress.py ... --split test  # 只在 test 上回放
+```
+
+规则：**dev 用于找问题与调参，test 只在需要对外报数时跑一次**；一旦看过
+test 的错题，它就不再是 test。历史结论（v3.12 及之前）全部在全集上选择并
+验证，标注为 *in-sample*，不得当作外推证据。
 
 ## P9 记录失败与回滚
 

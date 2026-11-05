@@ -1618,3 +1618,57 @@ v3.10–v3.12 三次保留的改动，全部是"在同一 500 题上找错 → �
 - 单测仍 **66** 全绿；500 题基线按新文案重建，`regress --check` 绿。
 - 后续顺序：L4（重解析 500，约 10 min）→ L1–L3（重抽取约 3 h，与下次全量重建
   合并）→ L6（领域词移出核心规则）→ P8 的 dev/test 切分落地。
+
+---
+
+## infra-2026-11 · 阶段 L：去掉解析提示词的题库示例 + 落地 dev/test 切分（2026-11-05）
+
+按 P5（提示词不写题库）和 P8（固定 dev/test）执行，目标不是涨分。
+
+### 一、L4：解析提示词去示例
+
+`PARSE_PROMPT_V2` 的 topic 示例原本是两道真题的原句
+（`babies born to friends and family members`、`pre-1920 American coin
+collection how many I have`），改为抽象描述：
+
+> `<retrieval key phrase, 5-15 words: the objects or people asked about +
+> the action + the time frame; copy the user's own wording where possible>`
+
+`PROMPT_VERSIONS["parse"]` 升到 `fusion-v2.5-parse`，**写入侧三个 scope 不动**，
+所以只需重解析、不需重抽取。代价：全量 500 题重解析 + 重作答 + 重判分，
+**34 分钟、约 1500 次调用**（解析 500 + 作答 500 + judge 500）。
+
+冒烟（5 题）先确认新 topic 正常：`charity events I participated in before Run
+for the Cure`、`issues with my new car after its first service` 等，均短、具体、
+无示例残留。
+
+### 二、结果：中性，不是提升
+
+| 口径 | 结果 |
+| --- | --- |
+| 全量单轮 | 88.80%（444/500），judge 错误 0 |
+| 上下文变化 | **267/500（53%）**；plan 变化 374（topic 措辞变了） |
+| 改动的 267 题 | 229 → 231，**净 +2**（12 修 / 10 坏） |
+| 未改动的 233 题 | 208 → 213，**净 +5**（7 修 / 2 坏）——上下文逐字未变 |
+
+**读法**：+7 里只有 +2 与改动相关，且落在噪声内（12 修 / 10 坏）；未改动组
+自己涨了 5。所以这次改动的正确结论是"**去泄漏且不掉分**"，不是"提升 1.4pp"。
+88.80 这个总分是一次幸运抽样，不作为版本成绩。
+
+### 三、P8：固定切分落地
+
+- `scripts/splits.py`：按题型分层、组内按 `md5(qid)` 排序交替分配。
+  Oracle 500 → **dev 251 / test 249**，每个题型差 ≤1。
+- `run_eval.py --split dev|test`、`regress.py --split dev|test` 已接入；
+  `regress --split dev` 回放 251 题、0 漂移（`--split` 子集不再误报"缺失"）。
+- `tests/test_splits.py` 3 例：覆盖全部且不重叠、分层平衡、顺序无关可复现。
+- 约定写入 `docs/iteration-principles.md` P8：**dev 找问题，test 只报数**；
+  一旦看过 test 的错题，它就不再是 test。
+
+### 四、判定与后续
+
+- **保留**：泄漏已除去，性能中性；单测 66 → **69** 全绿；基线按新解析重建。
+- 版本：**v3.13**（去泄漏、中性）。
+- 剩余泄漏：L1–L3（抽取提示词里的数字/实体示例）需要重抽取约 3 h；
+  L6（`_GENERIC_TOKS` 领域词）待分层。两者都排在"下一次全量重建"里一起做。
+- 下一轮起，找问题只看 dev；test 留到需要对外报数时再跑一次。

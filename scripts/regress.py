@@ -162,6 +162,9 @@ def main() -> None:
     ap.add_argument("--drop-parse", default="", help="导出删除 parse 键的缓存副本")
     ap.add_argument("--prev-trace", default="",
                     help="上一次的 trace.jsonl，用于打印第一处漂移的文本 diff")
+    ap.add_argument("--split", default="all",
+                    choices=["all", "dev", "test"],
+                    help="按 P8 的固定切分回放（默认 all）")
     ap.add_argument("--audit-plans", action="store_true",
                     help="汇总查询计划的静态问题码（只诊断，不做比对）")
     args = ap.parse_args()
@@ -174,6 +177,10 @@ def main() -> None:
     insts = load_instances(args.data)
     labels = load_labels(args.judged)
     selected = select_instances(insts, labels, args.ids, args.types)
+    if args.split != "all":
+        from splits import ids_of
+        keep = ids_of(insts, args.split)
+        selected = [i for i in selected if i.question_id in keep]
 
     raw_cache = json.loads(pathlib.Path(args.cache).read_text(encoding="utf-8"))
     cache = TrackingCache(raw_cache)
@@ -241,7 +248,7 @@ def main() -> None:
     only_old = sorted(set(old) - set(current))
     only_new = sorted(set(current) - set(old))
     # 只回放子集时，基线里没被回放的题不算漂移——这是「定点复核」的常用姿势。
-    subset_run = bool(args.ids.strip())
+    subset_run = bool(args.ids.strip()) or args.split != "all"
     semantic_diffs, format_diffs = [], []
     for qid in sorted(set(old) & set(current)):
         sem, fmt = diff_one(old[qid], current[qid])

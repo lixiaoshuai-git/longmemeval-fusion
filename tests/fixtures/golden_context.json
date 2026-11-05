@@ -1,8 +1,8 @@
 {
  "meta": {
   "n": 15,
-  "cache": "v311-fusion-cache.json",
-  "created": "2026-11-05 17:46",
+  "cache": "l4-fusion-cache.json",
+  "created": "2026-11-05 18:44",
   "ids": 15,
   "note": "确定性上下文指纹；不含耗时字段"
  },
@@ -19,7 +19,7 @@
   },
   "bbf86515": {
    "type": "temporal-reasoning",
-   "plan": "9dcd207a80f1",
+   "plan": "1d03388a53bc",
    "ctx": "38ed969d5c7e",
    "sections": "8707e6ad0391",
    "cand": "e65520e21e6a",
@@ -39,13 +39,13 @@
   },
   "b9cfe692": {
    "type": "temporal-reasoning",
-   "plan": "2b6f37b5fa9e",
-   "ctx": "89353d72abc3",
+   "plan": "a204e31a0740",
+   "ctx": "039241626702",
    "sections": "cab61077edc5",
-   "cand": "eba3be830001",
+   "cand": "28e8baaf63a1",
    "one_hop": 0,
-   "matched": 14,
-   "chars": 15202
+   "matched": 11,
+   "chars": 14925
   },
   "gpt4_9a159967": {
    "type": "temporal-reasoning",
@@ -59,13 +59,13 @@
   },
   "982b5123_abs": {
    "type": "temporal-reasoning",
-   "plan": "c4eba509f32f",
-   "ctx": "8b118be05fe0",
-   "sections": "f46db1eab0a0",
-   "cand": "16c9a6306da8",
+   "plan": "f7bf1f84eeab",
+   "ctx": "9b24b097b0a5",
+   "sections": "3b39e1b0d235",
+   "cand": "510fab284994",
    "one_hop": 0,
    "matched": 2,
-   "chars": 10173
+   "chars": 10092
   },
   "6d550036": {
    "type": "multi-session",
@@ -79,27 +79,27 @@
   },
   "gpt4_59c863d7": {
    "type": "multi-session",
-   "plan": "b79cd1af67a4",
-   "ctx": "44b040765bac",
+   "plan": "7d9c57a51f54",
+   "ctx": "b60f63680c51",
    "sections": "cab61077edc5",
    "cand": "97d170e1550e",
    "one_hop": 0,
    "matched": 0,
-   "chars": 14250
+   "chars": 14249
   },
   "46a3abf7": {
    "type": "multi-session",
-   "plan": "788768695807",
-   "ctx": "2032e8290245",
+   "plan": "0ae8be0f3da1",
+   "ctx": "1ec54ddde674",
    "sections": "8707e6ad0391",
-   "cand": "789c80e0a9c9",
+   "cand": "c76dc43baaf0",
    "one_hop": 0,
    "matched": 2,
-   "chars": 11462
+   "chars": 11357
   },
   "6a1eabeb": {
    "type": "knowledge-update",
-   "plan": "64d0cff29ee4",
+   "plan": "55ad597bfb4d",
    "ctx": "1e4333d72e3e",
    "sections": "8707e6ad0391",
    "cand": "dd28df13f968",
@@ -109,7 +109,7 @@
   },
   "8a2466db": {
    "type": "single-session-preference",
-   "plan": "a2db67ad2c70",
+   "plan": "f4ebb8eae741",
    "ctx": "1213a1552061",
    "sections": "f2cc1a6ef872",
    "cand": "e4562ce1710e",
@@ -119,7 +119,7 @@
   },
   "7161e7e2": {
    "type": "single-session-assistant",
-   "plan": "009cbf5f335d",
+   "plan": "12e4c443341c",
    "ctx": "9f171397adc2",
    "sections": "a97fb11f7172",
    "cand": "8aa9eead0f7d",
@@ -149,7 +149,7 @@
   },
   "ba358f49": {
    "type": "multi-session",
-   "plan": "3509937f2ffe",
+   "plan": "c8ba03b1358c",
    "ctx": "dd29ecf524b0",
    "sections": "151dfe4c2ced",
    "cand": "97d170e1550e",
