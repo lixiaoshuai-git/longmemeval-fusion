@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from bm25 import BM25, tokenize
 from llm_io import PARSE_PROMPT_V2, PARSE_PROMPT_V2_ZH, extract_json_object
 from config import _INTENTS
+from plan import audit_plan
 from schema import CATEGORIES
 from temporal import _shift_month, resolve_when_expr
 from textutil import _clean, _clip, _first_number, _fmt_d, _looks_zh
@@ -78,6 +79,9 @@ class ReadMixin:
             lambda: self._parse(question, qdate, zh=zh),
             scope="parse_zh" if zh else "parse")
         self.last_trace["plan"] = dict(sq)
+        # 静态审计（只读）：计划缺字段 / 时间没解析出来时留下问题码，
+        # 供 regress.py --audit-plans 汇总。不修补字段，不影响执行。
+        self.last_trace["plan_issues"] = audit_plan(sq, question, qdate)
         self.last_trace["parse_ms"] = round((time.perf_counter() - tp) * 1000, 2)
         self.last_meta = {"intent": sq.get("intent"), "topic": sq.get("topic")}
 

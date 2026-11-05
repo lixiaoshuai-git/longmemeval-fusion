@@ -121,6 +121,33 @@ def parse_cache_keys(question: str, question_date: str) -> list[str]:
             for scope in ("parse", "parse_zh")]
 
 
+def _print_plan_audit(records: list[dict]) -> None:
+    """汇总 plan_issues：按问题码计数，给出占比与示例题号。"""
+    from plan import ISSUE_TEXT, entities_not_in_question
+
+    total = len(records)
+    counts: dict[str, list[str]] = {}
+    stray_ents = 0
+    for r in records:
+        trace = r.get("trace") or {}
+        for code in trace.get("plan_issues") or []:
+            counts.setdefault(code, []).append(r["question_id"])
+        plan = trace.get("plan") or {}
+        if plan and entities_not_in_question(plan, trace.get("question") or ""):
+            stray_ents += 1
+
+    print(f"计划审计：{total} 题，有问题 {len({q for v in counts.values() for q in v})} 题")
+    print(f"{'问题码':<22}{'题数':>6}{'占比':>8}  示例")
+    for code, qids in sorted(counts.items(), key=lambda kv: -len(kv[1])):
+        print(f"{code:<22}{len(qids):>6}{len(qids) / max(1, total):>7.1%}  "
+              f"{', '.join(qids[:3])}")
+    if not counts:
+        print("（无问题码）")
+    print(f"\n附：entities 里有问题中未出现的词 {stray_ents} 题"
+          f"（{stray_ents / max(1, total):.1%}）——上位词/假前提的近似指标")
+    print("说明：" + "；".join(f"{k}={v}" for k, v in ISSUE_TEXT.items()))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(DEFAULT_DATA))
@@ -128,17 +155,21 @@ def main() -> None:
     ap.add_argument("--judged", default="")
     ap.add_argument("--ids", default="")
     ap.add_argument("--types", default="")
-    ap.add_argument("--golden", required=True)
+    ap.add_argument("--golden", default="", help="基线文件（--update/--check 必填）")
     ap.add_argument("--update", action="store_true", help="写入 / 覆盖基线")
     ap.add_argument("--check", action="store_true", help="与基线比对")
     ap.add_argument("--dump-cache", default="", help="导出本次命中的缓存子集")
     ap.add_argument("--drop-parse", default="", help="导出删除 parse 键的缓存副本")
     ap.add_argument("--prev-trace", default="",
                     help="上一次的 trace.jsonl，用于打印第一处漂移的文本 diff")
+    ap.add_argument("--audit-plans", action="store_true",
+                    help="汇总查询计划的静态问题码（只诊断，不做比对）")
     args = ap.parse_args()
 
-    if not (args.update or args.check):
-        ap.error("必须指定 --update 或 --check")
+    if not (args.update or args.check or args.audit_plans):
+        ap.error("必须指定 --update / --check / --audit-plans 之一")
+    if (args.update or args.check) and not args.golden:
+        ap.error("--update / --check 需要 --golden")
 
     insts = load_instances(args.data)
     labels = load_labels(args.judged)
@@ -177,6 +208,10 @@ def main() -> None:
             json.dumps(raw_cache, ensure_ascii=False), encoding="utf-8")
         print(f"删除 {dropped} 个 parse 键 → {args.drop_parse}"
               f"（剩余 {len(raw_cache)} 键）；下一步用 run_eval --ids 跑真实解析")
+
+    if args.audit_plans:
+        _print_plan_audit(records)
+        return
 
     if args.update:
         payload = {

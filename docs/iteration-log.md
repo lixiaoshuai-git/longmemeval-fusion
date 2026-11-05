@@ -1234,3 +1234,66 @@ CLI 行为不变。
 **边界**：这是结构改动，不产生任何分数或速度收益；mixin 之间仍共享
 `self.store / self.client / self.last_trace`，没有引入接口约束——真要解耦，
 下一步是把 `_execute` 的入参从裸 dict 换成带 schema 校验的 `QueryPlan`。
+
+---
+
+## infra-2026-11 · 阶段 G：查询计划审计（2026-11-05）
+
+**自选方向**：拆分后 `read_path.py` 只剩查询链，正好给它加一个只读审计。
+目标不是改行为，而是回答一个一直没有数据的问题——**解析出来的计划，
+质量到底怎么样**。
+
+### 改动
+
+1. `memory_sys/plan.py`：`QueryPlan` dataclass（与 PARSE_PROMPT 输出一一对应，
+   `from_dict / to_dict` 保真）+ `audit_plan()` 静态检查。审计只读、不修补字段：
+   `intent_unknown / topic_missing / topic_is_question / window_days_invalid /
+   month_invalid / at_text_unresolved / before_unresolved / agg_without_anchor`。
+2. `read_path.read()` 把问题码写进 `last_trace["plan_issues"]`（不进上下文，
+   不影响任何指纹）。
+3. `regress.py --audit-plans`：按问题码汇总题数、占比、示例题号，并给出
+   「entities 有问题中未出现的词」的近似比例。
+4. 单测 55 → **61**（`tests/test_plan.py`：契约保真、干净计划通过、
+   事件锚点判为未解析、非法 window/month、entities 外词）。
+
+**注意**：`_parse` 的返回值没有改成 dataclass。回放走解析缓存，改输出形状
+**无法被 500 题基线验证**（阶段 E 的教训）；契约先以只读视图存在，等有了
+`--drop-parse` 的实测再说。
+
+### 500 题审计结果（v3.8 缓存，零调用）
+
+| 问题码 | 题数 | 占比 | 该组准确率 | 与整体（86.6%）差 |
+| --- | --- | --- | --- | --- |
+| `at_text_unresolved` | 37 | 7.4% | **73.0%** | **-13.6pp** |
+| `before_unresolved` | 16 | 3.2% | 87.5% | +0.9 |
+| `intent_unknown` | 3 | 0.6% | 100.0% | +13.4 |
+| （无任何问题码） | 450 | 90.0% | 87.8% | +1.2 |
+
+- 50 题（10.0%）至少一个问题码；`entities` 里有问题中未出现的词 24 题（4.8%）。
+- `before_unresolved`、`intent_unknown` 与正确率**没有**负相关，不该动。
+- 唯一有信号的是 `at_text_unresolved`：37 题，准确率比整体低 13.6pp。
+
+### 这 37 题的 at_text 长什么样（35 个不同取值）
+
+绝大多数不是时间表达，而是**事件引用**：
+
+- `when I moved to the United States` / `when I got my mortgage from Wells Fargo` /
+  `when I attended the bird watching workshop` / `when Alex was born`
+- 少数是日历事件或模糊词：`Maundy Thursday`、`Valentine's day`、
+  `last Saturday`、`Monday`、`previously`
+
+**结论**：这不是正则缺口，而是架构里一直缺的「**事件锚点**」——`how long X
+after Y` 里的 Y 需要先在记忆里找到对应事件、取它的日期，现有
+`resolve_when_expr` 只认字面时间。加正则救不了 `when I moved to the US`。
+
+### 判定
+
+**保留，零行为变化**（`regress --check` 500/500 仍然 0 漂移；审计字段只进 trace）。
+生产仍是 **v3.8（Oracle）/ v3.9.1（S 档）**，`infra-2026-11` 不占用 v3.10 编号。
+
+**下一步（有数据支撑，优先级最高）**：确定性事件锚点解析——
+`at_text` 规则解不出时，用 BM25 在 active events 里找锚点事件，取
+`valid_from` 作为窗口起点，并设置信阈值（低于阈值维持现状，不猜）。
+评估集就用这 37 题（`results/infra-f-trace.jsonl` 里带 `at_text_unresolved`
+的题号），配对比较，修好/修坏都要记账。上限约 +2pp，但更重要的是它把
+「相对事件的时间推理」变成确定性算子，而不是靠 reader 自己算。
