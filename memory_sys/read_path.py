@@ -165,12 +165,15 @@ class ReadMixin:
                     "mentioned; recommend based on what the user likes.")
             else:
                 parts.append(
-                    "[MEMORY SCOPE NOTE] The memory contains no statement about: "
-                    + ", ".join(ents) + ".\n"
-                    "If you find the required information is missing, you MUST answer "
-                    "using wording like: \"The information provided is not enough. "
-                    "You did not mention ...\" — do NOT give a number (not even 0), "
-                    "a guess, or a definitive answer about it.")
+                    "[MEMORY SCOPE NOTE] The memory contains no verbatim statement "
+                    "about: " + ", ".join(ents) + ".\n"
+                    "The user may have described it in different words (e.g. "
+                    "'siblings' as brother/sister, 'internet plan' as its speed or "
+                    "provider) — check the facts, preferences and verbatim user "
+                    "turns for a paraphrase before concluding.\n"
+                    "Only if the information is genuinely absent, answer with "
+                    "wording like: \"The information provided is not enough. "
+                    "You did not mention ...\" — do NOT invent a number or a fact.")
 
         # v3.4：确定性前提校验（专有实体必须在 user 发言中出现过）——
         # SCOPE NOTE 只在解析层 entities 全 miss 时触发，覆盖不了"实体被

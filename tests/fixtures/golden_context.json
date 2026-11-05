@@ -2,7 +2,7 @@
  "meta": {
   "n": 15,
   "cache": "v311-fusion-cache.json",
-  "created": "2026-11-05 17:32",
+  "created": "2026-11-05 17:39",
   "ids": 15,
   "note": "确定性上下文指纹；不含耗时字段"
  },

@@ -1483,3 +1483,77 @@ gram 因为有 `Alex` 而通过阈值，最终 suspects 里却混进了动词 `c
 **顺带确认**：今天两次全量（v3.10 88.40 / v3.11 87.40）之间，未改动题的
 重采样差异已达 7 题。以后任何"总分提升"都必须先扣掉这层噪声，否则一律
 不可信。
+
+---
+
+## infra-2026-11 · 阶段 J：SCOPE NOTE 不再强制拒答（2026-11-05）
+
+**自选方向**：继续按"先看错题再动手"。这轮先看 `fact_current` / `lookup` 的
+22 道错题，发现其中 3 道（8e91e7d9 兄弟姐妹、92a0aa75 现职时长、ad7109d1
+网速）上下文里都有 `[MEMORY SCOPE NOTE]`——读者被要求拒答，而金标有明确答案。
+
+### 一、先否决一个候选：类别硬过滤
+
+追 3 道"召回缺失"题（matched=1 金标 2）时发现 `_execute` 对 `agg_*` 用
+`e.category == plan.category` **硬过滤**：
+
+- `21d02d0d`：3/26 那场 5K 的 category 是 `event`，plan 是 `activity` → 被过滤；
+- `6d550036`：两个项目都是 `education`，plan 是 `work` → 全被过滤，只剩一个
+  `work` 干扰项。
+
+看起来该删，但先量化（189 道 agg/list 题）：**170 道有候选被过滤，其中 142 道
+当前答对**；"过滤后只剩 ≤2 条"的 46 道里 41 道答对。删掉过滤会把大量干扰项
+放回去，风险远大于收益。**否决**，只记录机制（真正的毛病是解析给的 category
+偶尔错，不是过滤本身）。
+
+### 二、SCOPE NOTE 的伤害面（500 题零调用）
+
+| 分组 | 触发 | 该组准确率 | 未触发 | 差 |
+| --- | --- | --- | --- | --- |
+| 非拒答（470） | 19 | **57.9%** | 89.1% | **-31.2pp** |
+| 拒答（30） | 5 | 100% | 76.0% | +24.0pp |
+
+触发它的 entities 绝大多数是**普通名词**：`siblings`、`current role`、
+`internet plan`、`occupation`、`college`、`relatives`。用户其实说过
+"one brother and three sisters"，只是没说过 "siblings" 这个词。
+
+原文措辞是强制性的：`you MUST answer using wording like "The information
+provided is not enough" … do NOT give a number`。于是**词汇不匹配 = 强制拒答**。
+
+### 三、改法：先找同义表达，真缺才拒答
+
+```
+[MEMORY SCOPE NOTE] The memory contains no verbatim statement about: X.
+The user may have described it in different words (e.g. 'siblings' as
+brother/sister, 'internet plan' as its speed or provider) — check the facts,
+preferences and verbatim user turns for a paraphrase before concluding.
+Only if the information is genuinely absent, answer with wording like
+"The information provided is not enough ..." — do NOT invent a number or a fact.
+```
+
+只改这一段的措辞，不新增/删除任何段落，也不动 `entities` 的产生逻辑。
+
+### 四、配对评测（24 道 SCOPE 题，两轮独立采样）
+
+| 轮次 | 基线 | 候选 | 修好 | 修坏 | 净 |
+| --- | --- | --- | --- | --- | --- |
+| scope1 | 16/24 | 23/24 | 7 | 0 | **+7** |
+| scope2 | 16/24 | 23/24 | 7 | 0 | **+7** |
+
+两轮 24/24 标签完全相同。修好的 7 题：`8e91e7d9`（4 个兄弟姐妹）、
+`92a0aa75`（1 年 5 个月）、`ad7109d1`（500 Mbps）、`b86304ba`（画值三倍、
+未说价格）、`ccb36322`（Spotify）、`gpt4_31ff4165`（4 件健康设备）、
+`gpt4_8279ba03`（smoker，仍属措辞宽松但金标接受）。
+
+**拒答题无损失**：这 24 题里的 5 道 `_abs` 三轮（基线 / scope1 / scope2）全部
+判对，标签完全一致。
+
+### 五、判定与口径
+
+**保留**。只改了 24 题的上下文，其余 476 题逐字不变，因此**没有跑全量**——
+全量只会给 476 道未改动题加一层重采样噪声（上一轮实测这股噪声有 7 题），
+不提供新信息。对外报"子集 7 修 0 坏（16→23）"，全量投影 444/500 ≈ 88.8%。
+
+- 版本：**v3.12**；单测 65 → **66**（新增 SCOPE NOTE 行为用例：必须出现
+  `paraphrase` 指引、不再出现 `MUST answer`）。
+- 基线按新行为重建（500 + 15 题），`regress --check` 绿。

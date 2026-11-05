@@ -93,3 +93,27 @@ def test_premise_still_flags_absent_proper_noun_in_same_gram():
     out = m._premise_check(
         "How many largemouth bass did I catch with Jordan at Lake Michigan?")
     assert out and "jordan" in out
+
+
+# ---------------- SCOPE NOTE 不再强制拒答（infra-2026-11 H2） ----------------
+
+class _PlanClient:
+    """只回答 parse：给出一个记忆里不存在的实体。"""
+
+    model = "fake"
+
+    def chat(self, prompt, *args, **kwargs):
+        return ('{"intent": "agg_count", "topic": "siblings", '
+                '"entities": ["siblings"], "category": "person"}')
+
+
+def test_scope_note_asks_for_paraphrase_not_refusal():
+    m = FusionMemory(client=_PlanClient(), cache={})
+    m.store.add_event("user", "state", "I have one brother and three sisters.",
+                      "person", datetime(2023, 5, 1), None, False, None, "",
+                      ("s1", 0), stated_at=datetime(2023, 5, 1))
+    ctx = m.read("How many siblings do I have?", "2023-06-01")
+    assert "MEMORY SCOPE NOTE" in ctx
+    assert "paraphrase" in ctx            # 先找同义表达
+    assert "not enough" in ctx            # 真正缺失时才用拒答措辞
+    assert "MUST answer" not in ctx       # 不再强制拒答
