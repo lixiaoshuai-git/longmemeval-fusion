@@ -167,10 +167,11 @@ class ReadMixin:
                 parts.append(
                     "[MEMORY SCOPE NOTE] The memory contains no verbatim statement "
                     "about: " + ", ".join(ents) + ".\n"
-                    "The user may have described it in different words (e.g. "
-                    "'siblings' as brother/sister, 'internet plan' as its speed or "
-                    "provider) — check the facts, preferences and verbatim user "
-                    "turns for a paraphrase before concluding.\n"
+                    "The user may have described it in different words (a "
+                    "category word vs its members, a product vs its attributes, "
+                    "or any paraphrase) — check the facts, preferences and "
+                    "verbatim user turns for an equivalent statement before "
+                    "concluding.\n"
                     "Only if the information is genuinely absent, answer with "
                     "wording like: \"The information provided is not enough. "
                     "You did not mention ...\" — do NOT invent a number or a fact.")

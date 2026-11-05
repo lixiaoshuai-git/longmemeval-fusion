@@ -22,7 +22,7 @@ S 档（122k tok/题，48 题样本）零架构改动泛化，89.58% 进入第�
 | **fusion v3.8（上一生产基线）** | 3 | **86.80 ± 0.72** | 86.2 – 87.6 | SS-P 结构性突破 |
 | **fusion v3.10（单轮）** | 1 | 88.40 | — | 修 `evolve` 丢时间；影响 36 题，因果 +2 |
 | **fusion v3.11（单轮）** | 1 | 87.40 | — | 收窄前提校验；影响 84 题，因果 +2。同批未改动 416 题自身漂移 -7，故**总分不可比**，以配对为准 |
-| **fusion v3.12（当前代码）** | 子集 24 | 16 → 23 | — | SCOPE NOTE 不再强制拒答；**7 修 0 坏**，两轮标签完全一致，未跑全量（其余 476 题上下文未变） |
+| **fusion v3.12（当前代码）** | 子集 24 | 16 → 23 | — | SCOPE NOTE 不再强制拒答；**7 修 0 坏**（三轮一致，含去题库例子版），未跑全量（其余 476 题上下文未变） |
 
 **跨采样稳定的结论**（单次差值 <3pp 不作数，见方差披露）：
 
@@ -170,12 +170,14 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | `scripts/run_eval.py` | 评测流水线：分层抽样、断点续跑、缓存落盘、`--trace` 执行轨迹、`--ids` 子集 |
 | `scripts/replay_trace.py` | 零 LLM 回放器：用既有缓存重建记忆与查询轨迹，cache miss 立即报错 |
 | `scripts/pair_report.py` | 配对报告：修好/修坏题号、分题型变化、子集替换后的预计全量分数 |
+| `scripts/audit_leakage.py` | 泄漏审计：扫描提示词/词表里的评测集原句与领域词，报告题面命中数（`--strict` 可作门禁） |
 | `scripts/regress.py` | 上下文回归基线：500 题确定性上下文/计划/候选固化成指纹，`--check` 发现漂移即非零退出；`--dump-cache` 生成精简夹具，`--drop-parse` 生成去掉解析缓存的副本用于验证读侧改动；`--audit-plans` 汇总计划问题码 |
 | `scripts/check_zh_ood.py` | 中文 OOD 小样本确定性判定（expected_any 子串匹配，不调 LLM judge） |
 | `tests/fixtures/zh_ood_e2e.json` | 7 题中文端到端样本（事实/偏好/更新/时间/聚合/助手事实/拒答） |
 | `scripts/judge.py` | 评分（直接 import 官方 `get_anscheck_prompt`，不重写提示词；judge 错误单独标记） |
 | `scripts/build_report.py` | 真实水平报告生成器（从 summary.json 直注数据，零手抄数字） |
 | `docs/layer2-data-structure.md` | 设计文档：三层 schema、四类流程、v1 失败取证（§8）、v2 实现与验证（§9） |
+| `docs/iteration-principles.md` | **迭代原则 P1–P9**（含防过拟合条款：提示词不写题库、词表分层、dev/test 切分、配对判定） |
 | `docs/iteration-log.md` | 全部迭代实验日志（v1→v3.9.1；`infra-2026-11` 为基础设施轮次，含失败与回滚记录） |
 | `docs/evaluation-report.md` | 正式评估报告：多轮主结果、消融矩阵、检索延迟、成本、方差披露 |
 | `docs/defense-outline.md` | 答辩材料：演示流程、关键数据速查、Q&A 预案 |
