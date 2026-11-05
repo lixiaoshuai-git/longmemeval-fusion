@@ -27,6 +27,7 @@ import pathlib
 import re
 import sys
 import threading
+import time
 from datetime import datetime, timedelta
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -35,12 +36,28 @@ if _HERE not in sys.path:
 
 from bm25 import BM25, tokenize  # noqa: E402
 from llm_io import (  # noqa: E402
-    ASSISTANT_FACTS_PROMPT, PARSE_PROMPT_V2, RELATION_PROMPT,
-    TURN_EXTRACTION_PROMPT, extract_json_array, extract_json_object,
+    ASSISTANT_FACTS_PROMPT, ASSISTANT_FACTS_PROMPT_ZH,
+    PARSE_PROMPT_V2, PARSE_PROMPT_V2_ZH, RELATION_PROMPT, RELATION_PROMPT_ZH,
+    TURN_EXTRACTION_PROMPT, TURN_EXTRACTION_PROMPT_ZH,
+    extract_json_array, extract_json_object,
 )
 from schema import CATEGORIES, MemoryStore  # noqa: E402
 
 PROMPT_VERSION = "fusion-v2.4"
+# 四个 LLM 边界的缓存版本独立演进。初值刻意与旧 PROMPT_VERSION 相同，
+# 因此旧缓存哈希逐位兼容；以后只改 PARSE_VERSION 不会让写入缓存失效。
+PROMPT_VERSIONS = {
+    "extract": PROMPT_VERSION,
+    "assistant": PROMPT_VERSION,
+    "relation": PROMPT_VERSION,
+    "parse": PROMPT_VERSION,
+    "answer": PROMPT_VERSION,
+    # 中文分支独立版本：新增语言支持不触碰上面五条英文缓存哈希。
+    "extract_zh": "fusion-zh-v1",
+    "assistant_zh": "fusion-zh-v1",
+    "relation_zh": "fusion-zh-v1",
+    "parse_zh": "fusion-zh-v2",
+}
 
 _INTENTS = {"agg_count", "agg_sum", "fact_current", "fact_at_time",
             "list_events", "argmax", "lookup", "unknown"}
@@ -99,6 +116,69 @@ def _shift_month_keep_day(d: datetime, k: int) -> datetime:
     return datetime(y, m, min(d.day, _days_in_month(y, m)))
 
 
+_CN_NUM = {"零": 0, "一": 1, "二": 2, "两": 2, "三": 3, "四": 4,
+           "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
+
+
+def _cn_int(s: str) -> int | None:
+    if s.isdigit():
+        return int(s)
+    if s in _CN_NUM:
+        return _CN_NUM[s]
+    if "十" in s:
+        left, right = s.split("十", 1)
+        tens = _CN_NUM.get(left, 1) if left else 1
+        ones = _CN_NUM.get(right, 0) if right else 0
+        if left in _CN_NUM or not left:
+            if right in _CN_NUM or not right:
+                return tens * 10 + ones
+    return None
+
+
+def _cjk_when(raw: str, sdate: datetime) -> tuple[datetime, datetime] | None:
+    """中文相对时间兜底；无中文表达时返回 None，英文路径不变。"""
+    m = re.search(r"(20\d{2})年(\d{1,2})月(\d{1,2})日", raw)
+    if m:
+        try:
+            d = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            return d, d + timedelta(days=1)
+        except ValueError:
+            pass
+    if "前天" in raw:
+        d = sdate - timedelta(days=2)
+        return d, d + timedelta(days=1)
+    if "昨天" in raw:
+        d = sdate - timedelta(days=1)
+        return d, d + timedelta(days=1)
+    if "今天" in raw:
+        return sdate, sdate + timedelta(days=1)
+    if "上个月" in raw:
+        return _shift_month(sdate.replace(day=1), -1), sdate.replace(day=1)
+    if "去年" in raw:
+        return datetime(sdate.year - 1, 1, 1), datetime(sdate.year, 1, 1)
+
+    for pat, unit in ((r"([0-9一二两三四五六七八九十]+)\s*天前", "day"),
+                      (r"([0-9一二两三四五六七八九十]+)\s*周前", "week"),
+                      (r"([0-9一二两三四五六七八九十]+)\s*个月前", "month"),
+                      (r"([0-9一二两三四五六七八九十]+)\s*年前", "year")):
+        m = re.search(pat, raw)
+        if not m:
+            continue
+        n = _cn_int(m.group(1))
+        if n is None:
+            continue
+        if unit == "day":
+            d = sdate - timedelta(days=n)
+        elif unit == "week":
+            d = sdate - timedelta(weeks=n)
+        elif unit == "month":
+            d = _shift_month_keep_day(sdate, -n)
+        else:
+            d = _shift_month_keep_day(sdate, -12 * n)
+        return d, d + timedelta(days=1)
+    return None
+
+
 def resolve_when_expr(raw: str, sdate: datetime) -> tuple[datetime, datetime] | None:
     """规则解析相对时间表达 → [start, end)。不命中返回 None。
 
@@ -109,6 +189,10 @@ def resolve_when_expr(raw: str, sdate: datetime) -> tuple[datetime, datetime] | 
     raw = (raw or "").strip().lower()
     if not raw:
         return None
+
+    cjk = _cjk_when(raw, sdate)
+    if cjk:
+        return cjk
 
     # 模糊表达：不解析、不信任模型的猜测，锚定到陈述日
     if re.search(r"\b(recently|lately|a while ago|some time ago|not long ago)\b", raw):
@@ -226,6 +310,16 @@ def _clip(s: str, n: int) -> str:
     return s if len(s) <= n else s[:n] + "..."
 
 
+_CJK_CHAR = re.compile(r"[\u3400-\u9fff]")
+
+
+def _looks_zh(text: str) -> bool:
+    """确定性语言判定：至少 2 个汉字且占比 ≥5% 才走中文分支。"""
+    s = str(text or "")
+    n = len(_CJK_CHAR.findall(s))
+    return n >= 2 and n / max(1, len(s)) >= 0.05
+
+
 def _clean(v, allowed=None):
     if v is None:
         return None
@@ -268,11 +362,13 @@ class FusionMemory:
         self.enable_excerpts = _os.environ.get("ABL_EXCERPTS", "1") == "1"
         self.enable_floor = _os.environ.get("ABL_FLOOR", "1") == "1"
         self.last_meta: dict = {}
+        self.last_trace: dict = {}
 
     # -- 缓存 --
 
-    def _cached(self, key: str, fn):
-        full = hashlib.sha1((PROMPT_VERSION + "|" + key).encode("utf-8")).hexdigest()[:16]
+    def _cached(self, key: str, fn, *, scope: str):
+        version = PROMPT_VERSIONS[scope]
+        full = hashlib.sha1((version + "|" + key).encode("utf-8")).hexdigest()[:16]
         with self._lock:
             hit = self.cache.get(full)
         if hit is not None:
@@ -349,7 +445,10 @@ class FusionMemory:
         seen = {id(e) for e in seeds}
         extra: list = []
         for e in seeds[:5]:
-            toks = sorted(self._entity_toks(e), key=lambda x: df.get(x, 999))
+            # 同 df 的 token 必须按词面二次排序：set 的迭代顺序随进程哈希种子
+            # 变化，只按 df 排会让 one-hop 结果在两次运行间漂移（已复现 3/5 条）。
+            toks = sorted(self._entity_toks(e),
+                          key=lambda x: (df.get(x, 999), x))
             for t in toks[:4]:
                 if df.get(t, 999) > 8:
                     continue
@@ -368,6 +467,7 @@ class FusionMemory:
         sid = f"s{self._sess_n}"
         sdate = parse_dt(session_date) or datetime(2023, 1, 1)
         self.store.add_evidence(sid, sdate, session)
+        zh = _looks_zh(" ".join(str(t.get("content", "")) for t in session))
 
         # ---- 1) 逐 user 轮次抽取（Mem0 粒度）----
         cands: list[dict] = []
@@ -378,7 +478,8 @@ class FusionMemory:
             key = "ext|" + hashlib.sha1(
                 json.dumps([session_date, t["content"]],
                            ensure_ascii=False).encode("utf-8")).hexdigest()
-            raw = self._cached(key, lambda ut=t, at=nxt: self._extract_turn(ut, at, sdate))
+            raw = self._cached(key, lambda ut=t, at=nxt: self._extract_turn(
+                ut, at, sdate, zh=zh), scope="extract_zh" if zh else "extract")
             for item in raw if isinstance(raw, list) else []:
                 if isinstance(item, dict) and item.get("fact"):
                     c = dict(item)          # 浅拷贝：缓存条目必须保持可序列化
@@ -392,7 +493,9 @@ class FusionMemory:
             key = "asst|" + hashlib.sha1(
                 json.dumps([session_date, asst_turns],
                            ensure_ascii=False).encode("utf-8")).hexdigest()
-            raw = self._cached(key, lambda: self._extract_assistant(asst_turns, sdate))
+            raw = self._cached(key, lambda: self._extract_assistant(
+                asst_turns, sdate, zh=zh),
+                scope="assistant_zh" if zh else "assistant")
             for item in raw if isinstance(raw, list) else []:
                 if isinstance(item, dict) and item.get("fact"):
                     c = dict(item)
@@ -418,13 +521,14 @@ class FusionMemory:
             c["_rng"] = rng
 
         existing = self._active_events()
-        rel_out = self._classify(cands, existing, sdate)
+        rel_out = self._classify(cands, existing, sdate, zh=zh)
         for c, act in zip(cands, rel_out):
             self._apply(c, act, sdate, sid)
 
     def _extract_turn(self, user_turn: dict, asst: dict | None,
-                      sdate: datetime) -> list:
-        prompt = TURN_EXTRACTION_PROMPT.format(
+                      sdate: datetime, zh: bool = False) -> list:
+        tpl = TURN_EXTRACTION_PROMPT_ZH if zh else TURN_EXTRACTION_PROMPT
+        prompt = tpl.format(
             date=sdate.strftime("%Y-%m-%d"),
             user_turn=user_turn["content"],
             assistant_turn=(asst["content"] if asst else "(none)"),
@@ -432,8 +536,10 @@ class FusionMemory:
         resp = self.client.chat(prompt, max_tokens=700)
         return extract_json_array(resp) or []
 
-    def _extract_assistant(self, asst_turns: str, sdate: datetime) -> list:
-        prompt = ASSISTANT_FACTS_PROMPT.format(
+    def _extract_assistant(self, asst_turns: str, sdate: datetime,
+                           zh: bool = False) -> list:
+        tpl = ASSISTANT_FACTS_PROMPT_ZH if zh else ASSISTANT_FACTS_PROMPT
+        prompt = tpl.format(
             assistant_turns=_clip(asst_turns, 6000), cats="|".join(CATEGORIES))
         resp = self.client.chat(prompt, max_tokens=500)
         return extract_json_array(resp) or []
@@ -443,7 +549,8 @@ class FusionMemory:
     def _active_events(self) -> list:
         return [e for e in self.store.events if e.status == "active"]
 
-    def _classify(self, cands: list[dict], existing: list, sdate: datetime) -> list[dict]:
+    def _classify(self, cands: list[dict], existing: list, sdate: datetime,
+                  zh: bool = False) -> list[dict]:
         """Mem0 式关系分类（LLM 决策）→ 输出与 cands 等长的动作列表。
 
         检索按**逐候选** top-3（而非全局 top-12）：候选只看到与自己相关的
@@ -491,7 +598,8 @@ class FusionMemory:
             [sdate.strftime("%Y-%m-%d"), ex_lines, cd_lines],
             ensure_ascii=False).encode("utf-8")).hexdigest()
         out = self._cached(key, lambda: self._relation_call(
-            "\n".join(ex_lines), "\n".join(cd_lines), sdate))
+            "\n".join(ex_lines), "\n".join(cd_lines), sdate, zh=zh),
+            scope="relation_zh" if zh else "relation")
 
         parsed = out if isinstance(out, list) else []
         by_eid = {eid_of[idx]: existing[idx] for idx in eid_of}
@@ -514,10 +622,12 @@ class FusionMemory:
             actions[i] = {"action": act, "target": tgt, "anchor": anchor}
         return actions
 
-    def _relation_call(self, ex_block: str, cd_block: str, sdate: datetime):
-        prompt = RELATION_PROMPT.format(date=sdate.strftime("%Y-%m-%d"),
-                                        existing_block=ex_block,
-                                        candidates_block=cd_block)
+    def _relation_call(self, ex_block: str, cd_block: str, sdate: datetime,
+                       zh: bool = False):
+        tpl = RELATION_PROMPT_ZH if zh else RELATION_PROMPT
+        prompt = tpl.format(date=sdate.strftime("%Y-%m-%d"),
+                            existing_block=ex_block,
+                            candidates_block=cd_block)
         resp = self.client.chat(prompt, max_tokens=800)
         return extract_json_array(resp) or []
 
@@ -580,17 +690,30 @@ class FusionMemory:
 
     def read(self, question: str, question_date: str) -> str:
         from lme_core import parse_dt
+        t0 = time.perf_counter()
         qdate = parse_dt(question_date) or datetime(2023, 6, 1)
+        self.last_trace = {"question": question, "question_date": question_date}
+        zh = _looks_zh(question)
 
+        tp = time.perf_counter()
         sq = self._cached("parse|" + hashlib.sha1(
             json.dumps([question, question_date],
                        ensure_ascii=False).encode("utf-8")).hexdigest(),
-            lambda: self._parse(question, qdate))
+            lambda: self._parse(question, qdate, zh=zh),
+            scope="parse_zh" if zh else "parse")
+        self.last_trace["plan"] = dict(sq)
+        self.last_trace["parse_ms"] = round((time.perf_counter() - tp) * 1000, 2)
         self.last_meta = {"intent": sq.get("intent"), "topic": sq.get("topic")}
 
         parts: list[str] = []
+        te = time.perf_counter()
         result, meta = self._execute(sq, qdate)
-        self.last_meta.update(meta)
+        self.last_trace["execute_ms"] = round((time.perf_counter() - te) * 1000, 2)
+        self.last_trace["execution"] = meta
+        self.last_trace["deterministic_result"] = result
+        # mem_meta 保持原有的小字段；trace_* 大对象只进独立 trace 文件。
+        self.last_meta.update({k: v for k, v in meta.items()
+                               if not k.startswith("trace_")})
         if result:
             parts.append("[DETERMINISTIC QUERY RESULT]\n" + result)
 
@@ -677,12 +800,17 @@ class FusionMemory:
         if premise:
             parts.append(premise)
 
-        return "\n\n".join(parts)
+        context = "\n\n".join(parts)
+        self.last_trace["sections"] = [p.split("\n", 1)[0] for p in parts]
+        self.last_trace["context_chars"] = len(context)
+        self.last_trace["elapsed_ms"] = round((time.perf_counter() - t0) * 1000, 2)
+        return context
 
-    def _parse(self, question: str, qdate: datetime) -> dict:
-        prompt = PARSE_PROMPT_V2.format(cats="|".join(CATEGORIES),
-                                        date=qdate.strftime("%Y-%m-%d"),
-                                        question=question)
+    def _parse(self, question: str, qdate: datetime, zh: bool = False) -> dict:
+        tpl = PARSE_PROMPT_V2_ZH if zh else PARSE_PROMPT_V2
+        prompt = tpl.format(cats="|".join(CATEGORIES),
+                            date=qdate.strftime("%Y-%m-%d"),
+                            question=question)
         resp = self.client.chat(prompt, max_tokens=300)
         obj = extract_json_object(resp) or {}
         intent = _clean(obj.get("intent"), _INTENTS) or "unknown"
@@ -763,6 +891,16 @@ class FusionMemory:
             slots[sid].sort(key=lambda e: (e.valid_from or datetime.min, e.tx_seq))
         return slots
 
+    def _trace_events(self, cand: list, limit: int = 30) -> list[dict]:
+        """把候选事件压成可 JSON 序列化的归因记录，不携带 Event 对象。"""
+        return [{
+            "date": _fmt_d(e.valid_from or e.stated_at),
+            "score": round(float(s), 3),
+            "fact": _clip(e.fact or e.value, 220),
+            "status": e.status,
+            "slot_id": e.slot_id,
+        } for e, s in cand[:limit]]
+
     def _execute(self, sq: dict, qdate: datetime) -> tuple[str, dict]:
         intent = sq["intent"]
         if intent == "unknown":
@@ -778,9 +916,10 @@ class FusionMemory:
                 if intent in ("fact_current", "fact_at_time", "lookup"):
                     intent = "list_events"
 
-        meta: dict = {"matched": 0}
-        lines: list[str] = []
         wtxt = f"{_fmt_d(window[0])}..{_fmt_d(window[1])}" if window else "all time"
+        meta: dict = {"matched": 0, "intent": intent, "topic": topic,
+                      "window": wtxt, "trace_candidates": []}
+        lines: list[str] = []
 
         if intent in ("agg_count", "agg_sum", "list_events"):
             cand = self._event_candidates(topic, sq, window)
@@ -798,6 +937,7 @@ class FusionMemory:
                 later_ctx = [(e, s) for e, s in raw_cand
                              if (e.valid_from or e.stated_at or datetime.max) > window[1]][:5]
             meta["matched"] = len(cand)
+            meta["trace_candidates"] = self._trace_events(cand)
             if not cand:
                 lines.append(f'Query: {intent}  topic="{topic}"  window={wtxt}\n'
                              "No matching facts in memory.")
@@ -832,6 +972,7 @@ class FusionMemory:
                     cand_main = cand
                     cand = cand_main + extras
                     meta["one_hop"] = len(extras)
+                    meta["trace_one_hop"] = self._trace_events(extras)
                     lines.append(
                         f"ONE-HOP RELATED ({len(extras)}) — pulled in by shared "
                         "rare entities with the top candidates; include each "
@@ -853,8 +994,9 @@ class FusionMemory:
             if intent == "agg_count":
                 lines.append(f"TOTAL MATCHED = {len(cand)} — this is a RECALL count, "
                              "not the answer: it may include items that do not truly "
-                             "match the question. Review each event above, exclude the "
-                             "irrelevant ones, and state the final count explicitly.")
+                             "match the question.")
+                lines.append("Review each event above, exclude the irrelevant "
+                             "ones, and state the final count explicitly.")
                 meta["computed"] = len(cand)
             elif intent == "agg_sum":
                 tot, missing = 0.0, 0
@@ -903,6 +1045,8 @@ class FusionMemory:
             # 跨槽位算术注记：总量与增量可能被分进不同槽位（分类器方差），
             # 在话题 BM25 匹配的事件并集上再算一遍
             top_evs = [e for e, _ in self._event_candidates(topic, sq, None)[:20]]
+            meta["trace_candidates"] = self._trace_events(
+                [(e, 0.0) for e in top_evs])
             note = (self._arithmetic_note_events(top_evs)
                     if self.enable_arith else None)
             if note and not any("ARITHMETIC NOTE" in ch for ch in chains[:2]):
@@ -931,6 +1075,7 @@ class FusionMemory:
             # 确定性执行：对候选事件逐个抽数值，按数值降序输出，首项即 argmax。
             cand = self._event_candidates(topic, sq, window)
             meta["matched"] = len(cand)
+            meta["trace_candidates"] = self._trace_events(cand)
             scored = []
             for e, s in cand[:20]:
                 n = _first_number(e.fact)
@@ -963,6 +1108,7 @@ class FusionMemory:
         else:  # lookup
             cand = self._event_candidates(topic, sq, None)
             meta["matched"] = len(cand)
+            meta["trace_candidates"] = self._trace_events(cand)
             lines.append(f'Query: lookup  topic="{topic}"')
             for e, s in cand[:10]:
                 lines.append(f"  {_fmt_d(e.valid_from or e.stated_at)} | "

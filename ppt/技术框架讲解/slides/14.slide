@@ -1,0 +1,90 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>S 档扩展：实体倒排与一跳召回</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>SCALE / 14</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <svg width={660} height={430} viewBox='0 0 660 430' style={{ position: 'absolute', left: 56, top: 132 }}>
+    <text x='0' y='14' fill='#6B7C96' fontSize='11' fontFamily='Consolas'>SEED EVENTS (TOP-5)</text>
+    <text x='262' y='14' fill='#6B7C96' fontSize='11' fontFamily='Consolas'>RARE ENTITIES (df≤8)</text>
+    <text x='470' y='14' fill='#6B7C96' fontSize='11' fontFamily='Consolas'>CO-OCCURRING</text>
+
+    {[
+      ['3 cucumber plants', 34],
+      ['quarantine tank', 118],
+      ['film festival #4', 202],
+    ].map(([t, y]) => (
+      <g key={t}>
+        <rect x='0' y={y} width='220' height='52' rx='6' fill='#121E33' stroke='#22314A' strokeWidth='1' />
+        <text x='12' y={y + 31} fill='#C9D6E8' fontSize='13' fontFamily='Microsoft YaHei'>{t}</text>
+      </g>
+    ))}
+
+    <line x1='220' y1='60' x2='262' y2='60' stroke='#38BDF8' strokeWidth='1' opacity='0.5' />
+    <line x1='220' y1='144' x2='262' y2='144' stroke='#38BDF8' strokeWidth='1' opacity='0.5' />
+    <line x1='220' y1='228' x2='262' y2='228' stroke='#38BDF8' strokeWidth='1' opacity='0.5' />
+
+    {[
+      ['cucumber　df=3', 44],
+      ['tank　df=5', 128],
+      ['festival　df=7', 212],
+    ].map(([t, y]) => (
+      <g key={t}>
+        <rect x='262' y={y} width='176' height='32' rx='6' fill='rgba(52,211,153,0.10)' stroke='#34D399' strokeWidth='1' />
+        <text x='274' y={y + 21} fill='#34D399' fontSize='12' fontFamily='Consolas'>{t}</text>
+      </g>
+    ))}
+
+    <line x1='438' y1='60' x2='470' y2='60' stroke='#34D399' strokeWidth='1' opacity='0.5' />
+    <line x1='438' y1='144' x2='470' y2='144' stroke='#34D399' strokeWidth='1' opacity='0.5' />
+    <line x1='438' y1='228' x2='470' y2='228' stroke='#34D399' strokeWidth='1' opacity='0.5' />
+
+    <rect x='470' y='30' width='190' height='52' rx='6' fill='#121E33' stroke='#38BDF8' strokeWidth='1' strokeDasharray='4 3' />
+    <text x='482' y='52' fill='#E6EDF7' fontSize='12' fontFamily='Microsoft YaHei'>tomato planting</text>
+    <text x='482' y='70' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>ONE-HOP</text>
+
+    <rect x='470' y='114' width='190' height='52' rx='6' fill='#121E33' stroke='#38BDF8' strokeWidth='1' strokeDasharray='4 3' />
+    <text x='482' y='136' fill='#E6EDF7' fontSize='12' fontFamily='Microsoft YaHei'>new 20-gal tank</text>
+    <text x='482' y='154' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>ONE-HOP</text>
+
+    <rect x='470' y='198' width='190' height='52' rx='6' fill='#121E33' stroke='#38BDF8' strokeWidth='1' strokeDasharray='4 3' />
+    <text x='482' y='220' fill='#E6EDF7' fontSize='12' fontFamily='Microsoft YaHei'>Portland Film Fest.</text>
+    <text x='482' y='238' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>ONE-HOP</text>
+
+    <text x='0' y='286' fill='#6B7C96' fontSize='11' fontFamily='Consolas'>GATE</text>
+    <rect x='0' y='296' width='660' height='54' rx='6' fill='rgba(251,191,36,0.06)' stroke='#22314A' strokeWidth='1' />
+    <text x='14' y='318' fill='#FBBF24' fontSize='12' fontFamily='Consolas'>store &gt; 100 events</text>
+    <text x='14' y='338' fill='#9FB0C8' fontSize='12' fontFamily='Microsoft YaHei'>Oracle 每题约 33 条 → 门控关闭，生产口径零行为变化</text>
+
+    <text x='0' y='378' fill='#6B7C96' fontSize='11' fontFamily='Consolas'>ROUTE WHITELIST</text>
+    <text x='0' y='400' fill='#34D399' fontSize='12' fontFamily='Consolas'>agg_count / agg_sum / fact_current</text>
+    <text x='0' y='420' fill='#8B97A8' fontSize='11' fontFamily='Microsoft YaHei'>list_events 实测纯亏（污染时间线排序）→ 已移除</text>
+  </svg>
+
+  <Box style={{ position: 'absolute', left: 748, top: 132, width: 476, height: 488, background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 22 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#38BDF8', marginBottom: 10 }}>WHY IT WORKS</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 14 }}>事件在库里，BM25 词面匹配找不到</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#9FB0C8', lineHeight: 1.75, marginBottom: 16 }}>
+      「我一共种了几种蔬菜」与「cucumber」词面重叠不足；实体倒排用稀有词把同集合成员连起来，补进独立段落，不计入主计数。
+    </Text>
+    <Box style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginBottom: 4 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 44, fontWeight: 'bold', color: '#34D399', lineHeight: 1 }}>+16.7pp</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#9FB0C8', marginBottom: 4 }}>S 档（72.92→89.58）</Text>
+    </Box>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#6B7C96', marginBottom: 16 }}>
+      配对 8 修 / 0 坏；四题型满分，MS 9/12
+    </Text>
+    <Box style={{ borderTop: '1px solid #22314A', paddingTop: 14 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.2, color: '#FBBF24', marginBottom: 8 }}>FORGETTING / lifecycle.py</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#C9D6E8', lineHeight: 1.75 }}>
+        TTL / 容量 / 历史压缩三策略；软归档——退出当前召回，但 value_at(t) 仍可审计。默认关闭，评测零影响。
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>14 / 16</Text>
+  </Box>
+</Slide>

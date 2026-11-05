@@ -1,0 +1,91 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>架构：双层记忆与四个 LLM 边界</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 05</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <svg width={700} height={470} viewBox='0 0 700 470' style={{ position: 'absolute', left: 64, top: 108 }}>
+    <text x='0' y='12' fill='#8B97A8' fontSize='11' fontFamily='Georgia' letterSpacing='1.2'>WRITE</text>
+    <text x='252' y='12' fill='#8B97A8' fontSize='11' fontFamily='Georgia' letterSpacing='1.2'>MEMORY</text>
+    <text x='512' y='12' fill='#8B97A8' fontSize='11' fontFamily='Georgia' letterSpacing='1.2'>READ</text>
+
+    <rect x='0' y='30' width='196' height='50' rx='5' fill='#E8EFF8' stroke='#1E4FA8' strokeWidth='1.2' />
+    <text x='12' y='51' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>逐轮事实抽取</text>
+    <text x='12' y='69' fill='#1E4FA8' fontSize='10' fontFamily='Georgia'>LLM ①</text>
+
+    <rect x='0' y='100' width='196' height='50' rx='5' fill='#FFFFFF' stroke='#D6DCE5' strokeWidth='1.2' />
+    <text x='12' y='121' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>时间规则解析</text>
+    <text x='12' y='139' fill='#8B97A8' fontSize='10' fontFamily='Georgia'>CODE</text>
+
+    <rect x='0' y='170' width='196' height='50' rx='5' fill='#E8EFF8' stroke='#1E4FA8' strokeWidth='1.2' />
+    <text x='12' y='191' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>关系分类</text>
+    <text x='12' y='209' fill='#1E4FA8' fontSize='10' fontFamily='Georgia'>LLM ②</text>
+
+    <rect x='0' y='240' width='196' height='50' rx='5' fill='#FFFFFF' stroke='#D6DCE5' strokeWidth='1.2' />
+    <text x='12' y='261' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>双时间轴执行器</text>
+    <text x='12' y='279' fill='#8B97A8' fontSize='10' fontFamily='Georgia'>CODE</text>
+
+    <line x1='98' y1='80' x2='98' y2='100' stroke='#D6DCE5' strokeWidth='1' />
+    <line x1='98' y1='150' x2='98' y2='170' stroke='#D6DCE5' strokeWidth='1' />
+    <line x1='98' y1='220' x2='98' y2='240' stroke='#D6DCE5' strokeWidth='1' />
+    <line x1='196' y1='265' x2='246' y2='265' stroke='#D6DCE5' strokeWidth='1' />
+
+    <rect x='246' y='92' width='212' height='96' rx='5' fill='#FFFFFF' stroke='#1E4FA8' strokeWidth='1.2' />
+    <text x='258' y='116' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>事实层</text>
+    <text x='258' y='138' fill='#4A5568' fontSize='12' fontFamily='Microsoft YaHei'>Event：原句 + 双时间轴</text>
+    <text x='258' y='156' fill='#4A5568' fontSize='12' fontFamily='Microsoft YaHei'>Slot：版本链</text>
+    <text x='258' y='176' fill='#8B97A8' fontSize='10' fontFamily='Georgia'>COMPRESSED</text>
+
+    <rect x='246' y='236' width='212' height='96' rx='5' fill='#FFFFFF' stroke='#D6DCE5' strokeWidth='1.2' />
+    <text x='258' y='260' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>证据层</text>
+    <text x='258' y='282' fill='#4A5568' fontSize='12' fontFamily='Microsoft YaHei'>对话轮次原文</text>
+    <text x='258' y='300' fill='#4A5568' fontSize='12' fontFamily='Microsoft YaHei'>召回地板</text>
+    <text x='258' y='320' fill='#8B97A8' fontSize='10' fontFamily='Georgia'>VERBATIM</text>
+
+    <rect x='512' y='30' width='188' height='50' rx='5' fill='#E8EFF8' stroke='#1E4FA8' strokeWidth='1.2' />
+    <text x='524' y='51' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>问题解析</text>
+    <text x='524' y='69' fill='#1E4FA8' fontSize='10' fontFamily='Georgia'>LLM ③</text>
+
+    <rect x='512' y='100' width='188' height='50' rx='5' fill='#FFFFFF' stroke='#D6DCE5' strokeWidth='1.2' />
+    <text x='524' y='121' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>确定性执行</text>
+    <text x='524' y='139' fill='#8B97A8' fontSize='10' fontFamily='Georgia'>CODE</text>
+
+    <rect x='512' y='170' width='188' height='50' rx='5' fill='#FFFFFF' stroke='#D6DCE5' strokeWidth='1.2' />
+    <text x='524' y='191' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>BM25 + 守卫</text>
+    <text x='524' y='209' fill='#8B97A8' fontSize='10' fontFamily='Georgia'>CODE</text>
+
+    <rect x='512' y='240' width='188' height='50' rx='5' fill='#E8EFF8' stroke='#1E4FA8' strokeWidth='1.2' />
+    <text x='524' y='261' fill='#1A2230' fontSize='14' fontFamily='Microsoft YaHei'>组装 + 作答</text>
+    <text x='524' y='279' fill='#1E4FA8' fontSize='10' fontFamily='Georgia'>LLM ④</text>
+
+    <line x1='606' y1='80' x2='606' y2='100' stroke='#D6DCE5' strokeWidth='1' />
+    <line x1='606' y1='150' x2='606' y2='170' stroke='#D6DCE5' strokeWidth='1' />
+    <line x1='606' y1='220' x2='606' y2='240' stroke='#D6DCE5' strokeWidth='1' />
+    <line x1='458' y1='140' x2='512' y2='140' stroke='#D6DCE5' strokeWidth='1' strokeDasharray='4 4' />
+    <line x1='458' y1='284' x2='512' y2='205' stroke='#D6DCE5' strokeWidth='1' strokeDasharray='4 4' />
+
+    <rect x='0' y='336' width='700' height='74' rx='5' fill='#F7F9FC' stroke='#D6DCE5' strokeWidth='1' />
+    <text x='14' y='358' fill='#1E4FA8' fontSize='11' fontFamily='Georgia' letterSpacing='1.2'>DESIGN RULE</text>
+    <text x='14' y='380' fill='#1A2230' fontSize='13' fontFamily='Microsoft YaHei'>LLM 只做四件事：抽取、判断关系、解析意图、生成语言。</text>
+    <text x='14' y='398' fill='#4A5568' fontSize='13' fontFamily='Microsoft YaHei'>时间几何、计数、排序、拒答判定与渲染全部是确定性代码。</text>
+
+    <text x='0' y='438' fill='#8B97A8' fontSize='11' fontFamily='Georgia'>BLUE = LLM BOUNDARY　　GREY = DETERMINISTIC</text>
+  </svg>
+
+  <Box style={{ position: 'absolute', left: 792, top: 108, width: 424, flexDirection: 'column', gap: 14 }}>
+    {[
+      ['01', '双层记忆', '事实层负责可计算，证据层负责不丢失。两层同时进入上下文。'],
+      ['02', '四个边界', '其余环节没有任何模型调用——每一步可单测、可复现、可回放。'],
+      ['03', '可溯源', '每条事实持有证据指针，结论可以回查到原始轮次。'],
+    ].map(([n, t, d]) => (
+      <Box key={n} style={{ background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 6, padding: 18 }}>
+        <Text style={{ fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8', marginBottom: 6 }}>{n}</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 19, fontWeight: 'bold', color: '#1A2230', marginBottom: 6 }}>{t}</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#4A5568', lineHeight: 1.7 }}>{d}</Text>
+      </Box>
+    ))}
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>05 / 17</Text>
+</Slide>

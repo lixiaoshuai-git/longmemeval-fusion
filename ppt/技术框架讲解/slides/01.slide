@@ -1,0 +1,52 @@
+<Slide style={{ width: 1280, height: 720, background: 'linear-gradient(135deg, #0B1220 0%, #10203A 100%)', padding: 0, position: 'relative', overflow: 'hidden' }}>
+  <svg width={1280} height={720} viewBox='0 0 1280 720' style={{ position: 'absolute', top: 0, left: 0 }}>
+    {Array.from({ length: 15 }).map((_, i) => (
+      <line key={`v${i}`} x1={i * 88 + 40} y1={0} x2={i * 88 + 40} y2={720} stroke='#38BDF8' strokeWidth='1' opacity='0.045' />
+    ))}
+    {Array.from({ length: 8 }).map((_, i) => (
+      <line key={`h${i}`} x1={0} y1={i * 88 + 40} x2={1280} y2={i * 88 + 40} stroke='#38BDF8' strokeWidth='1' opacity='0.045' />
+    ))}
+    <circle cx='1050' cy='250' r='150' fill='none' stroke='#38BDF8' strokeWidth='1' opacity='0.12' />
+    <circle cx='1050' cy='250' r='96' fill='none' stroke='#38BDF8' strokeWidth='1' opacity='0.10' strokeDasharray='4 8' />
+    <circle cx='1050' cy='250' r='6' fill='#34D399' />
+    <line x1='1050' y1='100' x2='1050' y2='400' stroke='#38BDF8' strokeWidth='1' opacity='0.10' />
+    <line x1='900' y1='250' x2='1200' y2='250' stroke='#38BDF8' strokeWidth='1' opacity='0.10' />
+  </svg>
+
+  <Box style={{ position: 'absolute', left: 72, top: 96, width: 880 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 13, letterSpacing: 2.4, color: '#38BDF8', marginBottom: 28 }}>
+      LONGMEMEVAL / MEMORY SYSTEM / TECHNICAL FRAMEWORK
+    </Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 66, fontWeight: 'bold', color: '#E6EDF7', lineHeight: 1.18 }}>
+      把对话历史
+    </Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 66, fontWeight: 'bold', color: '#38BDF8', lineHeight: 1.18, marginBottom: 26 }}>
+      编译成可计算的记忆
+    </Text>
+    <Box style={{ width: 520, height: 1, background: '#22314A', marginBottom: 22 }} />
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 22, color: '#9FB0C8', lineHeight: 1.6, width: 760 }}>
+      fusion：双层记忆 + 四个 LLM 边界 + 全确定性算子
+      <br />
+      <span style={{ color: '#6B7C96', fontSize: 18 }}>Oracle 86.80 ± 0.72　/　S 档 89.58%（n=48）　/　检索 p95 11.3ms</span>
+    </Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 72, bottom: 54, flexDirection: 'row', gap: 48 }}>
+    <Box>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, color: '#6B7C96', letterSpacing: 1.4 }}>VERSION</Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 15, color: '#9FB0C8', marginTop: 6 }}>v3.8 / v3.9.1</Text>
+    </Box>
+    <Box>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, color: '#6B7C96', letterSpacing: 1.4 }}>DATE</Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 15, color: '#9FB0C8', marginTop: 6 }}>2026.10</Text>
+    </Box>
+    <Box>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, color: '#6B7C96', letterSpacing: 1.4 }}>MODE</Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 15, color: '#34D399', marginTop: 6 }}>DETERMINISTIC CORE</Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', right: 72, top: 560, alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, color: '#6B7C96', letterSpacing: 1.4 }}>ALL NUMBERS: MULTI-RUN MEAN ± SD</Text>
+  </Box>
+</Slide>

@@ -1,0 +1,57 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>守卫层：两类错误，三条确定性规则</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>GUARDS / 13</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <Box style={{ position: 'absolute', left: 56, top: 132, width: 636 }}>
+    {[
+      ['01', 'SCOPE NOTE', '拒答措辞协议', '解析层 entities 全未命中 → 要求以「The information provided is not enough. You did not mention …」作答，禁止用 0 或数字收尾。', '#38BDF8'],
+      ['02', 'PREMISE CHECK', '专名假前提校验', '问题中的数字/连字符/非句首大写专名在 user 发言零出现 → 列出可疑词 + 最近邻用户表述 + 「勿按假前提作答」。', '#FBBF24'],
+      ['03', 'RECOMMENDATION HINT', '建议形态豁免', '18 项建议类关键词（should I / what do you think / whether to…）→ 改为基于已陈述偏好推荐，不拒答。', '#34D399'],
+    ].map(([n, name, sub, desc, color]) => (
+      <Box key={n} style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 18, marginBottom: 12 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: color }}>{n}</Text>
+          <Text style={{ fontFamily: "'Consolas'", fontSize: 15, fontWeight: 'bold', color: '#E6EDF7' }}>{name}</Text>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#6B7C96' }}>{sub}</Text>
+        </Box>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#9FB0C8', lineHeight: 1.65 }}>{desc}</Text>
+      </Box>
+    ))}
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, color: '#6B7C96' }}>ALL THREE ARE PLAIN PYTHON — NO LLM CALL, NO PROMPT</Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 718, top: 132, width: 506, height: 488, background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 22 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#34D399', marginBottom: 12 }}>MEASURED EFFECT</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 16 }}>守卫层的实测收益</Text>
+    <Box style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12, marginBottom: 4 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 52, fontWeight: 'bold', color: '#34D399', lineHeight: 1 }}>57→80%</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#9FB0C8', marginBottom: 6 }}>拒答子集</Text>
+    </Box>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#6B7C96', marginBottom: 18 }}>
+      _abs 17/30 → 24/30，三轮逐题不差（确定性规则）
+    </Text>
+    <Box style={{ borderLeft: '2px solid #FBBF24', paddingLeft: 12, marginBottom: 16 }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#C9D6E8', lineHeight: 1.65 }}>
+        四道触发题全部翻对：Shinjuku / 30-gallon / Pete / Porsche——问题里的专名在用户发言里从未出现。
+      </Text>
+    </Box>
+    <Box style={{ borderLeft: '2px solid #38BDF8', paddingLeft: 12, marginBottom: 16 }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#C9D6E8', lineHeight: 1.65 }}>
+        SS-P 81.11 → 90.00：偏好分段 + 建议形态豁免修复「推荐类问句被拒答」。
+      </Text>
+    </Box>
+    <Box style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #22314A' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#9FB0C8', lineHeight: 1.65 }}>
+        语义审计：判错集合中约 64% 是 judge 误判，拒答措辞协议直接消除了其中一类。
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>13 / 16</Text>
+  </Box>
+</Slide>

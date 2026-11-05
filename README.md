@@ -101,7 +101,7 @@ hindsight 强在 KU（Reflect 层 94.87），弱在 SS-A/TR，互相印证机制
 ## 运行方法
 
 依赖：Python 3.10+，`pip install -r requirements.txt`（openai / tiktoken / backoff / numpy / tqdm；judge 另需官方仓库依赖）。
-自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（39 例，纯离线，<1s；CI 见 `.github/workflows/tests.yml`）。
+自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（55 例，纯离线，<2s；CI 见 `.github/workflows/tests.yml`）。
 
 1. 配置 `.env`（参考 `.env.example`）：OpenAI 兼容接口的 `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL`。
 2. 数据：LongMemEval 官方仓库（github.com/xiaowu0162/LongMemEval），
@@ -149,20 +149,25 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | 路径 | 说明 |
 |---|---|
 | `memory_sys/fusion.py` | **核心**：fusion 记忆策略（写入期对齐 + 确定性执行器 + BM25 召回 + 近逐字证据层 + 守卫层 + LEDGER/偏好分段 + S 档 one-hop） |
-| `memory_sys/bm25.py` | 纯 Python BM25 与分词（无第三方依赖） |
+| `memory_sys/bm25.py` | 纯 Python BM25 与分词（无第三方依赖；英文原逻辑 + 中文 OOD 单字/双字兜底） |
 | `memory_sys/schema.py` | 数据模型：Event（五元组 + fact/slot_id）、Slot 版本链、MemoryStore |
 | `memory_sys/lifecycle.py` | 遗忘/生命周期：TTL / 容量 / 历史压缩，软归档（独立模块，零核心耦合） |
 | `memory_sys/llm_io.py` | LLM 边界提示词：抽取 / 关系分类 / 解析 + 稳健 JSON 解析（JSONL 兜底） |
 | `memory_sys/structured.py` | v1 结构化策略（留作消融对照） |
 | `cli.py` | **交互入口**：多轮跨会话 REPL（load / ingest / ask / context / stats / forget） |
-| `tests/` | 39 例离线单测（时间解析/执行器/BM25/遗忘/守卫）+ CLI 手工用例（17 例全过） |
-| `scripts/lme_core.py` | 数据加载（会话强制按时间排序）、LLM 客户端（思考开关）、官方提示词模板 |
+| `tests/` | 55 例离线单测（时间解析/执行器/BM25/遗忘/守卫/轨迹/调用可靠性/配对报告/中文 OOD/上下文基线）+ CLI 手工用例（17 例全过） |
+| `scripts/lme_core.py` | 数据加载（会话强制按时间排序）、LLM 客户端（思考开关、错误分类重试）、官方提示词模板 |
 | `scripts/memory.py` | 策略注册与接口（full-context / user-turn-only / structured / fusion） |
-| `scripts/run_eval.py` | 评测流水线：分层抽样、断点续跑、缓存落盘 |
-| `scripts/judge.py` | 评分（直接 import 官方 `get_anscheck_prompt`，不重写提示词；需官方仓库） |
+| `scripts/run_eval.py` | 评测流水线：分层抽样、断点续跑、缓存落盘、`--trace` 执行轨迹、`--ids` 子集 |
+| `scripts/replay_trace.py` | 零 LLM 回放器：用既有缓存重建记忆与查询轨迹，cache miss 立即报错 |
+| `scripts/pair_report.py` | 配对报告：修好/修坏题号、分题型变化、子集替换后的预计全量分数 |
+| `scripts/regress.py` | 上下文回归基线：500 题确定性上下文/计划/候选固化成指纹，`--check` 发现漂移即非零退出；`--dump-cache` 生成精简夹具，`--drop-parse` 生成去掉解析缓存的副本用于验证读侧改动 |
+| `scripts/check_zh_ood.py` | 中文 OOD 小样本确定性判定（expected_any 子串匹配，不调 LLM judge） |
+| `tests/fixtures/zh_ood_e2e.json` | 7 题中文端到端样本（事实/偏好/更新/时间/聚合/助手事实/拒答） |
+| `scripts/judge.py` | 评分（直接 import 官方 `get_anscheck_prompt`，不重写提示词；judge 错误单独标记） |
 | `scripts/build_report.py` | 真实水平报告生成器（从 summary.json 直注数据，零手抄数字） |
 | `docs/layer2-data-structure.md` | 设计文档：三层 schema、四类流程、v1 失败取证（§8）、v2 实现与验证（§9） |
-| `docs/iteration-log.md` | 全部迭代实验日志（v1→v3.9.1，14 个闭环：5 次回滚 + 2 次标定否决） |
+| `docs/iteration-log.md` | 全部迭代实验日志（v1→v3.9.1；`infra-2026-11` 为基础设施轮次，含失败与回滚记录） |
 | `docs/evaluation-report.md` | 正式评估报告：多轮主结果、消融矩阵、检索延迟、成本、方差披露 |
 | `docs/defense-outline.md` | 答辩材料：演示流程、关键数据速查、Q&A 预案 |
 | `docs/project-truth-report.html` | 真实水平综合可视化报告（12 数据集 / 27 次运行） |

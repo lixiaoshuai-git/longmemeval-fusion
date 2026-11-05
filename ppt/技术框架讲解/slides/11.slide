@@ -1,0 +1,56 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>查询期：从问题到九段上下文</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>READ PATH / 11</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <Box style={{ position: 'absolute', left: 56, top: 132, width: 292, height: 488 }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 24, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 16 }}>只有一次解析<br />其余全部代码</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#9FB0C8', lineHeight: 1.75, marginBottom: 20 }}>
+      解析层输出查询计划：意图、检索短语、类别、时间窗口、预设实体。
+      之后每一步都是确定性代码，直到最后交给 reader 作答。
+    </Text>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 8, padding: 16 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.2, color: '#38BDF8', marginBottom: 8 }}>8 INTENTS</Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#9FB0C8', lineHeight: 1.9 }}>
+        agg_count / agg_sum
+        <br />
+        fact_current / fact_at_time
+        <br />
+        list_events / argmax
+        <br />
+        lookup / unknown
+      </Text>
+    </Box>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#6B7C96', lineHeight: 1.6, marginTop: 14 }}>
+      上下文总预算约 2.3k token/题——比全上下文压缩一个数量级。
+    </Text>
+  </Box>
+
+  <svg width={816} height={492} viewBox='0 0 816 492' style={{ position: 'absolute', left: 374, top: 128 }}>
+    {[
+      ['01', '问题解析：输出结构化查询计划', 'LLM ③', '#38BDF8'],
+      ['02', 'before 预检：定位锚事件，窗口改 [远古, X)', 'CODE', '#34D399'],
+      ['03', '确定性执行：计数/求和/版本链/最值/序数', 'CODE', '#34D399'],
+      ['04', 'BM25 召回：top-30 + 类目辅路合并', 'CODE', '#34D399'],
+      ['05', '近逐字证据：lookup/unknown 引用源轮次全文', 'CODE', '#34D399'],
+      ['06', '守卫层：拒答协议 / 假前提 / 推荐豁免', 'CODE', '#34D399'],
+      ['07', '渲染九段上下文 → reader 作答', 'LLM ④', '#38BDF8'],
+    ].map(([n, label, tag, color], i) => (
+      <g key={n}>
+        <rect x='0' y={i * 68 + 6} width='816' height='50' rx='7' fill='#121E33' stroke='#22314A' strokeWidth='1' />
+        <text x='16' y={i * 68 + 36} fill={color} fontSize='13' fontFamily='Consolas'>{n}</text>
+        <text x='58' y={i * 68 + 36} fill='#E6EDF7' fontSize='14' fontFamily='Microsoft YaHei'>{label}</text>
+        <text x='742' y={i * 68 + 36} fill={color} fontSize='10' fontFamily='Consolas'>{tag}</text>
+        {i < 6 && <line x1='30' y1={i * 68 + 56} x2='30' y2={i * 68 + 74} stroke='#22314A' strokeWidth='1' />}
+      </g>
+    ))}
+    <text x='0' y='486' fill='#6B7C96' fontSize='11' fontFamily='Consolas'>CONTEXT = DETERMINISTIC RESULT + EXCERPTS + VERBATIM + LEDGER + PREFS + FACTS + FLOOR + GUARDS</text>
+  </svg>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>11 / 16</Text>
+  </Box>
+</Slide>

@@ -1,0 +1,161 @@
+{
+ "meta": {
+  "n": 15,
+  "cache": "fusfull38-fusion-cache.json",
+  "created": "2026-11-05 14:27",
+  "ids": 15,
+  "note": "确定性上下文指纹；不含耗时字段"
+ },
+ "questions": {
+  "gpt4_2655b836": {
+   "type": "temporal-reasoning",
+   "plan": "5bc66db20560",
+   "ctx": "9102c2e6191b",
+   "sections": "8707e6ad0391",
+   "cand": "1ca56fc6b99f",
+   "one_hop": 0,
+   "matched": 14,
+   "chars": 15046
+  },
+  "bbf86515": {
+   "type": "temporal-reasoning",
+   "plan": "9dcd207a80f1",
+   "ctx": "38ed969d5c7e",
+   "sections": "8707e6ad0391",
+   "cand": "e65520e21e6a",
+   "one_hop": 0,
+   "matched": 4,
+   "chars": 11274
+  },
+  "a3838d2b": {
+   "type": "temporal-reasoning",
+   "plan": "256315a17ac1",
+   "ctx": "357c3e1950d7",
+   "sections": "cab61077edc5",
+   "cand": "70338a890ca5",
+   "one_hop": 0,
+   "matched": 15,
+   "chars": 21787
+  },
+  "b9cfe692": {
+   "type": "temporal-reasoning",
+   "plan": "2b6f37b5fa9e",
+   "ctx": "89353d72abc3",
+   "sections": "c47c0d6652f4",
+   "cand": "eba3be830001",
+   "one_hop": 0,
+   "matched": 14,
+   "chars": 15644
+  },
+  "gpt4_9a159967": {
+   "type": "temporal-reasoning",
+   "plan": "c23004af4a35",
+   "ctx": "b6090d0e730c",
+   "sections": "cab61077edc5",
+   "cand": "dd3a5a06ded2",
+   "one_hop": 0,
+   "matched": 27,
+   "chars": 11835
+  },
+  "982b5123_abs": {
+   "type": "temporal-reasoning",
+   "plan": "c4eba509f32f",
+   "ctx": "8b118be05fe0",
+   "sections": "f46db1eab0a0",
+   "cand": "16c9a6306da8",
+   "one_hop": 0,
+   "matched": 2,
+   "chars": 10173
+  },
+  "6d550036": {
+   "type": "multi-session",
+   "plan": "4f4af684e0b9",
+   "ctx": "2b80d45d1d38",
+   "sections": "cab61077edc5",
+   "cand": "b856d01b1054",
+   "one_hop": 0,
+   "matched": 1,
+   "chars": 16497
+  },
+  "gpt4_59c863d7": {
+   "type": "multi-session",
+   "plan": "b79cd1af67a4",
+   "ctx": "44b040765bac",
+   "sections": "cab61077edc5",
+   "cand": "97d170e1550e",
+   "one_hop": 0,
+   "matched": 0,
+   "chars": 14250
+  },
+  "46a3abf7": {
+   "type": "multi-session",
+   "plan": "788768695807",
+   "ctx": "2032e8290245",
+   "sections": "8707e6ad0391",
+   "cand": "789c80e0a9c9",
+   "one_hop": 0,
+   "matched": 2,
+   "chars": 11462
+  },
+  "6a1eabeb": {
+   "type": "knowledge-update",
+   "plan": "64d0cff29ee4",
+   "ctx": "1e4333d72e3e",
+   "sections": "8707e6ad0391",
+   "cand": "dd28df13f968",
+   "one_hop": 0,
+   "matched": 2,
+   "chars": 8220
+  },
+  "8a2466db": {
+   "type": "single-session-preference",
+   "plan": "a2db67ad2c70",
+   "ctx": "1213a1552061",
+   "sections": "f2cc1a6ef872",
+   "cand": "e4562ce1710e",
+   "one_hop": 0,
+   "matched": 4,
+   "chars": 5245
+  },
+  "7161e7e2": {
+   "type": "single-session-assistant",
+   "plan": "009cbf5f335d",
+   "ctx": "9f171397adc2",
+   "sections": "9e13da3ec5aa",
+   "cand": "8aa9eead0f7d",
+   "one_hop": 0,
+   "matched": 7,
+   "chars": 5294
+  },
+  "e47becba": {
+   "type": "single-session-user",
+   "plan": "a4efbb29bbc3",
+   "ctx": "c17439f849d0",
+   "sections": "1d4c29f0e179",
+   "cand": "e2bf6ca80737",
+   "one_hop": 0,
+   "matched": 1,
+   "chars": 4030
+  },
+  "gpt4_a1b77f9c": {
+   "type": "temporal-reasoning",
+   "plan": "563c5b2f47af",
+   "ctx": "8ff88b46c415",
+   "sections": "8707e6ad0391",
+   "cand": "1d22302db71e",
+   "one_hop": 3,
+   "matched": 19,
+   "chars": 22819
+  },
+  "ba358f49": {
+   "type": "multi-session",
+   "plan": "3509937f2ffe",
+   "ctx": "dd29ecf524b0",
+   "sections": "151dfe4c2ced",
+   "cand": "97d170e1550e",
+   "one_hop": 0,
+   "matched": 0,
+   "chars": 8720
+  }
+ }
+}

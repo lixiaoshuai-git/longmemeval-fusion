@@ -70,7 +70,7 @@ def stratified_sample(insts, n, seed=42):
 
 
 def answer_one(inst, client: LLMClient, strategy: str, mem_kwargs: dict,
-               cot: bool, max_tokens: int) -> dict:
+               cot: bool, max_tokens: int, trace: bool = False) -> dict:
     mem = build_memory(strategy, **mem_kwargs)
     mem.reset()
     for sess, date in zip(inst.sessions, inst.session_dates):
@@ -82,7 +82,7 @@ def answer_one(inst, client: LLMClient, strategy: str, mem_kwargs: dict,
     hypothesis = client.chat(prompt, max_tokens=max_tokens)
     dt = time.time() - t0
 
-    return {
+    out = {
         "question_id": inst.question_id,
         "hypothesis": hypothesis,
         "question_type": inst.question_type,
@@ -94,6 +94,9 @@ def answer_one(inst, client: LLMClient, strategy: str, mem_kwargs: dict,
         "mem_meta": getattr(mem, "last_meta", None),
         "mem_stats": mem.stats() if hasattr(mem, "stats") else {},
     }
+    if trace:
+        out["mem_trace"] = getattr(mem, "last_trace", None)
+    return out
 
 
 def main() -> None:
@@ -112,6 +115,10 @@ def main() -> None:
     ap.add_argument("--cot", action="store_true", help="使用官方 CoT 提示词模板")
     ap.add_argument("--max-tokens", type=int, default=500)
     ap.add_argument("--useronly", action="store_true", help="只喂 user 轮次")
+    ap.add_argument("--trace", action="store_true",
+                    help="落盘查询计划与算子执行轨迹 <tag>-trace.jsonl")
+    ap.add_argument("--ids", default="",
+                    help="只跑指定 question_id（逗号分隔），用于配对筛选")
     args = ap.parse_args()
 
     env = load_env()
@@ -126,6 +133,9 @@ def main() -> None:
         insts = stratified_sample(insts, args.stratified, args.seed)
     elif args.n:
         insts = insts[: args.n]
+    if args.ids:
+        keep = {x.strip() for x in args.ids.split(",") if x.strip()}
+        insts = [x for x in insts if x.question_id in keep]
 
     RESULTS_DIR.mkdir(exist_ok=True)
     out_path = RESULTS_DIR / f"{args.tag}-hyp.jsonl"
@@ -183,7 +193,7 @@ def main() -> None:
 
     def work(inst):
         return answer_one(inst, client, args.strategy, mem_kwargs,
-                          args.cot, args.max_tokens)
+                          args.cot, args.max_tokens, trace=args.trace)
 
     if args.workers > 1:
         with ThreadPoolExecutor(max_workers=args.workers) as ex:
@@ -219,11 +229,22 @@ def main() -> None:
                                 "hypothesis": r["hypothesis"]},
                                ensure_ascii=False) + "\n")
 
-    # 明细另存，便于失败模式分析
+    # 明细另存，便于失败模式分析（trace 体积大，单独落盘）
     detail_path = RESULTS_DIR / f"{args.tag}-detail.jsonl"
     with detail_path.open("w", encoding="utf-8") as f:
         for r in sorted(results, key=lambda x: x["question_id"]):
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+            f.write(json.dumps({k: v for k, v in r.items() if k != "mem_trace"},
+                               ensure_ascii=False) + "\n")
+    if args.trace:
+        trace_path = RESULTS_DIR / f"{args.tag}-trace.jsonl"
+        with trace_path.open("w", encoding="utf-8") as f:
+            for r in sorted(results, key=lambda x: x["question_id"]):
+                if r.get("mem_trace"):
+                    f.write(json.dumps({"question_id": r["question_id"],
+                                        "question_type": r["question_type"],
+                                        "trace": r["mem_trace"]},
+                                       ensure_ascii=False) + "\n")
+        print(f"轨迹        : {trace_path}")
 
     # 结构化/融合策略：落盘 LLM 调用缓存，重跑不重复计费
     if args.strategy in ("structured", "fusion"):
@@ -243,6 +264,8 @@ def main() -> None:
     print(f"Token       : prompt {usage['prompt_tokens']:,} / "
           f"completion {usage['completion_tokens']:,}"
           f"（其中思考 {usage['reasoning_tokens']:,}）")
+    print(f"调用可靠性  : 重试 {usage['retries']}  致命4xx {usage['fatal_4xx']}  "
+          f"模型空回复 {usage['empty_responses']}")
     print(f"hypothesis  : {out_path}")
     print(f"明细        : {detail_path}")
 

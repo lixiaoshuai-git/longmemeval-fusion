@@ -79,11 +79,13 @@ def main() -> None:
             e["question_type"], e["question"], e["answer"],
             h["hypothesis"], abstention=is_abs)
 
+        judge_error = False
         try:
             resp = judge.chat(prompt, max_tokens=24)
             label = "yes" in resp.lower()
         except Exception as ex:  # noqa: BLE001
             n_err += 1
+            judge_error = True
             label = False
             resp = f"<ERROR {type(ex).__name__}>"
 
@@ -93,7 +95,8 @@ def main() -> None:
         logs.append({"question_id": qid, "question_type": e["question_type"],
                      "is_abstention": is_abs, "question": e["question"],
                      "answer": e["answer"], "hypothesis": h["hypothesis"],
-                     "judge_raw": resp, "label": label})
+                     "judge_raw": resp, "label": label,
+                     "judge_error": judge_error})
         mark = "✓" if label else "✗"
         print(f"[{i:>3}/{len(hyps)}] {mark} {qid:<28} {e['question_type']}")
 
@@ -115,7 +118,8 @@ def main() -> None:
     print("=" * 68)
     u = judge.usage.as_dict()
     print(f"judge token: prompt {u['prompt_tokens']:,} / completion "
-          f"{u['completion_tokens']:,}  调用 {u['calls']} 次  失败 {n_err}")
+          f"{u['completion_tokens']:,}  调用 {u['calls']} 次  失败 {n_err}  "
+          f"重试 {u['retries']}  致命4xx {u['fatal_4xx']}  空回复 {u['empty_responses']}")
 
     out = HERE.parent / "results" / f"{args.tag}-judged.jsonl"
     with out.open("w", encoding="utf-8") as f:
@@ -130,6 +134,7 @@ def main() -> None:
                          "correct": sum(v)} for t, v in per_type.items()},
         "abstention": ({"acc": round(sum(abst) / len(abst), 4), "n": len(abst)}
                        if abst else None),
+        "judge_errors": n_err,
         "note": "judge 为 glm-5.2 代跑，官方口径默认 GPT-4o，正式报告须披露",
     }
     sp = HERE.parent / "results" / f"{args.tag}-summary.json"

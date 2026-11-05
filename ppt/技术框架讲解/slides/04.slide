@@ -1,0 +1,61 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>问题定义：为什么需要记忆系统</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>PROBLEM / 04</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <Box style={{ position: 'absolute', left: 56, top: 136, width: 402, height: 480, background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 26 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.6, color: '#38BDF8', marginBottom: 16 }}>ROOT CAUSE</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7', lineHeight: 1.35, marginBottom: 18 }}>
+      LLM 的每次
+      <br />
+      调用互相独立
+    </Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 17, color: '#9FB0C8', lineHeight: 1.7 }}>
+      对话历史不会被自动保存。昨天说「买了三盆植物」，今天问「我有几盆」，模型无法回答——除非把原文重新放进输入。
+    </Text>
+    <Box style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid #22314A' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#34D399', lineHeight: 1.6 }}>
+        目标：把长历史压缩成
+        <br />
+        小而准的上下文。
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 486, top: 136, width: 738, flexDirection: 'column', gap: 14 }}>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 20 }}>
+      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+        <Text style={{ fontFamily: "'Consolas'", fontSize: 22, fontWeight: 'bold', color: '#38BDF8' }}>01</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 21, fontWeight: 'bold', color: '#E6EDF7' }}>全上下文：成本</Text>
+      </Box>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 16, color: '#9FB0C8', lineHeight: 1.6 }}>
+        S 档单题 122k token，输入长度与费用成正比；每题重复塞入全部历史的开销不可接受。
+      </Text>
+    </Box>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 20 }}>
+      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+        <Text style={{ fontFamily: "'Consolas'", fontSize: 22, fontWeight: 'bold', color: '#38BDF8' }}>02</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 21, fontWeight: 'bold', color: '#E6EDF7' }}>全上下文：噪声</Text>
+      </Box>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 16, color: '#9FB0C8', lineHeight: 1.6 }}>
+        S/M 档的干扰会话混进输入，稀释注意力；证据密度在 S 档只有约 0.4%。
+      </Text>
+    </Box>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 20 }}>
+      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+        <Text style={{ fontFamily: "'Consolas'", fontSize: 22, fontWeight: 'bold', color: '#FBBF24' }}>03</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 21, fontWeight: 'bold', color: '#E6EDF7' }}>全上下文：合规</Text>
+      </Box>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 16, color: '#9FB0C8', lineHeight: 1.6 }}>
+        手册附录 F.1 明令禁止把全上下文作为交付实现，只允许作对照上界探针。
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>04 / 16</Text>
+  </Box>
+</Slide>

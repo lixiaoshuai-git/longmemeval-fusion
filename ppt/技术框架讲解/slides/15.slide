@@ -1,0 +1,58 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>成绩与边界：多运行口径</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>RESULTS / 15</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <Box style={{ position: 'absolute', left: 56, top: 138, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Box style={{ width: 360 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#6B7C96', marginBottom: 4 }}>ORACLE 500 / 3 RUN</Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 76, fontWeight: 'bold', color: '#38BDF8', lineHeight: 1 }}>86.80</Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 15, color: '#9FB0C8', marginTop: 8 }}>± 0.72　上界 87.90 ± 0.84（打平）</Text>
+    </Box>
+    <Box style={{ width: 380 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#6B7C96', marginBottom: 4 }}>S-TIER / 122K TOK / n=48</Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 76, fontWeight: 'bold', color: '#34D399', lineHeight: 1 }}>89.58</Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 15, color: '#9FB0C8', marginTop: 8 }}>配对 8 修 / 0 坏　四题型满分</Text>
+    </Box>
+    <Box style={{ width: 340 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#6B7C96', marginBottom: 4 }}>READ LATENCY / P95</Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 76, fontWeight: 'bold', color: '#FBBF24', lineHeight: 1 }}>11.3<span style={{ fontSize: 30 }}>ms</span></Text>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 15, color: '#9FB0C8', marginTop: 8 }}>成本几乎全部在 LLM 调用</Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 336, width: 1168, height: 1, background: '#22314A' }} />
+
+  <Box style={{ position: 'absolute', left: 56, top: 372, width: 570 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#34D399', marginBottom: 10 }}>WHAT IS SOLID</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#C9D6E8', lineHeight: 1.9 }}>
+      SS-P 90.00：三轮单调上行，全部高于旧版全部三轮——首个反超基线的题型。
+      <br />
+      TR / MS：确定性时间与写入期聚合的跨采样稳定优势。
+      <br />
+      _abs 拒答 80%：确定性守卫，三轮逐题不差。
+      <br />
+      消融：关摘录 SS-A -7.14；关算术注记 MS -2.0——机制有独立贡献。
+    </Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 662, top: 372, width: 562 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#FBBF24', marginBottom: 10 }}>WHAT IS NOT</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#C9D6E8', lineHeight: 1.9 }}>
+      judge 噪声：判错集合约 64% 是语义误判，正式口径需官方 judge 复跑。
+      <br />
+      MS 大池计数：S 档剩 3 错，根因是 reader 计数而非召回。
+      <br />
+      SS 系列压缩损失：Oracle 上落后基线 2–7pp，是架构的固有代价。
+      <br />
+      样本量：S 档 n=48（95% CI ±9pp），结论以配对设计为准。
+    </Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>15 / 16</Text>
+  </Box>
+</Slide>

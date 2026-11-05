@@ -1,0 +1,95 @@
+<svg width="100%" viewBox="0 0 680 376" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei, PingFang SC, Noto Sans CJK SC, sans-serif">
+<title>fusion 记忆系统：一轮写入、一座记忆库、一道查询</title>
+<desc>左侧是写入五步，中间是事实层与证据层，右侧是查询七步；琥珀色表示 LLM 调用，青色表示确定性代码，十二个步骤里只有四处调用 LLM。</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+
+<text x="40" y="30" font-size="11.5" fill="#64748B">对话流入</text>
+<text x="596" y="30" font-size="11.5" fill="#64748B">答案输出</text>
+
+<rect x="40" y="42" width="196" height="256" rx="12" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="0.5"/>
+<rect x="268" y="42" width="150" height="256" rx="12" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="0.5"/>
+<rect x="450" y="42" width="190" height="256" rx="12" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="0.5"/>
+
+<text x="54" y="64" font-size="13" font-weight="500" fill="#334155">写入 · 每轮</text>
+<text x="282" y="64" font-size="13" font-weight="500" fill="#334155">记忆库</text>
+<text x="464" y="64" font-size="13" font-weight="500" fill="#334155">查询 · 每题</text>
+
+<g>
+<rect x="52" y="78" width="172" height="30" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text x="64" y="93" font-size="12" fill="#633806" dominant-baseline="central">抽取事实（用户 / 助手轮）</text>
+</g>
+<g>
+<rect x="52" y="116" width="172" height="30" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="64" y="131" font-size="12" fill="#04342C" dominant-baseline="central">时间归一（±400 天校验）</text>
+</g>
+<g>
+<rect x="52" y="154" width="172" height="30" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="64" y="169" font-size="12" fill="#04342C" dominant-baseline="central">BM25 找相似（top-3）</text>
+</g>
+<g>
+<rect x="52" y="192" width="172" height="30" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text x="64" y="207" font-size="12" fill="#633806" dominant-baseline="central">判定关系（5 类）</text>
+</g>
+<g>
+<rect x="52" y="230" width="172" height="30" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="64" y="245" font-size="12" fill="#04342C" dominant-baseline="central">执行落库（封时间轴）</text>
+</g>
+<text x="52" y="284" font-size="11" fill="#64748B">演进只封旧值，纠正封双轴</text>
+
+<rect x="280" y="78" width="126" height="100" rx="8" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="0.5"/>
+<text x="292" y="96" font-size="12" font-weight="500" fill="#334155">事实层</text>
+<text x="292" y="118" font-size="11.5" fill="#475569">Event 事实句</text>
+<text x="292" y="138" font-size="11.5" fill="#475569">Slot 版本链</text>
+<text x="292" y="158" font-size="11.5" fill="#475569">双时间轴</text>
+
+<rect x="280" y="190" width="126" height="88" rx="8" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="0.5"/>
+<text x="292" y="208" font-size="12" font-weight="500" fill="#334155">证据层</text>
+<text x="292" y="230" font-size="11.5" fill="#475569">原始轮次</text>
+<text x="292" y="248" font-size="11.5" fill="#475569">逐字保留</text>
+<text x="292" y="266" font-size="11.5" fill="#475569">审计 / 引用</text>
+
+<text x="282" y="286" font-size="11" fill="#64748B">写入编译，读取回查</text>
+
+<g>
+<rect x="466" y="78" width="158" height="26" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text x="478" y="91" font-size="12" fill="#633806" dominant-baseline="central">解析意图</text>
+</g>
+<g>
+<rect x="466" y="110" width="158" height="26" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="478" y="123" font-size="12" fill="#04342C" dominant-baseline="central">确定性算子</text>
+</g>
+<g>
+<rect x="466" y="142" width="158" height="26" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="478" y="155" font-size="12" fill="#04342C" dominant-baseline="central">BM25 召回</text>
+</g>
+<g>
+<rect x="466" y="174" width="158" height="26" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="478" y="187" font-size="12" fill="#04342C" dominant-baseline="central">引原文（证据层）</text>
+</g>
+<g>
+<rect x="466" y="206" width="158" height="26" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="478" y="219" font-size="12" fill="#04342C" dominant-baseline="central">三道守卫</text>
+</g>
+<g>
+<rect x="466" y="238" width="158" height="26" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="478" y="251" font-size="12" fill="#04342C" dominant-baseline="central">渲染（台账 / 偏好）</text>
+</g>
+<g>
+<rect x="466" y="270" width="158" height="26" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text x="478" y="283" font-size="12" fill="#633806" dominant-baseline="central">作答</text>
+</g>
+
+<line x1="236" y1="170" x2="264" y2="170" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="418" y1="170" x2="446" y2="170" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="40" y="322" width="12" height="12" rx="3" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text x="58" y="332" font-size="11.5" fill="#475569" dominant-baseline="central">LLM 调用（全系统仅 4 处）</text>
+<rect x="228" y="322" width="12" height="12" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="246" y="332" font-size="11.5" fill="#475569" dominant-baseline="central">确定性代码（可单测、可回放）</text>
+
+<text x="40" y="358" font-size="11.5" fill="#64748B">时间几何、聚合、拒答判定、前提校验、渲染、遗忘全部走代码；LLM 只负责“读得懂”和“写得像”。</text>
+</svg>

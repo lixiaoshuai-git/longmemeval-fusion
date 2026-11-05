@@ -127,6 +127,78 @@ CRITICAL disambiguation:
 - A baby born / an item bought at a different date is "supplement" even if the item type matches an existing memory.
 """
 
+TURN_EXTRACTION_PROMPT_ZH = """你从一条用户消息里抽取可长期记住的事实。会话日期：{date}。
+
+用户消息：
+{user_turn}
+
+紧随其后的助手回复（只作上下文，不要从中抽取）：
+{assistant_turn}
+
+只输出 JSON 数组。每一项是用户在这条消息里陈述的**一条原子事实**：
+{{"fact":"<完整中文句子，必须自足；数字、数量、价格、时长、专名逐字保留>","when_raw":"<原文时间词，没有则空字符串>","when":"<解析后的 YYYY-MM-DD | YYYY-MM | start..end | none>","category":"<one of: {cats}>","kind":"event|state|preference|numeric"}}
+
+硬性规则：
+1. 事实句必须自足，数字和专名一个都不能丢或四舍五入。
+2. 一个陈述一项；两个不同事件两项；不要合并、不要补背景。
+3. 提到"买了 / 收到 / 得到了 / 别人送了"时，这次获得必须单独成项，kind="event"。
+4. when 要按会话日期 {date} 解析相对时间（"两周前"减 14 天，"上个月"为上一个自然月，"3月"为当年 3 月）；when_raw 必须抄原文，不要改写。模糊词如"最近"放进 when_raw，when 用 "none"。
+5. kind：state=可变化的持续状态；event=一次性事件；preference=喜好；numeric=事件附带的数量。
+6. 跳过寒暄、向助手提问、助手回复；没有可记事实输出 []。category 必须取自给定英文列表，其余字段值也按 schema 原样输出。
+"""
+
+ASSISTANT_FACTS_PROMPT_ZH = """从下面的助手回复里，只抽取**助手主动引入的具体信息**（用户以后可能会问"你当时推荐了哪本书 / 哪个标题 / 哪个数字"）。
+
+{assistant_turns}
+
+只输出 JSON 数组；每项：
+{{"fact":"<完整中文句子，专名/标题/链接/数字逐字保留>","when_raw":"","when":"none","category":"<one of: {cats}>","kind":"assistant_fact"}}
+
+规则：
+- 抽取助手讲过的知识、定义、价格、日期、标题；不要复述用户说过的话，不要祝贺语。
+- 用户被明确要求二选一的选项列表不抽。
+- 最多 12 条；数字和专名必须逐字保留；没有则输出 []。
+"""
+
+RELATION_PROMPT_ZH = """你在维护一个时序记忆库。下面是会话日期 {date} 的新候选事实，以及每条候选最相似的已有记忆。
+
+已有记忆：
+{existing_block}
+
+新候选：
+{candidates_block}
+
+请按顺序为每条候选输出一个 JSON 对象：
+{{"id":"<候选编号>","action":"new|merge|evolve|correct|supplement","target":"<已有记忆编号或 null>","anchor":"<YYYY-MM-DD 或 null>"}}
+
+动作含义：
+- new：没有已有记忆覆盖它。
+- merge：同一事实的纯复述，合并到目标。
+- evolve：状态更新为新值，旧值到 anchor 为止曾为真（"我现在有 38 枚"）。
+- correct：明确说以前记错了，旧值从未为真。
+- supplement：同一集合新增一个实例（又买了一盆植物、又参加一场活动），新建但挂到同一目标。
+
+关键：不同事件不要 merge；拿不准 merge 还是 supplement 时选 supplement；集合新总量是 evolve 而不是 supplement。
+"""
+
+PARSE_PROMPT_V2_ZH = """把问题转换成针对事实句记忆库的检索计划。只输出 JSON：
+
+{{"intent":"agg_count|agg_sum|fact_current|fact_at_time|list_events|argmax|lookup|unknown","topic":"<用于模糊检索的中文关键词短语，5-15 字>","category":"<one of: {cats}> 或 null","count_kind":"events|stated_total|either|none","window_days":<整数或 null>,"month":"<YYYY-MM 或 null>","at_text":"<时刻查询的日期表达，或 null>","before_text":"<before X 比较中的原事件文本，或 null>","entities":["<问题假定存在的名词>"]}}
+
+规则：
+- "我一共 / 总共 / 有多少 X" → agg_count；"总共花了多少钱 / 合计多少" → agg_sum。
+- "现在 / 目前是什么" → fact_current；"当时 / 那时候" → fact_at_time 并填 at_text。
+- "哪个先 / 先后顺序 / 按时间排序" → list_events，绝不用 fact_at_time。
+- "最多 / 最大 / 最长" → argmax；"你之前说 / 推荐了什么" → lookup。
+- "上个月" → month 可推断时填 YYYY-MM；"过去两周" → window_days=14。
+- category 只有在问题词面能直接确定类别时才填，否则一律 null；错误类别会把助手闲聊当成候选。
+- topic 要包含核心名词及其常见中文词素（例如"兴趣班"补上"课 / 课程"），以便 BM25 的单字/双字召回命中。
+- entities 只填问题里出现、且用户原话可能逐字出现的专名；"兴趣班 / 东西 / 活动"这类概括词放 topic，不要放 entities，避免触发假前提拒答。
+
+问题日期：{date}
+问题：{question}
+"""
+
 PARSE_PROMPT_V2 = """Convert the question into a retrieval plan over a temporal memory of fact sentences.
 
 Output ONLY JSON:

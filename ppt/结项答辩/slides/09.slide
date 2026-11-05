@@ -1,0 +1,57 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>机制三：守卫层</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 09</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 108, width: 660 }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 19, fontWeight: 'bold', color: '#1A2230', marginBottom: 14 }}>
+      两类错误：该拒答时硬答 / 顺着假前提作答
+    </Text>
+    {[
+      ['01', 'SCOPE NOTE', '拒答措辞协议', '解析层实体全未命中 → 统一以「information provided is not enough」作答，禁止用 0 或数字收尾。', '#1E4FA8'],
+      ['02', 'PREMISE CHECK', '专名假前提校验', '问题中的专名（Shinjuku / 30-gallon / Porsche）在用户发言零出现 → 列出可疑词与用户实际表述，提示勿按假前提作答。', '#1E4FA8'],
+      ['03', 'RECOMMENDATION HINT', '建议形态豁免', '「should I / what do you think / whether to」等 18 项 → 改为基于已陈述偏好推荐，不拒答。', '#3D7BD9'],
+    ].map(([n, name, sub, desc, color], i) => (
+      <Box key={n} style={{ paddingTop: 14, paddingBottom: 14, borderTop: i === 0 ? '2px solid #1E4FA8' : '1px solid #E5E7EB' }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12, marginBottom: 6 }}>
+          <Text style={{ fontFamily: 'Georgia', fontSize: 13, color: color }}>{n}</Text>
+          <Text style={{ fontFamily: 'Georgia', fontSize: 15, fontWeight: 'bold', color: '#1A2230' }}>{name}</Text>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#8B97A8' }}>{sub}</Text>
+        </Box>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#4A5568', lineHeight: 1.7 }}>{desc}</Text>
+      </Box>
+    ))}
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#8B97A8', marginTop: 10 }}>
+      All three are plain Python — no model call, no prompt dependency.
+    </Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 756, top: 108, width: 460, height: 532, background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 6, padding: 24 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2, marginBottom: 10 }}>MEASURED EFFECT</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 19, fontWeight: 'bold', color: '#1A2230', marginBottom: 16 }}>确定的收益，可复现</Text>
+    <Box style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10 }}>
+      <Text style={{ fontFamily: 'Georgia', fontSize: 58, fontWeight: 'bold', color: '#0E3F8C', lineHeight: 1 }}>57→80%</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', marginBottom: 8 }}>拒答子集</Text>
+    </Box>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#8B97A8', marginBottom: 18 }}>_abs 17/30 → 24/30，三轮逐题不差</Text>
+    <Box style={{ borderLeft: '3px solid #1E4FA8', paddingLeft: 12, marginBottom: 14 }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.7 }}>
+        四道专名触发题全部翻对：Shinjuku / 30-gallon / Pete / Porsche。
+      </Text>
+    </Box>
+    <Box style={{ borderLeft: '3px solid #3D7BD9', paddingLeft: 12, marginBottom: 14 }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.7 }}>
+        SS-P 81.11 → 90.00：偏好分段 + 建议形态修复「推荐类问句被拒答」。
+      </Text>
+    </Box>
+    <Box style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #D6DCE5' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#4A5568', lineHeight: 1.65 }}>
+        语义审计：判错集合中约 64% 是 judge 误判；拒答措辞协议直接消除其中一类。
+      </Text>
+    </Box>
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>09 / 17</Text>
+</Slide>

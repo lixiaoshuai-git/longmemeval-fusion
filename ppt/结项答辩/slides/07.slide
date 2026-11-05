@@ -1,0 +1,83 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>机制一：双时间轴版本链</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 07</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 108, width: 300 }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 22, fontWeight: 'bold', color: '#1A2230', lineHeight: 1.5, marginBottom: 16 }}>
+      事实有两个时间戳，
+      <br />
+      回答两个问题
+    </Text>
+    <Box style={{ borderLeft: '3px solid #1E4FA8', paddingLeft: 14, marginBottom: 16 }}>
+      <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1 }}>τ_v 有效轴</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#4A5568', lineHeight: 1.7, marginTop: 4 }}>
+        这个事实在现实世界里何时成立？valid_from → valid_to。
+      </Text>
+    </Box>
+    <Box style={{ borderLeft: '3px solid #3D7BD9', paddingLeft: 14, marginBottom: 18 }}>
+      <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#3D7BD9', letterSpacing: 1 }}>τ_t 陈述轴</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#4A5568', lineHeight: 1.7, marginTop: 4 }}>
+        这句话是什么时候说的？stated_at = 会话日期。
+      </Text>
+    </Box>
+    <Box style={{ background: '#F0F5FC', borderRadius: 6, padding: 14 }}>
+      <Text style={{ fontFamily: "Consolas", fontSize: 13, color: '#0E3F8C', lineHeight: 1.9 }}>
+        current()　→ 现在<br />
+        value_at(t) → t 时刻
+      </Text>
+    </Box>
+  </Box>
+
+  <svg width={790} height={252} viewBox='0 0 790 252' style={{ position: 'absolute', left: 396, top: 108 }}>
+    <text x='0' y='14' fill='#1E4FA8' fontSize='12' fontFamily='Georgia' letterSpacing='1.2'>EVOLVE / 搬家</text>
+    <line x1='0' y1='58' x2='780' y2='58' stroke='#E5E7EB' strokeWidth='2' />
+    <rect x='40' y='42' width='300' height='32' rx='4' fill='#E8EFF8' stroke='#1E4FA8' strokeWidth='1' />
+    <text x='54' y='63' fill='#1A2230' fontSize='13' fontFamily='Microsoft YaHei'>Berlin　2022-01 → 2023-01</text>
+    <rect x='340' y='42' width='360' height='32' rx='4' fill='#DCEAFB' stroke='#3D7BD9' strokeWidth='1' />
+    <text x='354' y='63' fill='#1A2230' fontSize='13' fontFamily='Microsoft YaHei'>Munich　2023-01 → 现在</text>
+    <line x1='340' y1='30' x2='340' y2='90' stroke='#1E4FA8' strokeWidth='1' strokeDasharray='3 4' />
+    <text x='300' y='26' fill='#1E4FA8' fontSize='11' fontFamily='Georgia'>ANCHOR</text>
+    <text x='40' y='96' fill='#8B97A8' fontSize='11' fontFamily='Microsoft YaHei'>旧值曾为真 → 只封 τ_v；状态 superseded</text>
+
+    <text x='0' y='138' fill='#D9534F' fontSize='12' fontFamily='Georgia' letterSpacing='1.2'>CORRECT / 我说错了</text>
+    <line x1='0' y1='182' x2='780' y2='182' stroke='#E5E7EB' strokeWidth='2' />
+    <rect x='40' y='166' width='300' height='32' rx='4' fill='#F7F9FC' stroke='#D6DCE5' strokeWidth='1' strokeDasharray='4 4' />
+    <text x='54' y='187' fill='#8B97A8' fontSize='13' fontFamily='Microsoft YaHei'>Berlin　2022-01 → 2023-01</text>
+    <line x1='56' y1='170' x2='324' y2='194' stroke='#D9534F' strokeWidth='1.6' />
+    <line x1='56' y1='194' x2='324' y2='170' stroke='#D9534F' strokeWidth='1.6' />
+    <rect x='340' y='166' width='360' height='32' rx='4' fill='#DCEAFB' stroke='#3D7BD9' strokeWidth='1' />
+    <text x='354' y='187' fill='#1A2230' fontSize='13' fontFamily='Microsoft YaHei'>Munich　2023-01 → 现在</text>
+    <text x='40' y='220' fill='#8B97A8' fontSize='11' fontFamily='Microsoft YaHei'>旧值从未为真 → τ_v、τ_t 都封；状态 invalidated</text>
+
+    <text x='0' y='246' fill='#4A5568' fontSize='12' fontFamily='Microsoft YaHei'>同一个 value_at(2022-06)：演化返回 Berlin；更正返回空。</text>
+  </svg>
+
+  <Box style={{ position: 'absolute', left: 396, top: 372, width: 820, background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 6, padding: 18 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2, marginBottom: 10 }}>WHY IT MATTERS</Text>
+    <Box style={{ flexDirection: 'row', gap: 18 }}>
+      <Box style={{ width: 248 }}>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, fontWeight: 'bold', color: '#1A2230', marginBottom: 4 }}>ADD-only 系统</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.65 }}>
+          只追加不封轴，旧值会在「现在住哪」类问题里重新浮上来。
+        </Text>
+      </Box>
+      <Box style={{ width: 248 }}>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, fontWeight: 'bold', color: '#0E3F8C', marginBottom: 4 }}>fusion</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.65 }}>
+          演化只封有效轴，更正两轴都封——现在与当时都能被准确回答。
+        </Text>
+      </Box>
+      <Box style={{ width: 248 }}>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, fontWeight: 'bold', color: '#1A2230', marginBottom: 4 }}>实测（Oracle 3-run）</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.65 }}>
+          KU 86.5–88.9，与上界 92.3–97.4 的差距主要来自 judge 误判与压缩损失。
+        </Text>
+      </Box>
+    </Box>
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>07 / 17</Text>
+</Slide>

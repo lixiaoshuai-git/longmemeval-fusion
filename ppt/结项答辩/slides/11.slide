@@ -1,0 +1,67 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>评测纪律：方差、回滚与标定否决</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 11</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 108, width: 322 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2 }}>DECISION RULE</Text>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 76, fontWeight: 'bold', color: '#0E3F8C', lineHeight: 1.1, marginTop: 6 }}>3pp</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 17, color: '#1A2230', lineHeight: 1.7, marginTop: 6, marginBottom: 18 }}>
+      单次差值小于 3 个百分点不下结论——这是双方方差之和。
+    </Text>
+    <Box style={{ borderLeft: '3px solid #1E4FA8', paddingLeft: 14 }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.75 }}>
+        基线与系统各跑 2 次以上，报均值 ± 标准差；
+        改动保留需要「配对翻转 + 机制解释」双重证据。
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 418, top: 108, width: 798, height: 300 }}>
+    <Table
+      style={{ width: '100%', height: '100%' }}
+      defaultTextStyle={{ fontSize: 16, textAlign: 'left', color: '#1A2230', fontFamily: "'Microsoft YaHei'" }}
+      defaultCellStyle={{
+        border: {
+          left: { width: 0, color: '#FFFFFF' },
+          right: { width: 0, color: '#FFFFFF' },
+          top: { width: 0, color: '#FFFFFF' },
+          bottom: { width: 1, color: '#D6DCE5' },
+        },
+      }}
+      cells={[
+        [
+          { text: '方差来源', textStyle: { bold: true, color: '#FFFFFF', fontSize: 15 }, cellStyle: { background: { color: '#0E3F8C' } } },
+          { text: '实测', textStyle: { bold: true, color: '#FFFFFF', fontSize: 15 }, cellStyle: { background: { color: '#0E3F8C' } } },
+          { text: '应对', textStyle: { bold: true, color: '#FFFFFF', fontSize: 15 }, cellStyle: { background: { color: '#0E3F8C' } } },
+        ],
+        ['服务端非确定性（temperature=0 仍存在）', '37/500 题翻转，±1.4pp', '多运行，报均值±sd'],
+        ['多级 LLM 调用放大', 'fusion 侧 ±1.5–2pp', '同上；结论看配对'],
+        ['确定性守卫层', '收窄到 ±0.31', 'v3.4.5 的副收益'],
+        ['判分模型误判', '判错集合约 64%', '语义审计剥离；待官方 judge'],
+        ['小样本噪声', '20 题冒烟 ±18pp', '冒烟只验证管线不坏'],
+      ]}
+    />
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 418, top: 436, width: 798, background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 6, padding: 20 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2, marginBottom: 10 }}>FAILURE LEDGER / 14 LOOPS</Text>
+    <Box style={{ flexDirection: 'row', gap: 26 }}>
+      {[
+        ['05', '次回滚', 'v3.1 分层计数 / v3.2 批内去重 / v3.5 序数升级 / v3.7 系 verbatim 扩展'],
+        ['02', '次标定否决', 'P3 词面去重、动态窗口——实现前用缓存证明不可分，零成本'],
+        ['02', '次回归修复', 'SS-P 误杀（请求类豁免）、SS-P 拒答（建议形态）'],
+      ].map(([n, t, d]) => (
+        <Box key={t} style={{ width: 230 }}>
+          <Text style={{ fontFamily: 'Georgia', fontSize: 30, fontWeight: 'bold', color: '#0E3F8C', lineHeight: 1 }}>{n}</Text>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 16, fontWeight: 'bold', color: '#1A2230', marginTop: 4, marginBottom: 4 }}>{t}</Text>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#4A5568', lineHeight: 1.6 }}>{d}</Text>
+        </Box>
+      ))}
+    </Box>
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>11 / 17</Text>
+</Slide>

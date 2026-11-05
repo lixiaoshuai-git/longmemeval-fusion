@@ -1,0 +1,86 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>写入期：一个会话如何变成结构化记忆</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>WRITE PATH / 09</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <svg width={1168} height={172} viewBox='0 0 1168 172' style={{ position: 'absolute', left: 56, top: 120 }}>
+    <rect x='0' y='28' width='176' height='76' rx='7' fill='#121E33' stroke='#34D399' strokeWidth='1' />
+    <text x='14' y='54' fill='#E6EDF7' fontSize='14' fontFamily='Microsoft YaHei'>① 证据入库</text>
+    <text x='14' y='76' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>ALL TURNS → EVIDENCE</text>
+    <text x='14' y='94' fill='#34D399' fontSize='10' fontFamily='Consolas'>NO LLM</text>
+
+    <rect x='198' y='28' width='176' height='76' rx='7' fill='#121E33' stroke='#38BDF8' strokeWidth='1' />
+    <text x='212' y='54' fill='#E6EDF7' fontSize='14' fontFamily='Microsoft YaHei'>② 逐轮抽取</text>
+    <text x='212' y='76' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>ONE USER TURN</text>
+    <text x='212' y='94' fill='#38BDF8' fontSize='10' fontFamily='Consolas'>LLM ①</text>
+
+    <rect x='396' y='28' width='176' height='76' rx='7' fill='#121E33' stroke='#38BDF8' strokeWidth='1' />
+    <text x='410' y='54' fill='#E6EDF7' fontSize='14' fontFamily='Microsoft YaHei'>③ 专项抽取</text>
+    <text x='410' y='76' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>ASSISTANT TURNS</text>
+    <text x='410' y='94' fill='#38BDF8' fontSize='10' fontFamily='Consolas'>LLM ①</text>
+
+    <rect x='594' y='28' width='176' height='76' rx='7' fill='#121E33' stroke='#34D399' strokeWidth='1' />
+    <text x='608' y='54' fill='#E6EDF7' fontSize='14' fontFamily='Microsoft YaHei'>④ 时间解析</text>
+    <text x='608' y='76' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>RULES FIRST</text>
+    <text x='608' y='94' fill='#34D399' fontSize='10' fontFamily='Consolas'>DETERMINISTIC</text>
+
+    <rect x='792' y='28' width='176' height='76' rx='7' fill='#121E33' stroke='#38BDF8' strokeWidth='1' />
+    <text x='806' y='54' fill='#E6EDF7' fontSize='14' fontFamily='Microsoft YaHei'>⑤ 相似 + 分类</text>
+    <text x='806' y='76' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>BM25 TOP-3 / CAND</text>
+    <text x='806' y='94' fill='#38BDF8' fontSize='10' fontFamily='Consolas'>LLM ②</text>
+
+    <rect x='990' y='28' width='178' height='76' rx='7' fill='#121E33' stroke='#34D399' strokeWidth='1' />
+    <text x='1004' y='54' fill='#E6EDF7' fontSize='14' fontFamily='Microsoft YaHei'>⑥ 确定性执行</text>
+    <text x='1004' y='76' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>GEOMETRY</text>
+    <text x='1004' y='94' fill='#34D399' fontSize='10' fontFamily='Consolas'>NO LLM</text>
+
+    <line x1='176' y1='66' x2='198' y2='66' stroke='#38BDF8' strokeWidth='1' opacity='0.5' />
+    <line x1='374' y1='66' x2='396' y2='66' stroke='#38BDF8' strokeWidth='1' opacity='0.5' />
+    <line x1='572' y1='66' x2='594' y2='66' stroke='#34D399' strokeWidth='1' opacity='0.5' />
+    <line x1='770' y1='66' x2='792' y2='66' stroke='#38BDF8' strokeWidth='1' opacity='0.5' />
+    <line x1='968' y1='66' x2='990' y2='66' stroke='#34D399' strokeWidth='1' opacity='0.5' />
+
+    <text x='0' y='140' fill='#6B7C96' fontSize='11' fontFamily='Consolas'>INPUT: SESSION + DATE　→　OUTPUT: EVENT STORE（每个会话约 20-60 条原子事实）</text>
+  </svg>
+
+  <Box style={{ position: 'absolute', left: 56, top: 306, width: 690, height: 314, background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 22 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#38BDF8', marginBottom: 10 }}>EXTRACTION / HARD RULES</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 19, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 14 }}>抽取阶段的三条硬规则</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#C9D6E8', lineHeight: 1.85 }}>
+      <span style={{ color: '#34D399', fontWeight: 'bold' }}>数字逐字</span>：数量、价格、时长、专名一律原样保留——后续问题可能问那个精确数字。
+      <br />
+      <span style={{ color: '#34D399', fontWeight: 'bold' }}>获取独立</span>：出现「买了/收到/得到」时，必须独立成一条事件，即使那句话主要在说别的。
+      <br />
+      <span style={{ color: '#34D399', fontWeight: 'bold' }}>模糊不猜</span>：「recently」只原样记录，不换算成日期；没有时间线索宁可留空。
+      <br />
+      <span style={{ color: '#9FB0C8' }}>预购例外：获得时间是到货日，不是下单日。</span>
+    </Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 770, top: 306, width: 454, height: 314, background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 22 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#FBBF24', marginBottom: 10 }}>RELATION / FIVE ACTIONS</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 19, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 12 }}>关系分类五种动作</Text>
+    {[
+      ['new', '库里没有 → 新建'],
+      ['merge', '同事实复述 → 合并出处'],
+      ['evolve', '状态更新 → 封旧值有效轴'],
+      ['correct', '宣布旧值错误 → 两轴都封'],
+      ['supplement', '集合新增实例 → 独立成条'],
+    ].map(([k, v]) => (
+      <Box key={k} style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
+        <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#38BDF8', width: 84 }}>{k}</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#C9D6E8' }}>{v}</Text>
+      </Box>
+    ))}
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#9FB0C8', lineHeight: 1.6, marginTop: 6 }}>
+      判别原则：merge 与 supplement 不确定时选 supplement——过合并会毁掉可计数事件。
+    </Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>09 / 16</Text>
+  </Box>
+</Slide>

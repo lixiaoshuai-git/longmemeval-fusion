@@ -1,0 +1,34 @@
+<Slide style={{ width: 1280, height: 720, background: 'linear-gradient(135deg, #0B1220 0%, #0E1B2E 100%)', padding: 0, position: 'relative', overflow: 'hidden' }}>
+  <svg width={1280} height={720} viewBox='0 0 1280 720' style={{ position: 'absolute', top: 0, left: 0 }}>
+    <line x1='96' y1='0' x2='96' y2='720' stroke='#34D399' strokeWidth='1' opacity='0.09' />
+    <line x1='104' y1='0' x2='104' y2='720' stroke='#34D399' strokeWidth='1' opacity='0.04' />
+  </svg>
+  <Box style={{ position: 'absolute', left: 140, top: 150, width: 640 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 13, letterSpacing: 2.2, color: '#34D399', marginBottom: 18 }}>SECTION 02 / MODEL &amp; WRITE</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 52, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 20 }}>数据模型与写入</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, color: '#9FB0C8', lineHeight: 1.75, width: 620 }}>
+      一条事实获得两个时间戳：现实何时成立、何时被说出。
+      五种关系动作（new / merge / evolve / correct / supplement）由 LLM 判定，
+      由确定性执行器改写存储。
+    </Text>
+    <Box style={{ marginTop: 34, flexDirection: 'row', gap: 12 }}>
+      <Box style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, background: 'rgba(52,211,153,0.10)', borderRadius: 4 }}>
+        <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#34D399' }}>τ_v 有效轴</Text>
+      </Box>
+      <Box style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, background: 'rgba(56,189,248,0.10)', borderRadius: 4 }}>
+        <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#38BDF8' }}>τ_t 陈述轴</Text>
+      </Box>
+      <Box style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, background: 'rgba(251,191,36,0.10)', borderRadius: 4 }}>
+        <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#FBBF24' }}>slot 版本链</Text>
+      </Box>
+    </Box>
+  </Box>
+
+  <Text style={{ position: 'absolute', right: 56, top: 120, fontFamily: "'Consolas'", fontSize: 210, fontWeight: 'bold', color: '#16263F', lineHeight: 1 }}>02</Text>
+  <Box style={{ position: 'absolute', left: 140, top: 664, flexDirection: 'row', gap: 36 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>01 / Event 双时间轴</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>02 / 演化 vs 更正</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>03 / 写入期六步</Text>
+  </Box>
+  <Text style={{ position: 'absolute', right: 72, top: 664, fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>06 / 16</Text>
+</Slide>

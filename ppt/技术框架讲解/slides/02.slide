@@ -1,0 +1,49 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>内容</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>CONTENTS / 02</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <Box style={{ position: 'absolute', left: 56, top: 132, width: 280, height: 480 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 88, fontWeight: 'bold', color: '#16263F', lineHeight: 1 }}>INDEX</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 17, color: '#9FB0C8', lineHeight: 1.7, marginTop: 22 }}>
+      三章，从问题定义到
+      <br />
+      可验证的结果。
+      <br />
+      每一条结论都给出
+      <br />
+      多运行口径与边界。
+    </Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 372, top: 132, width: 852, flexDirection: 'column' }}>
+    <Box style={{ flexDirection: 'row', alignItems: 'flex-start', paddingBottom: 26, borderBottom: '1px solid #22314A' }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 44, fontWeight: 'bold', color: '#38BDF8', width: 96 }}>01</Text>
+      <Box style={{ width: 740 }}>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 26, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 8 }}>问题与框架</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 17, color: '#9FB0C8', lineHeight: 1.6 }}>LLM 无状态与全上下文方案的三个问题；双层记忆与四个 LLM 边界</Text>
+      </Box>
+    </Box>
+    <Box style={{ flexDirection: 'row', alignItems: 'flex-start', paddingTop: 26, paddingBottom: 26, borderBottom: '1px solid #22314A' }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 44, fontWeight: 'bold', color: '#38BDF8', width: 96 }}>02</Text>
+      <Box style={{ width: 740 }}>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 26, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 8 }}>数据模型与写入</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 17, color: '#9FB0C8', lineHeight: 1.6 }}>Event 双时间轴、演化与更正的几何差别、写入期六步与时间解析规则</Text>
+      </Box>
+    </Box>
+    <Box style={{ flexDirection: 'row', alignItems: 'flex-start', paddingTop: 26 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 44, fontWeight: 'bold', color: '#38BDF8', width: 96 }}>03</Text>
+      <Box style={{ width: 740 }}>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 26, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 8 }}>查询与验证</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 17, color: '#9FB0C8', lineHeight: 1.6 }}>解析与确定性执行、BM25 与近逐字证据、守卫层、S 档扩展、成绩与边界</Text>
+      </Box>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>02 / 16</Text>
+  </Box>
+</Slide>

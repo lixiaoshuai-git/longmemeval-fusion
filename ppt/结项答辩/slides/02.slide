@@ -1,0 +1,45 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>目录</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.6, color: '#8B97A8' }}>D.I.V.E. / CONTENTS</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 120, width: 292, height: 500, background: '#0E3F8C', borderRadius: 8, padding: 32 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 40, color: '#FFFFFF', lineHeight: 1.2 }}>Contents</Text>
+    <Box style={{ width: 48, height: 2, background: '#FFC107', marginTop: 18, marginBottom: 22 }} />
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#D7E5F7', lineHeight: 1.9 }}>
+      三章内容：
+      <br />
+      问题与架构、
+      <br />
+      核心机制、
+      <br />
+      评测与交付。
+    </Text>
+    <Box style={{ marginTop: 'auto' }}>
+      <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#A8C4E8' }}>17 pages · 12 min</Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 408, top: 128, width: 808 }}>
+    {[
+      ['01', '问题与架构', '全上下文不可行的三个原因；双层记忆与四个 LLM 边界的设计分工。', '04–05'],
+      ['02', '核心机制', '双时间轴版本链、确定性执行与算术注记、三类确定性守卫。', '07–09'],
+      ['03', '评测、交付与展望', '多轮评测纪律与方差控制；Oracle 与 S 档成绩；消融、交付物与边界。', '11–16'],
+    ].map(([n, t, d, p], i) => (
+      <Box key={n} style={{ flexDirection: 'row', alignItems: 'flex-start', paddingTop: i === 0 ? 4 : 26, paddingBottom: 26, borderBottom: i < 2 ? '1px solid #E5E7EB' : 'none' }}>
+        <Text style={{ fontFamily: 'Georgia', fontSize: 40, fontWeight: 'bold', color: '#1E4FA8', width: 84 }}>{n}</Text>
+        <Box style={{ width: 620 }}>
+          <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 26, fontWeight: 'bold', color: '#1A2230' }}>{t}</Text>
+            <Text style={{ fontFamily: 'Georgia', fontSize: 13, color: '#8B97A8' }}>{p}</Text>
+          </Box>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 17, color: '#4A5568', lineHeight: 1.65, marginTop: 8 }}>{d}</Text>
+        </Box>
+      </Box>
+    ))}
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>02 / 17</Text>
+</Slide>

@@ -1,0 +1,77 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>数据模型：Event 与双时间轴</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>SCHEMA / 07</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <Box style={{ position: 'absolute', left: 56, top: 132, width: 300, height: 488 }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 24, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 14 }}>一条原子事实</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#9FB0C8', lineHeight: 1.7, marginBottom: 18 }}>
+      Event 是记忆的最小单位。事实载体是完整句子，数字、量词、价格、专名逐字保留。
+    </Text>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 8, padding: 16, marginBottom: 12 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, color: '#34D399', letterSpacing: 1.2, marginBottom: 6 }}>τ_v 有效轴</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#9FB0C8', lineHeight: 1.6 }}>
+        事实在现实世界里何时成立。valid_from → valid_to。
+      </Text>
+    </Box>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 8, padding: 16, marginBottom: 18 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, color: '#38BDF8', letterSpacing: 1.2, marginBottom: 6 }}>τ_t 陈述轴</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#9FB0C8', lineHeight: 1.6 }}>
+        这句话是什么时候说的。stated_at = 会话日期。
+      </Text>
+    </Box>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96', marginBottom: 6 }}>SLOT OPERATORS</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 13, color: '#34D399', lineHeight: 1.9 }}>current()　→ 现在<br />value_at(t) → t 时刻</Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 380, top: 132, width: 844, height: 300 }}>
+    <Table
+      style={{ width: '100%', height: '100%' }}
+      defaultTextStyle={{ fontSize: 13, textAlign: 'left', color: '#C9D6E8', fontFamily: "'Microsoft YaHei'" }}
+      defaultCellStyle={{
+        background: { color: '#121E33' },
+        border: {
+          left: { width: 0, color: '#0B1220' },
+          right: { width: 0, color: '#0B1220' },
+          top: { width: 0, color: '#0B1220' },
+          bottom: { width: 1, color: '#22314A' },
+        },
+      }}
+      cells={[
+        [
+          { text: '字段', textStyle: { bold: true, color: '#38BDF8', fontFamily: 'Consolas', fontSize: 12 }, cellStyle: { background: { color: '#16263F' } } },
+          { text: '含义', textStyle: { bold: true, color: '#38BDF8', fontFamily: 'Consolas', fontSize: 12 }, cellStyle: { background: { color: '#16263F' } } },
+          { text: '示例', textStyle: { bold: true, color: '#38BDF8', fontFamily: 'Consolas', fontSize: 12 }, cellStyle: { background: { color: '#16263F' } } },
+        ],
+        ['subject', '事实主体：user / assistant', 'user'],
+        ['predicate', '关系类别（40 个封闭值）', 'acquire / live_in / prefer'],
+        ['value', '归一化后的短值', 'peace lily'],
+        ['fact', '完整事实原句（逐字）', 'The user got three new peace lilies…'],
+        ['valid_from / valid_to', '有效轴；None = 现在仍为真', '2023-05-10 / None'],
+        ['stated_at', '陈述轴：会话日期', '2023-05-10'],
+        ['status', 'active / superseded / invalidated / archived', 'active'],
+        ['evidence', '溯源指针（会话 id + 轮次号）', '[("s2", 4)]'],
+      ]}
+    />
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 380, top: 452, width: 844, height: 168 }}>
+    <CodeBlock
+      code={`{"fact": "The user got three new peace lilies for their living room.",
+ "when_raw": "", "when": "2023-05-10",
+ "category": "plant", "kind": "event"}
+→ Event(subject="user", predicate="acquire", value="peace lily",
+        valid_from=2023-05-10, amount=3.0, evidence=[("s2", 4)])`}
+      language='javascript'
+      width={844}
+      fontSize={12}
+    />
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>07 / 16</Text>
+  </Box>
+</Slide>

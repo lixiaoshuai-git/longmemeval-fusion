@@ -1,0 +1,20 @@
+<Slide style={{ width: 1280, height: 720, background: '#F7F9FC', padding: 0, position: 'relative', overflow: 'hidden' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', right: 40, top: 96, fontFamily: 'Georgia', fontSize: 260, fontWeight: 'bold', color: '#E8EFF8', lineHeight: 1 }}>03</Text>
+  <Box style={{ position: 'absolute', left: 88, top: 176, width: 700 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 14, letterSpacing: 2.4, color: '#1E4FA8' }}>CHAPTER 03 / EVALUATION &amp; DELIVERY</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 54, fontWeight: 'bold', color: '#0E3F8C', marginTop: 20, marginBottom: 22 }}>评测、交付与展望</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, color: '#4A5568', lineHeight: 1.8, width: 660 }}>
+      多运行口径、方差披露与失败回滚构成评测纪律；Oracle 与 S 档给出两个规模上的证据；
+      消融矩阵量化每个机制的真实贡献。
+    </Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 88, top: 536, flexDirection: 'column', gap: 8 }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#1E4FA8' }}>01　评测纪律：方差、回滚与标定否决</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#1E4FA8' }}>02　Oracle 与 S 档：两个规模的成绩</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#1E4FA8' }}>03　公开对比、消融与交付物</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 0, bottom: 0, width: 1280, height: 4, background: '#1E4FA8' }} />
+  <Text style={{ position: 'absolute', left: 88, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>D.I.V.E. 结项答辩 · 2026.12</Text>
+  <Text style={{ position: 'absolute', right: 88, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>10 / 17</Text>
+</Slide>

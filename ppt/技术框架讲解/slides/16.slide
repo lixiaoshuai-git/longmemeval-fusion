@@ -1,0 +1,21 @@
+<Slide style={{ width: 1280, height: 720, background: 'linear-gradient(135deg, #0B1220 0%, #0E1B2E 100%)', padding: 0, position: 'relative', overflow: 'hidden' }}>
+  <svg width={1280} height={720} viewBox='0 0 1280 720' style={{ position: 'absolute', top: 0, left: 0 }}>
+    <line x1='640' y1='120' x2='640' y2='600' stroke='#38BDF8' strokeWidth='1' opacity='0.06' />
+    <circle cx='640' cy='360' r='230' fill='none' stroke='#38BDF8' strokeWidth='1' opacity='0.06' />
+    <circle cx='640' cy='360' r='320' fill='none' stroke='#38BDF8' strokeWidth='1' opacity='0.04' />
+  </svg>
+  <Box style={{ position: 'absolute', left: 140, top: 236, width: 1000 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 13, letterSpacing: 2.4, color: '#38BDF8', marginBottom: 26, textAlign: 'center' }}>
+      FUSION / DETERMINISTIC MEMORY
+    </Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 54, fontWeight: 'bold', color: '#E6EDF7', lineHeight: 1.4, textAlign: 'center' }}>
+      LLM 负责理解，代码负责计算。
+    </Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 30, color: '#9FB0C8', lineHeight: 1.6, textAlign: 'center', marginTop: 18 }}>
+      可审计的记忆，才是可交付的记忆。
+    </Text>
+  </Box>
+  <Text style={{ position: 'absolute', left: 140, top: 566, width: 1000, textAlign: 'center', fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>
+    docs/framework-explained.md　·　39 tests green　·　github.com/lixiaoshuai-git/longmemeval-fusion
+  </Text>
+</Slide>

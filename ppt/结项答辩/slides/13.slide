@@ -1,0 +1,66 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>S 档泛化：122k token 下零架构改动</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 13</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 108, width: 700 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2 }}>S-TIER / n=48 / 122K TOK PER QUESTION</Text>
+    <svg width={700} height={330} viewBox='0 0 700 330' style={{ marginTop: 8 }}>
+      <line x1='40' y1='300' x2='680' y2='300' stroke='#D6DCE5' strokeWidth='2' />
+      <rect x='60' y='240' width='150' height='60' fill='#E8EFF8' stroke='#1E4FA8' strokeWidth='1' />
+      <text x='76' y='222' fill='#4A5568' fontSize='13' fontFamily='Microsoft YaHei'>v3.6 基线</text>
+      <text x='76' y='275' fill='#0E3F8C' fontSize='24' fontFamily='Georgia' fontWeight='bold'>72.9</text>
+      <text x='150' y='275' fill='#8B97A8' fontSize='11' fontFamily='Georgia'>%</text>
+
+      <rect x='260' y='200' width='150' height='100' fill='#E8EFF8' stroke='#1E4FA8' strokeWidth='1' />
+      <text x='276' y='182' fill='#4A5568' fontSize='13' fontFamily='Microsoft YaHei'>v3.9 one-hop</text>
+      <text x='276' y='243' fill='#0E3F8C' fontSize='24' fontFamily='Georgia' fontWeight='bold'>79.2</text>
+      <text x='350' y='243' fill='#8B97A8' fontSize='11' fontFamily='Georgia'>%</text>
+
+      <rect x='460' y='120' width='150' height='180' fill='#0E3F8C' />
+      <text x='476' y='102' fill='#0E3F8C' fontSize='13' fontFamily='Microsoft YaHei' fontWeight='bold'>v3.9.1 路由修正</text>
+      <text x='476' y='168' fill='#FFFFFF' fontSize='26' fontFamily='Georgia' fontWeight='bold'>89.6</text>
+      <text x='552' y='168' fill='#A8C4E8' fontSize='11' fontFamily='Georgia'>%</text>
+      <text x='476' y='192' fill='#A8C4E8' fontSize='11' fontFamily='Microsoft YaHei'>+16.7pp vs 基线</text>
+
+      <line x1='60' y1='300' x2='60' y2='306' stroke='#D6DCE5' strokeWidth='1' />
+      <text x='40' y='322' fill='#8B97A8' fontSize='11' fontFamily='Georgia'>PLOT NOT TO SCALE</text>
+    </svg>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.7 }}>
+      同样本三轮配对：v3.6 → v3.9.1 共 8 修 0 坏（McNemar p≈0.008）；
+      四题型满分：KU / SS-A / SS-P / SS-U；MS 9/12、TR 12/14。
+    </Text>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 800, top: 108, width: 416 }}>
+    <Box style={{ background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 6, padding: 18, marginBottom: 12 }}>
+      <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2, marginBottom: 8 }}>SCALE FACTS</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.8 }}>
+        每题 48 个会话 / 248 条用户轮次 / 723 个事实事件（Oracle 的 22 倍）
+        <br />
+        检索延迟 86ms；上下文 14.6k token（8.4 倍压缩）
+        <br />
+        有效样本 n=48（2 题因端点故障未完成；三轮同一批题）
+      </Text>
+    </Box>
+    <Box style={{ background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 6, padding: 18, marginBottom: 12 }}>
+      <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2, marginBottom: 8 }}>POSITIONING / PUBLIC S-TIER</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.85 }}>
+        第三方可复现协议：76.9 – 77.8 → 本系统 89.6
+        <br />
+        Supermemory 85.2 / Hindsight 91.4 → 接近并超过前者
+        <br />
+        自报头部 94–96（gpt-5.5 级 reader）→ 差约 5pp
+      </Text>
+    </Box>
+    <Box style={{ padding: 14, background: '#F0F5FC', borderLeft: '3px solid #1E4FA8' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#1A2230', lineHeight: 1.7 }}>
+        结论：架构在 8.4 倍压缩下成立；剩余软肋是 MS 大池计数与 TR 噪声日期。
+      </Text>
+    </Box>
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>13 / 17</Text>
+</Slide>

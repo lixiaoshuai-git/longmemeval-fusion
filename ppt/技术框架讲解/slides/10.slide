@@ -1,0 +1,24 @@
+<Slide style={{ width: 1280, height: 720, background: 'linear-gradient(135deg, #0B1220 0%, #0F2136 100%)', padding: 0, position: 'relative', overflow: 'hidden' }}>
+  <svg width={1280} height={720} viewBox='0 0 1280 720' style={{ position: 'absolute', top: 0, left: 0 }}>
+    {Array.from({ length: 9 }).map((_, i) => (
+      <line key={i} x1={760 + i * 60} y1={0} x2={760 + i * 60} y2={720} stroke='#38BDF8' strokeWidth='1' opacity='0.03' />
+    ))}
+  </svg>
+  <Box style={{ position: 'absolute', left: 96, top: 130, width: 760 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 13, letterSpacing: 2.2, color: '#38BDF8', marginBottom: 18 }}>SECTION 03 / QUERY &amp; EVIDENCE</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 52, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 20 }}>查询与验证</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, color: '#9FB0C8', lineHeight: 1.75, width: 700 }}>
+      解析层输出 8 种意图的查询计划；确定性执行器按意图计算；BM25 与近逐字证据层负责召回；
+      守卫层在渲染末尾拦截「该拒答却硬答」与「顺着假前提作答」。
+    </Text>
+  </Box>
+  <Text style={{ position: 'absolute', right: 56, bottom: 60, fontFamily: "'Consolas'", fontSize: 220, fontWeight: 'bold', color: '#16263F', lineHeight: 1 }}>03</Text>
+  <Box style={{ position: 'absolute', left: 96, top: 560, flexDirection: 'row', gap: 28 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>01 / 查询流程</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>02 / BM25 &amp; VERBATIM</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>03 / 守卫层</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>04 / S 档扩展</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>05 / 成绩</Text>
+  </Box>
+  <Text style={{ position: 'absolute', right: 72, top: 664, fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>10 / 16</Text>
+</Slide>

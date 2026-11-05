@@ -1,0 +1,48 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>边界与下一步</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 16</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 108, width: 440 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#8B97A8', letterSpacing: 1.2, marginBottom: 10 }}>LIMITATIONS / 已知边界</Text>
+    {[
+      ['judge 噪声', '判错集合约 64% 是语义误判；当前分数是保守下界，正式口径需官方 judge 复跑。'],
+      ['MS 大池计数', 'S 档 9/12。根因是 reader 在长候选列表上数错，不是召回缺失（动态窗口已证伪）。'],
+      ['压缩固有损失', 'Oracle 上 SS-A / SS-U / KU 落后上界 2–7pp——事实层压缩的代价。'],
+      ['样本量', 'S 档 n=48，95% CI ±9pp；结论以同样本配对设计为准。'],
+    ].map(([t, d], i) => (
+      <Box key={t} style={{ paddingTop: 12, paddingBottom: 12, borderTop: i === 0 ? '2px solid #D9534F' : '1px solid #E5E7EB' }}>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 16, fontWeight: 'bold', color: '#1A2230', marginBottom: 4 }}>{t}</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#4A5568', lineHeight: 1.7 }}>{d}</Text>
+      </Box>
+    ))}
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 548, top: 108, width: 668 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2, marginBottom: 10 }}>NEXT / 下一步（按优先级）</Text>
+    {[
+      ['01', '官方 judge 复跑', '用官方 gpt-4o judge 重评现有 hypothesis——零生成成本，解锁被误判压低的真实口径。'],
+      ['02', 'embedding 混合检索', '接口已预留。S 档 MS 的根因是 BM25 词面匹配对语义关联事件的局限，向量通道是正式解。'],
+      ['03', 'S 档扩样本', 'n=48 → 200+，把 ±9pp 的置信区间收窄到 ±4pp 以内。'],
+      ['04', '关系分类实体级增强', '把同模板不同实例（五种烤蔬菜）的实体上下文喂给分类器，攻 MS 计数残差。'],
+    ].map(([n, t, d]) => (
+      <Box key={n} style={{ flexDirection: 'row', paddingTop: 12, paddingBottom: 12, borderTop: '1px solid #E5E7EB' }}>
+        <Text style={{ fontFamily: 'Georgia', fontSize: 18, fontWeight: 'bold', color: '#1E4FA8', width: 46 }}>{n}</Text>
+        <Box style={{ width: 610 }}>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 17, fontWeight: 'bold', color: '#1A2230', marginBottom: 4 }}>{t}</Text>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.65 }}>{d}</Text>
+        </Box>
+      </Box>
+    ))}
+    <Box style={{ marginTop: 16, padding: 16, background: '#F0F5FC', borderLeft: '3px solid #1E4FA8' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#1A2230', lineHeight: 1.7 }}>
+        一句话总结：在 Oracle 上追平上界、在 S 档进入公开第一梯队；
+        下一步不是把分数再抬 1pp，而是把评测口径换成官方 judge、把检索升级为语义通道。
+      </Text>
+    </Box>
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>16 / 17</Text>
+</Slide>

@@ -1,0 +1,21 @@
+<Slide style={{ width: 1280, height: 720, background: 'linear-gradient(135deg, #0B1220 0%, #101C30 100%)', padding: 0, position: 'relative', overflow: 'hidden' }}>
+  <svg width={1280} height={720} viewBox='0 0 1280 720' style={{ position: 'absolute', top: 0, left: 0 }}>
+    <line x1='0' y1='560' x2='1280' y2='560' stroke='#38BDF8' strokeWidth='1' opacity='0.10' />
+    <line x1='0' y1='568' x2='1280' y2='568' stroke='#38BDF8' strokeWidth='1' opacity='0.05' />
+    <rect x='880' y='120' width='300' height='300' fill='none' stroke='#38BDF8' strokeWidth='1' opacity='0.08' transform='rotate(12 1030 270)' />
+  </svg>
+  <Text style={{ position: 'absolute', left: 72, top: 96, fontFamily: "'Consolas'", fontSize: 210, fontWeight: 'bold', color: '#16263F', lineHeight: 1 }}>01</Text>
+  <Box style={{ position: 'absolute', left: 78, top: 346, width: 760 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 13, letterSpacing: 2.2, color: '#38BDF8', marginBottom: 18 }}>SECTION 01 / PROBLEM &amp; FRAMEWORK</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 52, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 18 }}>问题与框架</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, color: '#9FB0C8', lineHeight: 1.7, width: 720 }}>
+      LLM 每次调用互相独立；把全部历史塞进上下文成本高、噪声大，且被手册 F.1 禁止作为交付。
+      记忆系统的任务是把长历史压缩成小而准的上下文。
+    </Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 78, top: 616, flexDirection: 'row', gap: 36 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>01 / 问题定义</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>02 / 架构总览</Text>
+  </Box>
+  <Text style={{ position: 'absolute', right: 72, top: 664, fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>03 / 16</Text>
+</Slide>

@@ -1,0 +1,47 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>交付物：五项全部就绪</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 15</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 110, width: 420 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2 }}>DELIVERABLES / STATUS</Text>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 110, fontWeight: 'bold', color: '#0E3F8C', lineHeight: 1 }}>5 / 5</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 18, color: '#1A2230', marginTop: 6, marginBottom: 18 }}>必需交付物全部完成</Text>
+    <Box style={{ borderLeft: '3px solid #1E4FA8', paddingLeft: 14, marginBottom: 14 }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#4A5568', lineHeight: 1.75 }}>
+        额外完成：S 档泛化试点、Hindsight 同基准复现、双运行方差实验、GitHub 仓库与 CI。
+      </Text>
+    </Box>
+    <Box style={{ background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 6, padding: 16 }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#1A2230', lineHeight: 1.85 }}>
+        代码：tests 39 例全绿（&lt;1s，纯离线）
+        <br />
+        CLI：17 例手工用例全部通过
+        <br />
+        数据：Oracle 与 S 档 hypothesis 均已产出
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 516, top: 110, width: 700 }}>
+    {[
+      ['01', '可运行代码 + 交互入口', 'memory_sys 核心 + CLI REPL（load / ingest / ask / context / forget）；单元测试与 CI'],
+      ['02', '架构设计文档', '三层 schema、四类流程、v1 失败取证；迭代日志 14 个闭环完整可追溯'],
+      ['03', 'Oracle 评测 JSONL', 'results/fusfull38-hyp.jsonl（500 题，v3.8 口径）；S 档 spilot50v391 同步产出'],
+      ['04', '评估报告', '多轮主结果、分题型、消融矩阵、检索延迟与 token 成本、方差披露'],
+      ['05', '答辩材料', '本演示文稿 + 答辩大纲（演示流程、数据速查、Q&A 预案）'],
+    ].map(([n, t, d], i) => (
+      <Box key={n} style={{ flexDirection: 'row', paddingTop: 14, paddingBottom: 14, borderTop: i === 0 ? '2px solid #1E4FA8' : '1px solid #E5E7EB' }}>
+        <Text style={{ fontFamily: 'Georgia', fontSize: 22, fontWeight: 'bold', color: '#1E4FA8', width: 54 }}>{n}</Text>
+        <Box style={{ width: 630 }}>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 18, fontWeight: 'bold', color: '#1A2230', marginBottom: 4 }}>{t}</Text>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#4A5568', lineHeight: 1.65 }}>{d}</Text>
+        </Box>
+      </Box>
+    ))}
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>15 / 17</Text>
+</Slide>

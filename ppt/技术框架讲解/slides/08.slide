@@ -1,0 +1,71 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>演化与更正：两种更新，两种几何</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>BITEMPORAL / 08</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <Box style={{ position: 'absolute', left: 56, top: 128, width: 700 }}>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 18, marginBottom: 14 }}>
+      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#38BDF8' }}>EVOLVE</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 19, fontWeight: 'bold', color: '#E6EDF7' }}>演化：旧值到锚点前曾经为真</Text>
+      </Box>
+      <svg width={656} height={92} viewBox='0 0 656 92'>
+        <line x1='10' y1='52' x2='646' y2='52' stroke='#22314A' strokeWidth='1' />
+        <rect x='40' y='30' width='260' height='22' rx='4' fill='rgba(56,189,248,0.20)' stroke='#38BDF8' strokeWidth='1' />
+        <text x='52' y='46' fill='#E6EDF7' fontSize='12' fontFamily='Microsoft YaHei'>Berlin　2022-01 → 2023-01</text>
+        <rect x='300' y='30' width='300' height='22' rx='4' fill='rgba(52,211,153,0.18)' stroke='#34D399' strokeWidth='1' />
+        <text x='312' y='46' fill='#E6EDF7' fontSize='12' fontFamily='Microsoft YaHei'>Munich　2023-01 → 现在</text>
+        <line x1='300' y1='20' x2='300' y2='84' stroke='#34D399' strokeWidth='1' strokeDasharray='3 4' />
+        <text x='258' y='14' fill='#34D399' fontSize='11' fontFamily='Consolas'>ANCHOR</text>
+        <text x='40' y='80' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>valid_to = 2023-01　STATUS = superseded</text>
+      </svg>
+    </Box>
+
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 18 }}>
+      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#FBBF24' }}>CORRECT</Text>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 19, fontWeight: 'bold', color: '#E6EDF7' }}>更正：旧值从未为真</Text>
+      </Box>
+      <svg width={656} height={92} viewBox='0 0 656 92'>
+        <line x1='10' y1='52' x2='646' y2='52' stroke='#22314A' strokeWidth='1' />
+        <rect x='40' y='30' width='260' height='22' rx='4' fill='rgba(251,191,36,0.08)' stroke='#FBBF24' strokeWidth='1' strokeDasharray='4 4' />
+        <text x='52' y='46' fill='#8B97A8' fontSize='12' fontFamily='Microsoft YaHei'>Berlin　2022-01 → 2023-01</text>
+        <line x1='54' y1='48' x2='286' y2='34' stroke='#FBBF24' strokeWidth='1.4' opacity='0.9' />
+        <line x1='54' y1='34' x2='286' y2='48' stroke='#FBBF24' strokeWidth='1.4' opacity='0.9' />
+        <rect x='300' y='30' width='300' height='22' rx='4' fill='rgba(52,211,153,0.18)' stroke='#34D399' strokeWidth='1' />
+        <text x='312' y='46' fill='#E6EDF7' fontSize='12' fontFamily='Microsoft YaHei'>Munich　2023-01 → 现在</text>
+        <text x='40' y='80' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>STATUS = invalidated（τ_v、τ_t 两轴都封）</text>
+      </svg>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 782, top: 128, width: 442, height: 492, background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 22 }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#34D399', marginBottom: 14 }}>OBSERVABLE DIFFERENCE</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 21, fontWeight: 'bold', color: '#E6EDF7', lineHeight: 1.4, marginBottom: 16 }}>
+      同一个 value_at(t)，
+      <br />
+      两种结果
+    </Text>
+    <Box style={{ borderLeft: '2px solid #38BDF8', paddingLeft: 12, marginBottom: 16 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#38BDF8', marginBottom: 4 }}>evolve → value_at(2022-06)</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#C9D6E8' }}>返回 Berlin —— 当时确实住 Berlin</Text>
+    </Box>
+    <Box style={{ borderLeft: '2px solid #FBBF24', paddingLeft: 12, marginBottom: 18 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#FBBF24', marginBottom: 4 }}>correct → value_at(2022-06)</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#C9D6E8' }}>无结果 —— 那句话从未成立</Text>
+    </Box>
+    <Box style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #22314A' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#9FB0C8', lineHeight: 1.7 }}>
+        ADD-only 系统只追加不封轴，旧值会在「现在住哪」类问题里重新浮上来。
+        封轴让「现在」与「当时」都能被准确回答。
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>08 / 16</Text>
+  </Box>
+</Slide>

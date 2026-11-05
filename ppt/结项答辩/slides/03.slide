@@ -1,0 +1,19 @@
+<Slide style={{ width: 1280, height: 720, background: '#F7F9FC', padding: 0, position: 'relative', overflow: 'hidden' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', right: 40, top: 96, fontFamily: 'Georgia', fontSize: 260, fontWeight: 'bold', color: '#E8EFF8', lineHeight: 1 }}>01</Text>
+  <Box style={{ position: 'absolute', left: 88, top: 176, width: 700 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 14, letterSpacing: 2.4, color: '#1E4FA8' }}>CHAPTER 01 / PROBLEM &amp; ARCHITECTURE</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 54, fontWeight: 'bold', color: '#0E3F8C', marginTop: 20, marginBottom: 22 }}>问题与架构</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, color: '#4A5568', lineHeight: 1.8, width: 660 }}>
+      全上下文方案在成本、噪声与合规三方面不可行；记忆系统需要在压缩历史的同时，
+      保留可计算的时间结构与可回查的原始证据。
+    </Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 88, top: 552, flexDirection: 'column', gap: 8 }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#1E4FA8' }}>01　问题定义：三个缺口与一条禁令</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#1E4FA8' }}>02　架构总览：双层记忆与四个 LLM 边界</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 0, bottom: 0, width: 1280, height: 4, background: '#1E4FA8' }} />
+  <Text style={{ position: 'absolute', left: 88, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>D.I.V.E. 结项答辩 · 2026.12</Text>
+  <Text style={{ position: 'absolute', right: 88, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>03 / 17</Text>
+</Slide>

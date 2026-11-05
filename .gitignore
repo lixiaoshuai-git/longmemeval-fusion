@@ -15,3 +15,7 @@ experiments/
 ref/
 results/
 venv/
+
+# 幻灯片工具缓存
+.cache/
+.slidep/

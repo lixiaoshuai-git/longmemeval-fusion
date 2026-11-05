@@ -1,0 +1,51 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>问题定义：为什么全上下文不可行</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 04</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 112, width: 402, height: 452, background: '#0E3F8C', borderRadius: 8, padding: 28 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.8, color: '#A8C4E8', marginBottom: 14 }}>ROOT CAUSE</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#FFFFFF', lineHeight: 1.4, marginBottom: 16 }}>
+      LLM 的每次
+      <br />
+      调用互相独立
+    </Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 16, color: '#D7E5F7', lineHeight: 1.8 }}>
+      对话历史不会被自动保存。除非把原文重新放进输入，模型不知道昨天说过什么。
+    </Text>
+    <Box style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid #3D7BD9' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#FFFFFF', lineHeight: 1.7 }}>
+        记忆系统 = 压缩历史
+        <br />
+        + 可计算的时间结构
+        <br />
+        + 可回查的原始证据
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 494, top: 112, width: 722 }}>
+    {[
+      ['01', '成本：输入长度与费用成正比', 'S 档单题 122k token。每题重复塞入全部历史，成本随会话数线性增长，无法作为生产方案。', '#1E4FA8'],
+      ['02', '噪声：干扰会话稀释注意力', 'S 档证据密度约 0.4%。大量无关会话进入上下文，读者模型更容易漏掉关键句。', '#1E4FA8'],
+      ['03', '合规：手册 F.1 明令禁止', '全上下文只能作为对照上界探针，不能作为交付实现——否则等于没有做记忆系统。', '#D9534F'],
+    ].map(([n, t, d, c], i) => (
+      <Box key={n} style={{ flexDirection: 'row', paddingTop: i === 0 ? 2 : 20, paddingBottom: 20, borderBottom: i < 2 ? '1px solid #E5E7EB' : 'none' }}>
+        <Text style={{ fontFamily: 'Georgia', fontSize: 26, fontWeight: 'bold', color: c, width: 56 }}>{n}</Text>
+        <Box style={{ width: 650 }}>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 21, fontWeight: 'bold', color: '#1A2230', marginBottom: 6 }}>{t}</Text>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 16, color: '#4A5568', lineHeight: 1.7 }}>{d}</Text>
+        </Box>
+      </Box>
+    ))}
+    <Box style={{ marginTop: 18, padding: 16, background: '#F0F5FC', borderLeft: '3px solid #1E4FA8' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 16, color: '#1A2230', lineHeight: 1.7 }}>
+        目标：Oracle 档追平上界，S 档用 8.4 倍压缩保持可用精度。
+      </Text>
+    </Box>
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>04 / 17</Text>
+</Slide>

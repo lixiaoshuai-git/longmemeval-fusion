@@ -1,0 +1,28 @@
+<Slide style={{ width: 1280, height: 720, background: '#F7F9FC', padding: 0, position: 'relative', overflow: 'hidden' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <svg width={1280} height={720} viewBox='0 0 1280 720' style={{ position: 'absolute', top: 0, left: 0 }}>
+    <line x1='640' y1='120' x2='640' y2='600' stroke='#1E4FA8' strokeWidth='1' opacity='0.06' />
+    <circle cx='640' cy='340' r='240' fill='none' stroke='#1E4FA8' strokeWidth='1' opacity='0.08' />
+    <circle cx='640' cy='340' r='330' fill='none' stroke='#1E4FA8' strokeWidth='1' opacity='0.05' />
+  </svg>
+  <Box style={{ position: 'absolute', left: 140, top: 216, width: 1000 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 13, letterSpacing: 2.6, color: '#1E4FA8', textAlign: 'center', marginBottom: 24 }}>
+      THANK YOU / QUESTIONS &amp; DISCUSSION
+    </Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 44, fontWeight: 'bold', color: '#0E3F8C', lineHeight: 1.5, textAlign: 'center' }}>
+      记忆系统的价值不在记住更多，
+    </Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 44, fontWeight: 'bold', color: '#1E4FA8', lineHeight: 1.5, textAlign: 'center', marginBottom: 30 }}>
+      而在能证明「此刻该信哪一条」。
+    </Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 22, color: '#4A5568', textAlign: 'center' }}>
+      谢谢各位老师，请批评指正。
+    </Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 140, top: 570, width: 1000, alignItems: 'center' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#8B97A8' }}>
+      苑泽宇 · 四川大学软件学院 · D.I.V.E. 计划 2026
+    </Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 0, bottom: 0, width: 1280, height: 4, background: '#1E4FA8' }} />
+</Slide>

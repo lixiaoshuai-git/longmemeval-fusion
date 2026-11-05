@@ -1,0 +1,119 @@
+[
+  {
+    "question_id": "zh_fact_01",
+    "question_type": "single-session-user",
+    "question": "我买的鱼缸是多少加仑？",
+    "answer": "20加仑",
+    "question_date": "2023/03/20",
+    "haystack_session_ids": ["s1"],
+    "haystack_dates": ["2023/03/14"],
+    "answer_session_ids": ["s1"],
+    "expected_any": ["20加仑", "20 加仑"],
+    "haystack_sessions": [[
+      {"role": "user", "content": "我上周买了一个20加仑的鱼缸。"},
+      {"role": "assistant", "content": "好的，记得先养水再放鱼。"}
+    ]]
+  },
+  {
+    "question_id": "zh_pref_01",
+    "question_type": "single-session-preference",
+    "question": "我最喜欢喝什么？",
+    "answer": "手冲咖啡",
+    "question_date": "2023/03/20",
+    "haystack_session_ids": ["s1"],
+    "haystack_dates": ["2023/03/02"],
+    "answer_session_ids": ["s1"],
+    "expected_any": ["手冲咖啡", "手冲"],
+    "haystack_sessions": [[
+      {"role": "user", "content": "我最喜欢喝手冲咖啡。"},
+      {"role": "assistant", "content": "记下了，以后多聊咖啡。"}
+    ]]
+  },
+  {
+    "question_id": "zh_ku_01",
+    "question_type": "knowledge-update",
+    "question": "我现在有多少枚硬币？",
+    "answer": "38枚",
+    "question_date": "2023/04/20",
+    "haystack_session_ids": ["s1", "s2"],
+    "haystack_dates": ["2023/03/03", "2023/04/03"],
+    "answer_session_ids": ["s2"],
+    "expected_any": ["38", "三十八"],
+    "haystack_sessions": [
+      [
+        {"role": "user", "content": "我现在有30枚硬币。"},
+        {"role": "assistant", "content": "收藏刚开始，慢慢来。"}
+      ],
+      [
+        {"role": "user", "content": "我现在有38枚硬币了。"},
+        {"role": "assistant", "content": "这个月增加了不少。"}
+      ]
+    ]
+  },
+  {
+    "question_id": "zh_time_01",
+    "question_type": "temporal-reasoning",
+    "question": "我什么时候参加了烘焙课？",
+    "answer": "2023年3月19日",
+    "question_date": "2023/03/20",
+    "haystack_session_ids": ["s1"],
+    "haystack_dates": ["2023/03/20"],
+    "answer_session_ids": ["s1"],
+    "expected_any": ["3月19", "03-19", "2023-03-19"],
+    "haystack_sessions": [[
+      {"role": "user", "content": "我昨天参加了烘焙课，还做了一个朋友的生日蛋糕。"},
+      {"role": "assistant", "content": "听起来很有意思。"}
+    ]]
+  },
+  {
+    "question_id": "zh_agg_01",
+    "question_type": "multi-session",
+    "question": "我一共参加了几个兴趣班？",
+    "answer": "2个",
+    "question_date": "2023/05/15",
+    "haystack_session_ids": ["s1", "s2"],
+    "haystack_dates": ["2023/05/08", "2023/05/10"],
+    "answer_session_ids": ["s1", "s2"],
+    "expected_any": ["2", "两", "二个", "两个"],
+    "haystack_sessions": [
+      [
+        {"role": "user", "content": "我上周一参加了书法课。"},
+        {"role": "assistant", "content": "书法很适合静心。"}
+      ],
+      [
+        {"role": "user", "content": "我上周三参加了绘画课。"},
+        {"role": "assistant", "content": "下次可以试试水彩。"}
+      ]
+    ]
+  },
+  {
+    "question_id": "zh_assistant_01",
+    "question_type": "single-session-assistant",
+    "question": "你当时推荐了哪本书？",
+    "answer": "《三体》",
+    "question_date": "2023/03/20",
+    "haystack_session_ids": ["s1"],
+    "haystack_dates": ["2023/03/05"],
+    "answer_session_ids": ["s1"],
+    "expected_any": ["三体"],
+    "haystack_sessions": [[
+      {"role": "user", "content": "给我推荐一本科幻小说吧。"},
+      {"role": "assistant", "content": "我推荐《三体》，作者是刘慈欣。"}
+    ]]
+  },
+  {
+    "question_id": "zh_abs_01_abs",
+    "question_type": "single-session-user",
+    "question": "我几点去了月球？",
+    "answer": "提供的信息不足",
+    "question_date": "2023/03/20",
+    "haystack_session_ids": ["s1"],
+    "haystack_dates": ["2023/03/06"],
+    "answer_session_ids": ["s1"],
+    "expected_any": ["信息不足", "没有提到", "不足"],
+    "haystack_sessions": [[
+      {"role": "user", "content": "我昨天去了成都的图书馆。"},
+      {"role": "assistant", "content": "挺好的，借了什么书？"}
+    ]]
+  }
+]

@@ -1,0 +1,108 @@
+<Slide style={{ width: 1280, height: 720, background: '#0B1220', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 56, top: 26, width: 1168, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 34, fontWeight: 'bold', color: '#E6EDF7' }}>架构总览：双层记忆 + 四个 LLM 边界</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, letterSpacing: 1.6, color: '#6B7C96' }}>ARCHITECTURE / 05</Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 56, top: 96, width: 1168, height: 1, background: '#22314A' }} />
+
+  <svg width={730} height={486} viewBox='0 0 730 486' style={{ position: 'absolute', left: 56, top: 126 }}>
+    <text x='0' y='14' fill='#6B7C96' fontSize='11' fontFamily='Consolas' letterSpacing='1.4'>WRITE PATH</text>
+    <text x='262' y='14' fill='#6B7C96' fontSize='11' fontFamily='Consolas' letterSpacing='1.4'>STORE</text>
+    <text x='520' y='14' fill='#6B7C96' fontSize='11' fontFamily='Consolas' letterSpacing='1.4'>READ PATH</text>
+
+    <rect x='0' y='34' width='200' height='54' rx='7' fill='#121E33' stroke='#38BDF8' strokeWidth='1.2' />
+    <text x='14' y='56' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>逐轮事实抽取</text>
+    <text x='14' y='74' fill='#38BDF8' fontSize='11' fontFamily='Consolas'>LLM ①  EXTRACT</text>
+
+    <rect x='0' y='108' width='200' height='54' rx='7' fill='#121E33' stroke='#34D399' strokeWidth='1.2' />
+    <text x='14' y='130' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>时间规则解析</text>
+    <text x='14' y='148' fill='#34D399' fontSize='11' fontFamily='Consolas'>DETERMINISTIC</text>
+
+    <rect x='0' y='182' width='200' height='54' rx='7' fill='#121E33' stroke='#38BDF8' strokeWidth='1.2' />
+    <text x='14' y='204' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>关系分类</text>
+    <text x='14' y='222' fill='#38BDF8' fontSize='11' fontFamily='Consolas'>LLM ②  RELATE</text>
+
+    <rect x='0' y='256' width='200' height='54' rx='7' fill='#121E33' stroke='#34D399' strokeWidth='1.2' />
+    <text x='14' y='278' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>双时间轴执行器</text>
+    <text x='14' y='296' fill='#34D399' fontSize='11' fontFamily='Consolas'>DETERMINISTIC</text>
+
+    <line x1='100' y1='88' x2='100' y2='108' stroke='#38BDF8' strokeWidth='1' opacity='0.6' />
+    <line x1='100' y1='162' x2='100' y2='182' stroke='#34D399' strokeWidth='1' opacity='0.6' />
+    <line x1='100' y1='236' x2='100' y2='256' stroke='#38BDF8' strokeWidth='1' opacity='0.6' />
+    <line x1='200' y1='283' x2='250' y2='283' stroke='#34D399' strokeWidth='1' opacity='0.5' />
+
+    <rect x='250' y='100' width='216' height='100' rx='7' fill='#121E33' stroke='#38BDF8' strokeWidth='1' />
+    <text x='264' y='124' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>事实层</text>
+    <text x='264' y='146' fill='#9FB0C8' fontSize='12' fontFamily='Microsoft YaHei'>Event：自由文本原句</text>
+    <text x='264' y='164' fill='#9FB0C8' fontSize='12' fontFamily='Microsoft YaHei'>双时间轴 + Slot 版本链</text>
+    <text x='264' y='184' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>COMPRESSED / COMPUTABLE</text>
+
+    <rect x='250' y='250' width='216' height='100' rx='7' fill='#121E33' stroke='#34D399' strokeWidth='1' />
+    <text x='264' y='274' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>证据层</text>
+    <text x='264' y='296' fill='#9FB0C8' fontSize='12' fontFamily='Microsoft YaHei'>对话轮次原文逐字保留</text>
+    <text x='264' y='314' fill='#9FB0C8' fontSize='12' fontFamily='Microsoft YaHei'>检索失败时的召回地板</text>
+    <text x='264' y='334' fill='#6B7C96' fontSize='10' fontFamily='Consolas'>LOSSLESS / VERBATIM</text>
+
+    <rect x='520' y='34' width='200' height='54' rx='7' fill='#121E33' stroke='#38BDF8' strokeWidth='1.2' />
+    <text x='534' y='56' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>问题解析</text>
+    <text x='534' y='74' fill='#38BDF8' fontSize='11' fontFamily='Consolas'>LLM ③  PARSE</text>
+
+    <rect x='520' y='108' width='200' height='54' rx='7' fill='#121E33' stroke='#34D399' strokeWidth='1.2' />
+    <text x='534' y='130' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>确定性执行</text>
+    <text x='534' y='148' fill='#34D399' fontSize='11' fontFamily='Consolas'>AGG / CHAIN / ARGMAX</text>
+
+    <rect x='520' y='182' width='200' height='54' rx='7' fill='#121E33' stroke='#34D399' strokeWidth='1.2' />
+    <text x='534' y='204' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>BM25 召回 + 守卫</text>
+    <text x='534' y='222' fill='#34D399' fontSize='11' fontFamily='Consolas'>DETERMINISTIC</text>
+
+    <rect x='520' y='256' width='200' height='54' rx='7' fill='#121E33' stroke='#38BDF8' strokeWidth='1.2' />
+    <text x='534' y='278' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>上下文 + 作答</text>
+    <text x='534' y='296' fill='#38BDF8' fontSize='11' fontFamily='Consolas'>LLM ④  ANSWER</text>
+
+    <line x1='620' y1='88' x2='620' y2='108' stroke='#38BDF8' strokeWidth='1' opacity='0.6' />
+    <line x1='620' y1='162' x2='620' y2='182' stroke='#34D399' strokeWidth='1' opacity='0.6' />
+    <line x1='620' y1='236' x2='620' y2='256' stroke='#38BDF8' strokeWidth='1' opacity='0.6' />
+    <line x1='466' y1='150' x2='520' y2='150' stroke='#38BDF8' strokeWidth='1' opacity='0.4' strokeDasharray='4 5' />
+    <line x1='466' y1='300' x2='520' y2='210' stroke='#34D399' strokeWidth='1' opacity='0.4' strokeDasharray='4 5' />
+
+    <text x='0' y='352' fill='#6B7C96' fontSize='11' fontFamily='Consolas'>LLM BOUNDARIES = 4</text>
+    <rect x='200' y='342' width='10' height='10' rx='2' fill='none' stroke='#38BDF8' strokeWidth='1.2' />
+    <text x='218' y='352' fill='#9FB0C8' fontSize='11' fontFamily='Microsoft YaHei'>LLM 决策</text>
+    <rect x='310' y='342' width='10' height='10' rx='2' fill='none' stroke='#34D399' strokeWidth='1.2' />
+    <text x='328' y='352' fill='#9FB0C8' fontSize='11' fontFamily='Microsoft YaHei'>确定性代码</text>
+
+    <rect x='0' y='378' width='730' height='96' rx='7' fill='rgba(56,189,248,0.06)' stroke='#22314A' strokeWidth='1' />
+    <text x='16' y='402' fill='#38BDF8' fontSize='12' fontFamily='Consolas' letterSpacing='1.2'>DESIGN LAW</text>
+    <text x='16' y='426' fill='#E6EDF7' fontSize='15' fontFamily='Microsoft YaHei'>LLM 只负责「理解」：抽取、判断关系、解析意图、生成语言。</text>
+    <text x='16' y='450' fill='#9FB0C8' fontSize='15' fontFamily='Microsoft YaHei'>时间几何、计数、求和、排序、拒答判定、渲染全部由代码完成——可单测、可复现。</text>
+  </svg>
+
+  <Box style={{ position: 'absolute', left: 812, top: 126, width: 412, flexDirection: 'column', gap: 14 }}>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 20 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#38BDF8', marginBottom: 8 }}>01 / SEPARATION</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 6 }}>理解与计算分离</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#9FB0C8', lineHeight: 1.65 }}>
+        模型擅长的语义判断交给模型；模型容易出错的算术与时间交给代码。
+      </Text>
+    </Box>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 20 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#34D399', marginBottom: 8 }}>02 / TWO LAYERS</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 6 }}>压缩 + 保真并存</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#9FB0C8', lineHeight: 1.65 }}>
+        事实层有损但可计算；证据层无损但只做保底。两层同时进入上下文。
+      </Text>
+    </Box>
+    <Box style={{ background: '#121E33', border: '1px solid #22314A', borderRadius: 10, padding: 20 }}>
+      <Text style={{ fontFamily: "'Consolas'", fontSize: 11, letterSpacing: 1.4, color: '#FBBF24', marginBottom: 8 }}>03 / AUDIT</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 20, fontWeight: 'bold', color: '#E6EDF7', marginBottom: 6 }}>每条事实可溯源</Text>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#9FB0C8', lineHeight: 1.65 }}>
+        每个 Event 持有证据指针（会话 id + 轮次号），任何结论都能回查到原句。
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 56, top: 664, width: 1168, flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>fusion v3.8 / v3.9.1</Text>
+    <Text style={{ fontFamily: "'Consolas'", fontSize: 12, color: '#6B7C96' }}>05 / 16</Text>
+  </Box>
+</Slide>

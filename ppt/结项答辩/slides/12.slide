@@ -1,0 +1,65 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>Oracle 500 题：与上界统计打平，SS-P 反超</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 12</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 112, width: 380 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2 }}>FUSION v3.8 / 3 RUN</Text>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 86, fontWeight: 'bold', color: '#0E3F8C', lineHeight: 1.05, marginTop: 4 }}>86.80</Text>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 20, color: '#4A5568', marginTop: 2 }}>± 0.72</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#8B97A8', marginTop: 10, lineHeight: 1.7 }}>
+      三轮：86.60 / 87.60 / 86.20
+      <br />
+      全上下文上界：87.90 ± 0.84（4 run）
+      <br />
+      差值 1.1pp，在 3pp 判定阈内
+    </Text>
+    <Box style={{ marginTop: 22, padding: 14, background: '#F0F5FC', borderLeft: '3px solid #1E4FA8' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#1A2230', lineHeight: 1.7 }}>
+        SS-P 90.00：三轮单调上行，全部高于旧版全部三轮——首个反超基线的题型。
+      </Text>
+    </Box>
+    <Box style={{ marginTop: 12, padding: 14, background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 4 }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#4A5568', lineHeight: 1.7 }}>
+        _abs 拒答 80%（24/30，三轮不差）；TR 85.22；MS 80.20。
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 480, top: 112, width: 736, height: 420 }}>
+    <Chart
+      style={{ width: '100%', height: '100%' }}
+      chartType='barChart'
+      barDirection='bar'
+      grouping='clustered'
+      title='分题型准确率：fusion v3.8 vs 全上下文上界'
+      titleColor='#0E3F8C'
+      legendColor='#4A5568'
+      axisColor='#8B97A8'
+      colors={['#1E4FA8', '#C3D2E8']}
+      background='#FFFFFF'
+      showLegend={true}
+      data={[
+        ['题型', 'fusion v3.8', '上界（4 run）'],
+        ['multi-session', 80.2, 79.9],
+        ['temporal', 85.2, 82.0],
+        ['knowledge-update', 88.0, 94.2],
+        ['single-user', 92.4, 97.9],
+        ['single-assistant', 94.6, 100],
+        ['single-preference', 90.0, 87.5],
+        ['_abs', 79.0, 76.7],
+      ]}
+    />
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 480, top: 548, width: 736 }}>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 15, color: '#4A5568', lineHeight: 1.7 }}>
+      读法：MS / TR / _abs / SS-P 在或高于上界区间；SS-A / SS-U / KU 的落后是事实压缩的固有代价。
+      单题型样本量 30–120，小样本摆动 ±5pp 属常态。
+    </Text>
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>12 / 17</Text>
+</Slide>

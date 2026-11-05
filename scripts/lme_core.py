@@ -86,12 +86,19 @@ class Usage:
     completion_tokens: int = 0
     reasoning_tokens: int = 0
     calls: int = 0
+    retries: int = 0
+    fatal_4xx: int = 0
+    empty_responses: int = 0
     _lock: Any = field(default=None, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         import threading
         if self._lock is None:
             self._lock = threading.Lock()
+
+    def bump(self, name: str) -> None:
+        with self._lock:
+            setattr(self, name, getattr(self, name) + 1)
 
     def add(self, u: Any) -> None:
         with self._lock:
@@ -110,7 +117,33 @@ class Usage:
                 "completion_tokens": self.completion_tokens,
                 "reasoning_tokens": self.reasoning_tokens,
                 "total_tokens": self.prompt_tokens + self.completion_tokens,
+                "retries": self.retries,
+                "fatal_4xx": self.fatal_4xx,
+                "empty_responses": self.empty_responses,
             }
+
+
+def _error_status(exc: Exception) -> int | None:
+    """从 OpenAI 兼容 SDK 的异常里读出 HTTP 状态码；网络类异常返回 None。"""
+    for name in ("status_code", "http_status", "status"):
+        v = getattr(exc, name, None)
+        if isinstance(v, int):
+            return v
+        if isinstance(v, str) and v.isdigit():
+            return int(v)
+    return None
+
+
+def _is_retryable(exc: Exception) -> bool:
+    """4xx 里只有限流/超时类值得重试；网络与 5xx 保留退避重试。
+
+    402 subscription_required / 400 参数错 / 401 key 错 / 404 模型名错
+    重试四次只是白等 1+2+4 秒，且会把"账号没套餐"伪装成"系统很慢"。
+    """
+    status = _error_status(exc)
+    if status is None:
+        return True
+    return status in (408, 409, 425, 429) or status >= 500
 
 
 class LLMClient:
@@ -162,9 +195,25 @@ class LLMClient:
                 )
                 if getattr(r, "usage", None):
                     self.usage.add(r.usage)
-                return (r.choices[0].message.content or "").strip()
+                text = (r.choices[0].message.content or "").strip()
+                if not text:
+                    self.usage.bump("empty_responses")
+                return text
             except Exception as e:  # noqa: BLE001
                 last_err = e
+                status = _error_status(e)
+                if not _is_retryable(e):
+                    self.usage.bump("fatal_4xx")
+                    print(f"  [fatal HTTP {status}] "
+                          f"{type(e).__name__}: {str(e)[:120]} — 不重试",
+                          file=sys.stderr, flush=True)
+                    raise RuntimeError(f"不可重试错误 HTTP {status}: {e}") from e
+                if attempt + 1 >= self.max_retry:
+                    print(f"  [retry {attempt + 1}/{self.max_retry}] "
+                          f"{type(e).__name__}: {str(e)[:120]} — 已达上限",
+                          file=sys.stderr, flush=True)
+                    break
+                self.usage.bump("retries")
                 wait = min(2 ** attempt, 30)
                 print(f"  [retry {attempt + 1}/{self.max_retry}] "
                       f"{type(e).__name__}: {str(e)[:120]} — {wait}s 后重试",
@@ -257,6 +306,31 @@ ANSWER_TEMPLATE_COT = (
     "Answer (step by step):"
 )
 
+ANSWER_TEMPLATE_ZH = (
+    "下面给你若干段用户与助手的历史对话。请只依据相关历史回答问题。\n\n\n"
+    "历史对话：\n\n{}\n\n"
+    "当前日期：{}\n"
+    "问题：{}\n"
+    "请用中文简短作答；若信息不足，明确说“提供的信息不足”。\n答案："
+)
+
+ANSWER_TEMPLATE_COT_ZH = (
+    "下面给你若干段用户与助手的历史对话。请只依据相关历史回答问题。"
+    "先列出相关信息，再推理得到答案。\n\n\n"
+    "历史对话：\n\n{}\n\n"
+    "当前日期：{}\n"
+    "问题：{}\n"
+    "请用中文分步作答。\n答案（分步）："
+)
+
+_CJK_CHAR = re.compile(r"[\u3400-\u9fff]")
+
+
+def _looks_zh(text: str) -> bool:
+    s = str(text or "")
+    n = len(_CJK_CHAR.findall(s))
+    return n >= 2 and n / max(1, len(s)) >= 0.05
+
 SESSION_TEMPLATE = "\n### Session {}:\nSession Date: {}\nSession Content:\n{}\n"
 
 
@@ -272,5 +346,9 @@ def render_session(session: list[dict], fmt: str = "nl",
 
 
 def build_prompt(inst: Instance, context: str, cot: bool = False) -> str:
-    tpl = ANSWER_TEMPLATE_COT if cot else ANSWER_TEMPLATE
+    zh = _looks_zh(inst.question)
+    if cot:
+        tpl = ANSWER_TEMPLATE_COT_ZH if zh else ANSWER_TEMPLATE_COT
+    else:
+        tpl = ANSWER_TEMPLATE_ZH if zh else ANSWER_TEMPLATE
     return tpl.format(context, inst.question_date, inst.question)

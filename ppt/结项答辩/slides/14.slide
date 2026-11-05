@@ -1,0 +1,66 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, position: 'relative' }}>
+  <Box style={{ position: 'absolute', left: 0, top: 0, width: 1280, height: 6, background: '#0E3F8C' }} />
+  <Text style={{ position: 'absolute', left: 64, top: 26, fontFamily: "'Microsoft YaHei'", fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>公开对比与消融：机制有独立贡献</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 38, fontFamily: 'Georgia', fontSize: 12, letterSpacing: 1.4, color: '#8B97A8' }}>D.I.V.E. / 14</Text>
+  <Box style={{ position: 'absolute', left: 64, top: 86, width: 1152, height: 1, background: '#D6DCE5' }} />
+
+  <Box style={{ position: 'absolute', left: 64, top: 108, width: 620 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2, marginBottom: 10 }}>FRONTIER COMPARISON</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 19, fontWeight: 'bold', color: '#1A2230', marginBottom: 12 }}>同基准复现前沿架构</Text>
+    <Table
+      style={{ width: '100%', height: 240 }}
+      defaultTextStyle={{ fontSize: 14, textAlign: 'left', color: '#1A2230', fontFamily: "'Microsoft YaHei'" }}
+      defaultCellStyle={{
+        border: {
+          left: { width: 0, color: '#FFFFFF' },
+          right: { width: 0, color: '#FFFFFF' },
+          top: { width: 0, color: '#FFFFFF' },
+          bottom: { width: 1, color: '#D6DCE5' },
+        },
+      }}
+      cells={[
+        [
+          { text: '系统 / 口径', textStyle: { bold: true, color: '#FFFFFF', fontSize: 13 }, cellStyle: { background: { color: '#0E3F8C' } } },
+          { text: '分数', textStyle: { bold: true, color: '#FFFFFF', fontSize: 13 }, cellStyle: { background: { color: '#0E3F8C' } } },
+          { text: '说明', textStyle: { bold: true, color: '#FFFFFF', fontSize: 13 }, cellStyle: { background: { color: '#0E3F8C' } } },
+        ],
+        ['fusion v3.8', { text: '86.80', textStyle: { bold: true, color: '#0E3F8C' } }, 'Oracle 500，3 run'],
+        ['Hindsight 复现', '82.80', '同基准同 judge'],
+        ['第三方协议带 *', '76.9–77.8', 'TiMem / MemOS 套件'],
+        ['自报头部 *', '94–96', 'gpt-5.5 级 reader'],
+      ]}
+    />
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8', lineHeight: 1.6, marginTop: 10 }}>
+      * S 档公开数字，协议与 reader 不同，绝对值不可直接比；仅作区间参照。
+    </Text>
+    <Box style={{ marginTop: 16, padding: 14, background: '#F0F5FC', borderLeft: '3px solid #1E4FA8' }}>
+      <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 14, color: '#1A2230', lineHeight: 1.7 }}>
+        复现实验的价值：同一套评测代码、同一个 judge 下，本系统 +4.0pp；
+        对方强在 KU（Reflect 层 94.9），我们强在 SS-A 与 TR。
+      </Text>
+    </Box>
+  </Box>
+
+  <Box style={{ position: 'absolute', left: 728, top: 108, width: 488 }}>
+    <Text style={{ fontFamily: 'Georgia', fontSize: 12, color: '#1E4FA8', letterSpacing: 1.2, marginBottom: 10 }}>ABLATION MATRIX</Text>
+    <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 19, fontWeight: 'bold', color: '#1A2230', marginBottom: 12 }}>每关一个机制，量化其贡献</Text>
+    {[
+      ['关闭句子级摘录', 'SS-A −7.14', 'assistant 细节召回由摘录层承载'],
+      ['关闭算术注记', 'MS −2.0', '「总量+增量」题失去计算结果'],
+      ['关闭 PREMISE CHECK', '_abs 57%', '拒答从 80% 掉回 57%'],
+      ['关闭时间线渲染', '排序 4 题真错', '审计确认的排序错误重现'],
+      ['关闭证据地板', '净 −1', 'Oracle 上其余层冗余覆盖，如实报告'],
+    ].map(([t, v, d]) => (
+      <Box key={t} style={{ paddingTop: 12, paddingBottom: 12, borderTop: '1px solid #E5E7EB' }}>
+        <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 16, fontWeight: 'bold', color: '#1A2230' }}>{t}</Text>
+          <Text style={{ fontFamily: 'Consolas', fontSize: 14, color: '#1E4FA8' }}>{v}</Text>
+        </Box>
+        <Text style={{ fontFamily: "'Microsoft YaHei'", fontSize: 13, color: '#4A5568', lineHeight: 1.6, marginTop: 4 }}>{d}</Text>
+      </Box>
+    ))}
+  </Box>
+
+  <Text style={{ position: 'absolute', left: 64, top: 668, fontFamily: "'Microsoft YaHei'", fontSize: 12, color: '#8B97A8' }}>面向长对话的确定性记忆系统</Text>
+  <Text style={{ position: 'absolute', right: 64, top: 668, fontFamily: 'Georgia', fontSize: 13, color: '#1E4FA8' }}>14 / 17</Text>
+</Slide>

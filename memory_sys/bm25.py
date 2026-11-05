@@ -14,6 +14,9 @@ import re
 from collections import Counter
 
 _TOKEN_SPLIT = re.compile(r"[a-z0-9]+")
+# CJK 兜底：不引入分词依赖，用「单字 + 相邻双字」让中文查询与中文事实可交集。
+# 英文语料不会触发该分支，因此 LongMemEval 的 BM25 分数保持逐位不变。
+_CJK_RUN = re.compile(r"[\u3400-\u9fff]+")
 
 # 极简停用词：只挡高频虚词，保留领域名词
 _STOP = {
@@ -37,8 +40,19 @@ _SYNONYM = {
 }
 
 
+def _cjk_tokens(text: str) -> list[str]:
+    """中文连续片段 → 单字与相邻双字；无中文时返回空列表。"""
+    out: list[str] = []
+    for run in _CJK_RUN.findall(str(text)):
+        chars = list(run)
+        out.extend(chars)
+        out.extend("".join(chars[i:i + 2])
+                   for i in range(len(chars) - 1))
+    return out
+
+
 def tokenize(text: str) -> list[str]:
-    """小写分词 + 停用词过滤 + 轻量后缀折叠（-ies→y，-s）+ 同义词归并。"""
+    """小写分词 + 停用词过滤 + 轻量后缀折叠 + 同义词归并 + CJK 兜底。"""
     out: list[str] = []
     for w in _TOKEN_SPLIT.findall(str(text).lower()):
         if w in _STOP or len(w) < 2:
@@ -49,6 +63,7 @@ def tokenize(text: str) -> list[str]:
             w = w[:-1]
         w = _SYNONYM.get(w, w)
         out.append(w)
+    out.extend(_cjk_tokens(text))
     return out
 
 
