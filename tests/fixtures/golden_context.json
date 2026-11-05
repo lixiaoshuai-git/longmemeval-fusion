@@ -1,8 +1,8 @@
 {
  "meta": {
   "n": 15,
-  "cache": "fusfull38-fusion-cache.json",
-  "created": "2026-11-05 14:27",
+  "cache": "v310rc1-fusion-cache.json",
+  "created": "2026-11-05 16:35",
   "ids": 15,
   "note": "确定性上下文指纹；不含耗时字段"
  },
@@ -10,7 +10,7 @@
   "gpt4_2655b836": {
    "type": "temporal-reasoning",
    "plan": "5bc66db20560",
-   "ctx": "9102c2e6191b",
+   "ctx": "22964ee6034d",
    "sections": "8707e6ad0391",
    "cand": "1ca56fc6b99f",
    "one_hop": 0,

@@ -232,7 +232,11 @@ class WriteMixin:
                     tgt.valid_to = anchor            # 只封 τ_v（演化）
                 tgt.status = "superseded"
                 store.stats["superseded"] += 1
-                new_event(tgt.slot_id, False, anchor, None)
+                # 新值的生效时间优先用 when_raw 的确定性解析（如 "Last month"
+                # → 上月区间），anchor 只是分类器给的粗锚点（通常是陈述日）。
+                # 曾经的 bug：这里硬用 anchor，把 "Last month I attended ..."
+                # 记成了陈述当天，读者据此算出的间隔整体偏大。
+                new_event(tgt.slot_id, False, vf or anchor, None)
             else:
                 tgt.status = "invalidated"           # τ_v、τ_t 都封（更正）
                 store.stats["invalidated"] += 1

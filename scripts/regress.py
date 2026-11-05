@@ -189,7 +189,8 @@ def main() -> None:
     if args.dump_cache:
         subset = {k: raw_cache[k] for k in cache.hits if k in raw_cache}
         pathlib.Path(args.dump_cache).write_text(
-            json.dumps(subset, ensure_ascii=False), encoding="utf-8")
+            json.dumps(subset, ensure_ascii=False, sort_keys=True),
+            encoding="utf-8")
         size_kb = pathlib.Path(args.dump_cache).stat().st_size / 1024
         check, err2 = replay_records(
             [i for i in selected if i.question_id in current],
@@ -252,7 +253,7 @@ def main() -> None:
     print(f"\n比对 {len(set(old) & set(current))} 题："
           f"语义漂移 {len(semantic_diffs)} / 仅格式漂移 {len(format_diffs)} / "
           f"缺失 {len(only_old)} / 新增 {len(only_new)}")
-    for qid, fields in semantic_diffs[:10]:
+    for qid, fields in semantic_diffs[:50]:
         print(f"  SEMANTIC {qid} [{current[qid].get('type')}] 变动字段: {fields}")
     if format_diffs[:5]:
         print(f"  FORMAT   {[q for q, _ in format_diffs[:5]]}")
