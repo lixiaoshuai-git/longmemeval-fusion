@@ -1,8 +1,8 @@
 {
  "meta": {
   "n": 15,
-  "cache": "v310rc1-fusion-cache.json",
-  "created": "2026-11-05 16:35",
+  "cache": "v311-fusion-cache.json",
+  "created": "2026-11-05 17:32",
   "ids": 15,
   "note": "确定性上下文指纹；不含耗时字段"
  },
@@ -41,11 +41,11 @@
    "type": "temporal-reasoning",
    "plan": "2b6f37b5fa9e",
    "ctx": "89353d72abc3",
-   "sections": "c47c0d6652f4",
+   "sections": "cab61077edc5",
    "cand": "eba3be830001",
    "one_hop": 0,
    "matched": 14,
-   "chars": 15644
+   "chars": 15202
   },
   "gpt4_9a159967": {
    "type": "temporal-reasoning",
@@ -121,11 +121,11 @@
    "type": "single-session-assistant",
    "plan": "009cbf5f335d",
    "ctx": "9f171397adc2",
-   "sections": "9e13da3ec5aa",
+   "sections": "a97fb11f7172",
    "cand": "8aa9eead0f7d",
    "one_hop": 0,
    "matched": 7,
-   "chars": 5294
+   "chars": 4927
   },
   "e47becba": {
    "type": "single-session-user",

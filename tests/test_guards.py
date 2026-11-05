@@ -73,3 +73,23 @@ def test_ordinal_relative_after_n_rolled_back():
 def test_ordinal_miss_returns_none():
     m = mem_with([{"role": "assistant", "content": "no numbered lists here"}])
     assert m._ordinal_lookup("What is the 27th parameter?") is None
+
+
+# ---------------- 形态差异不是假前提（infra-2026-11 G2） ----------------
+
+def test_premise_ignores_inflected_verb():
+    """用户说 caught，问题说 catch：旧实现会当成假前提并强迫拒答。"""
+    m = mem_with([{"role": "user",
+                   "content": "I caught 7 largemouth bass with Alex at Lake Michigan "
+                              "on the earlier trip."}])
+    assert m._premise_check(
+        "How many largemouth bass did I catch with Alex at Lake Michigan?") is None
+
+
+def test_premise_still_flags_absent_proper_noun_in_same_gram():
+    """收紧后仍要抓真专名：Jordan 没出现过。"""
+    m = mem_with([{"role": "user",
+                   "content": "I caught 7 largemouth bass with Alex at Lake Michigan."}])
+    out = m._premise_check(
+        "How many largemouth bass did I catch with Jordan at Lake Michigan?")
+    assert out and "jordan" in out

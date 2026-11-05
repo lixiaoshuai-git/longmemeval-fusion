@@ -9,6 +9,14 @@ from config import _FACT_CAP, _TURN_CHARS, _VERBATIM_CHARS
 from textutil import _clip, _first_number, _fmt_d
 
 
+# 前提校验只报"专名信号"（大写/数字/连字符）。开启原因：旧实现会把
+# 普通动词也算进 suspects，于是 "did I catch … with Alex" 因为用户说的是
+# caught（形态不同）被误判成假前提，整题被迫拒答（10e09553，金标 7）。
+# 审计：非拒答题触发 91 → 36（55 题不再触发，其中 46 题原本就答对，
+# 9 题为错题）；拒答题 11 题触发数不变——收紧不削弱 _abs 保护。
+PREMISE_PROPER_ONLY = True
+
+
 class RenderMixin:
     """由 FusionMemory 组合；所有方法依赖 self.store / self.client / self._cached。"""
 
@@ -322,6 +330,7 @@ class RenderMixin:
             user_toks.update(tokenize(t))
 
         suspects = []
+        suspect_proper: dict[str, bool] = {}
         # v3.4.1 收紧：只认专名信号（原文大写 / 数字 / 连字符词），忽略措辞动词。
         # 误报复盘：acquire/total/past 是问题措辞而非事实前提（用户说的是
         # got/bought/in all），这类词触发会把好答案带偏。
@@ -375,6 +384,9 @@ class RenderMixin:
                 for w in has_specific:
                     if w not in user_toks and w not in suspects:
                         suspects.append(w)
+                        # tokenize 可能折叠后缀（catch→catche），两种形态都查
+                        suspect_proper[w] = bool(
+                            proper_flags.get(w) or proper_flags.get(w.rstrip("e")))
         # 单词级：只认原文数字/连字符的专名（"pre-1920" 类）；存在性按 tokenize
         # 结果判——**任一部词**（"art" of "art-related"）在 user 语料即算存在。
         # v3.4.4 教训：all-部词判定被 "related/different" 这类措辞形容词卡死；
@@ -387,6 +399,9 @@ class RenderMixin:
                     continue
                 if w not in suspects:
                     suspects.append(w)
+                    suspect_proper[w] = True
+        if PREMISE_PROPER_ONLY:
+            suspects = [w for w in suspects if suspect_proper.get(w, False)]
         if not suspects:
             return None
 
