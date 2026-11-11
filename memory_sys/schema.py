@@ -151,6 +151,35 @@ class MemoryStore:
             self.evidence.append(Evidence(session_id, i, t["role"],
                                           date, t["content"]))
 
+    # ---------- 写入：单一事件构造点 ----------
+
+    def append_event(self, *, subject: str, predicate: str, value: str,
+                     category: str, valid_from: datetime | None = None,
+                     valid_to: datetime | None = None, corrects: bool = False,
+                     amount: float | None = None, date_text: str = "",
+                     evidence: tuple | list = (), stated_at: datetime | None = None,
+                     fact: str | None = None,
+                     slot_id: int | None = None) -> Event:
+        """唯一的事件构造入口：分配 tx_seq、归一化、记账。
+
+        `add_event`（带去重/状态转移的通用写入）与写入期执行器
+        （`_apply.new_event`，几何已由关系分类决定）都走这里，避免两套
+        构造逻辑再次漂移——v3.10 的「evolve 丢时间」就源于两条路径各写一份。
+        """
+        self.tx_seq += 1
+        ev = Event(
+            subject=(subject or "user").strip().lower() or "user",
+            predicate=predicate, value=value, category=category,
+            valid_from=valid_from, valid_to=valid_to, tx_seq=self.tx_seq,
+            status="active", amount=norm_amount(amount), date_text=date_text,
+            corrects=corrects, stated_at=stated_at, evidence=list(evidence),
+        )
+        ev.fact = fact if fact is not None else ""
+        ev.slot_id = slot_id
+        self.events.append(ev)
+        self.stats["added"] += 1
+        return ev
+
     # ---------- 写入：去重 + 更新语义 ----------
 
     def add_event(self, subject: str, predicate: str, value: str,
@@ -192,12 +221,12 @@ class MemoryStore:
                         self.stats["superseded"] += 1
                     break
 
-        ev = Event(subject, predicate, value, category, valid_from,
-                   valid_to, self.tx_seq, "active", amount, date_text,
-                   corrects, stated_at, [ev_ptr])
-        self.events.append(ev)
+        ev = self.append_event(
+            subject=subject, predicate=predicate, value=value,
+            category=category, valid_from=valid_from, valid_to=valid_to,
+            corrects=corrects, amount=amount, date_text=date_text,
+            evidence=[ev_ptr], stated_at=stated_at)
         self._by_key[key] = ev
-        self.stats["added"] += 1
         return ev
 
     # ---------- 查询算子 ----------

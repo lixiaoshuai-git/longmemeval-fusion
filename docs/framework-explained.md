@@ -167,7 +167,7 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 
 | 文件 | 职责 |
 |---|---|
-| `memory_sys/schema.py` | Event/Slot/MemoryStore 数据模型与确定性存储算子 |
+| `memory_sys/schema.py` | Event/Slot/MemoryStore 数据模型与确定性存储算子；`append_event` 是唯一构造点 |
 | `memory_sys/fusion.py` | 组合根：缓存、生命周期、对外 API（行为由三个 mixin 提供） |
 | `memory_sys/write_path.py` | 写入期流程（抽取 / 定时 / 关系 / 落库） |
 | `memory_sys/read_path.py` | 查询期流程（解析 / 算子 / 召回 / 一跳 / 轨迹） |
@@ -180,7 +180,7 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 | `scripts/run_eval.py` | 评测流水线（抽样/并行/断点续跑/缓存落盘） |
 | `scripts/judge.py` | 判分（直接使用官方判分提示词） |
 | `cli.py` | 交互入口（REPL） |
-| `tests/` | 72 例离线单元测试 + CLI 手工测试用例 |
+| `tests/` | 75 例离线单元测试 + CLI 手工测试用例 |
 
 ---
 

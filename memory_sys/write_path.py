@@ -205,19 +205,15 @@ class WriteMixin:
 
         def new_event(slot_id: int | None, corrects: bool,
                       vfrom: datetime | None, vto: datetime | None):
-            store.tx_seq += 1
-            from schema import Event
-            ev = Event(
+            ev = store.append_event(
                 subject="assistant" if c.get("kind") == "assistant_fact" else "user",
                 predicate=str(c.get("kind", "event")),
-                value=_clip(fact, 300), category=str(c.get("category") or "other"),
-                valid_from=vfrom, valid_to=vto, tx_seq=store.tx_seq,
-                status="active", amount=None, date_text=str(c.get("when_raw", "")),
-                corrects=corrects, stated_at=sdate, evidence=[ptr])
-            ev.fact = fact
-            ev.slot_id = slot_id if slot_id is not None else store.tx_seq
-            store.events.append(ev)
-            store.stats["added"] += 1
+                value=_clip(fact, 300),
+                category=str(c.get("category") or "other"),
+                valid_from=vfrom, valid_to=vto,
+                corrects=corrects, date_text=str(c.get("when_raw", "")),
+                evidence=[ptr], stated_at=sdate, fact=fact)
+            ev.slot_id = slot_id if slot_id is not None else ev.tx_seq
             return ev
 
         if action == "merge" and tgt is not None and tgt.status == "active":

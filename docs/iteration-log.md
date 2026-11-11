@@ -1733,3 +1733,54 @@ key = (len(self.store.events),
 `MemoryStore.add_event` 的一个 `strict=False` 变体，让「时间几何、去重、
 状态转移」只有一处实现。这是目前最大的耦合点，也是历史 bug 的来源；
 预计 0 行为变化，用 500 题指纹验证。
+
+---
+
+## infra-2026-11 · 阶段 N：事件构造收敛为单一入口（2026-11-11）
+
+上一轮 R3 记录的耦合点：事件有两条创建路径——`MemoryStore.add_event`（去重 +
+单值谓词状态转移）与写入期执行器的 `_apply.new_event`（几何由关系分类给定，
+直接 append）。两套逻辑各自处理 `tx_seq / 归一化 / stats`，v3.10 的
+「evolve 丢时间」就是两套时间语义漂移的产物。
+
+### 一、改法
+
+新增 `MemoryStore.append_event(...)` 作为**唯一构造点**：分配 `tx_seq`、
+`norm_amount`、`stats["added"]`、`evidence` 拷贝、`fact/value/slot_id` 分离，
+一处完成。上层两种策略保持不变：
+
+- `add_event`：先做去重（`_by_key`）与单值谓词的状态转移，再调 `append_event`；
+- `_apply.new_event`：几何已定，直接调 `append_event`，再按需补 `slot_id`。
+
+```python
+# 收敛前：_apply 里 16 行手工构造
+ev = Event(...); ev.fact = fact; ev.slot_id = ...; store.events.append(ev)
+# 收敛后：10 行，只剩策略
+ev = store.append_event(..., fact=fact)
+ev.slot_id = slot_id if slot_id is not None else ev.tx_seq
+```
+
+`grep "Event(" memory_sys/` 现在只剩 1 处（`append_event` 内部）。
+
+### 二、验证
+
+- **500 题指纹 0 漂移**（0 cache miss，退出码 0）——合并是纯结构改动。
+- 单测 72 → **75**（`tests/test_store_construction.py`）：
+  构造点分配 `tx_seq` 且 `fact/value` 分离；`evidence` 是拷贝（外部改列表不影响
+  事件）；`add_event` 的去重仍然生效（两条同句合并、`merged=1`）。
+- 说明文件同步：`schema.py` 的职责描述、`architecture-brief.txt` 写入期新增
+  「构造统一走 append_event」。
+
+### 三、判定与下一步
+
+保留，**零行为变化**；版本 **v3.15**。
+
+剩下两处结构性欠账：
+
+1. **R5**：模块级开关（`PREMISE_PROPER_ONLY`、`ABL_*`）配合扁平导入，存在同名
+   模块两份的问题。改法是把开关收进一个 `RuntimeOptions` 数据类，由
+   `FusionMemory.__init__` 持有，规则函数从 `self.options` 读取；
+2. **read() 的职责**：解析 / 执行 / 渲染 / 守卫都在一个 100 行函数里，可拆成
+   `_plan()` / `_render()` 两个阶段，便于单测。
+
+两者都不改行为，先做哪一个由下一轮的信噪比决定；R5 风险更低（不碰主链路）。
