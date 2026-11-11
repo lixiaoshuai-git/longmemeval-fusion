@@ -42,7 +42,8 @@ class ReadMixin:
 
     def _entity_toks(self, e) -> set[str]:
         toks = tokenize(e.fact or e.value)
-        return {t for t in toks if len(t) >= 3 and t not in self._GENERIC_TOKS}
+        generic = self._generic_toks()
+        return {t for t in toks if len(t) >= 3 and t not in generic}
 
     def _one_hop(self, seeds: list, cap: int = 12) -> list:
         """v3.9 #3：一跳实体扩展——种子事件（裸 Event 列表）的**稀有**实体

@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import json
 import pathlib
 import re
@@ -71,7 +72,14 @@ def main() -> None:
     render = ROOT / "memory_sys" / "render.py"
     prompt_hits = scan(llm, DENY)
     read_hits = scan(ROOT / "memory_sys" / "read_path.py", DENY)
-    word_hits = scan(render, DOMAIN)
+    # P6 检查的是**词表集合本身**，不是文件文本（文档里举反例是允许的）
+    sys.path.insert(0, str(ROOT / "memory_sys"))
+    from lexicon import LANGUAGE_GENERIC
+    word_hits = [(0, w, "lexicon.LANGUAGE_GENERIC") for w in DOMAIN
+                 if w in LANGUAGE_GENERIC]
+    # 结构性检查：核心模块不应再出现硬编码的通用词表
+    if "_GENERIC_TOKS" in render.read_text(encoding="utf-8"):
+        word_hits.append((0, "_GENERIC_TOKS", "render.py 仍在硬编码词表"))
 
     qh = question_hits(DENY)
     print(f"提示词命中（llm_io.py）: {len(prompt_hits)}")
@@ -80,8 +88,8 @@ def main() -> None:
     print(f"读侧文案命中（read_path.py）: {len(read_hits)}")
     for ln, n, text in read_hits:
         print(f"  L{ln}: [{n}] {text}")
-    print(f"领域词命中（render.py 词表/注释）: {len(word_hits)}"
-          f"（P6 待分层，不计入 strict）")
+    print(f"领域词命中（render.py / lexicon.py 词表）: {len(word_hits)}"
+          f"（P6：应为 0；领域词只能由 options.domain_terms 注入）")
     if qh:
         total = sum(1 for v in qh.values() if v)
         print("\n题面命中统计（仅统计 >0 的词）:")
@@ -90,7 +98,7 @@ def main() -> None:
                 print(f"  {n:<34} {c} 题")
         print(f"  命中词条数: {total}/{len(qh)}")
 
-    bad = prompt_hits + read_hits
+    bad = prompt_hits + read_hits + word_hits
     if args.strict and bad:
         print("\nSTRICT: 提示词/文案仍含评测集原句，按 P5 需改为抽象表述。")
         raise SystemExit(1)

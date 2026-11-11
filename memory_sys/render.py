@@ -6,6 +6,7 @@ from datetime import datetime
 
 from bm25 import BM25, tokenize
 from config import _FACT_CAP, _TURN_CHARS, _VERBATIM_CHARS
+from lexicon import LANGUAGE_GENERIC
 from textutil import _clip, _first_number, _fmt_d
 
 
@@ -276,22 +277,15 @@ class RenderMixin:
     # 教训（_abs 稳定错 ×6）：assistant 闲聊里的无关提及（讲长野交通时罗列了
     # Shinjuku、讲网球包时提到 table tennis）会经 _mentions 抑制 SCOPE NOTE，
     # 让 reader 顺着错误前提作答。
-    _GENERIC_TOKS = {
-        "user", "my", "me", "i", "we", "our", "you", "your", "the", "a", "an",
-        "in", "on", "at", "for", "with", "and", "or", "of", "to", "do", "did",
-        "does", "have", "has", "had", "am", "is", "are", "was", "were", "will",
-        "would", "can", "could", "how", "many", "much", "what", "which", "when",
-        "where", "who", "long", "often", "first", "current", "new", "just",
-        "started", "start", "living", "live", "playing", "play", "lead",
-        "leading", "friends", "local", "park", "tank", "apartment", "role",
-        "job", "current", "team", "collection", "month", "months", "week",
-        "weeks", "year", "years", "day", "days", "time", "times", "high",
-        "school", "undergrad", "course", "research", "project", "gallon",
-        "different", "related", "kind", "type", "sort", "things", "thing",
-        "item", "items", "stuff", "much", "more", "most", "less", "least",
-        "store", "shop", "place", "city", "area", "event", "events",
-        "task", "tasks", "game", "games", "people", "person", "friend",
-    }
+    def _generic_toks(self) -> frozenset[str]:
+        """语言通用词 + 实例注入的领域词（P6 分层；领域词默认为空）。
+
+        旧实现是 111 个词的模块级集合，其中混入了评测语料专属的高频普通
+        名词（容器容量、居住类型、学历、课程名等）：在本题库上提高了守卫与
+        实体索引的精度，换一份语料就静默失效。现在语言通用词硬编码在
+        `lexicon.LANGUAGE_GENERIC`，语料词由 `options.domain_terms` 注入。
+        """
+        return LANGUAGE_GENERIC | self.options.domain_terms
 
     _ADVICE_KW = ("any advice", "can you recommend", "recommend", "any tips",
                   "any suggestions", "what should", "any idea", "help me",
@@ -331,6 +325,7 @@ class RenderMixin:
 
         suspects = []
         suspect_proper: dict[str, bool] = {}
+        generic = self._generic_toks()
         # v3.4.1 收紧：只认专名信号（原文大写 / 数字 / 连字符词），忽略措辞动词。
         # 误报复盘：acquire/total/past 是问题措辞而非事实前提（用户说的是
         # got/bought/in all），这类词触发会把好答案带偏。
@@ -370,7 +365,7 @@ class RenderMixin:
                 # 词）——v3.4.2 bug：拿原文形态查永远 miss
                 has_proper = any(proper_flags.get(w.strip(".,?!").lower(), False)
                                  for w in gram_raw)
-                has_specific = [w for w in toks if w not in self._GENERIC_TOKS]
+                has_specific = [w for w in toks if w not in generic]
                 # v3.4.3 最终触发条件：**硬专名信号**（数字/连字符/原文大写词）。
                 # 教训链：①同义改写（acquire↔bought、clothing↔clothes）不是假
                 # 前提；②"两词全专有"也不行（"acquire in"/"past two" 都触发）——
@@ -391,11 +386,21 @@ class RenderMixin:
         # 结果判——**任一部词**（"art" of "art-related"）在 user 语料即算存在。
         # v3.4.4 教训：all-部词判定被 "related/different" 这类措辞形容词卡死；
         # 连字符复合词的本质是修饰（art-related=与 art 相关），部词在即存在。
+        #
+        # v3.19 收紧：**数字是不可改写的硬事实**。旧规则下 "30-gallon" 会因
+        # 用户说过 "20-gallon" 里含 gallon 而被判存在——数字被同义部词顶替，
+        # 真正的假前提（用户没有 30 加仑的缸）反而漏报。现在含数字的部词必须
+        # 原样出现，非数字部词仍按"任一存在即可"（保留 art-related 的宽松）。
         for w_raw, w in ((r, r.strip(".,?!").lower()) for r in raw_words):
             is_proper = (any(ch.isdigit() for ch in w) or "-" in w)
-            if (is_proper and len(w) >= 4 and w not in self._GENERIC_TOKS):
-                sub = [t for t in tokenize(w) if t not in self._GENERIC_TOKS]
-                if sub and any(t in user_toks for t in sub):
+            if is_proper and len(w) >= 4 and w not in generic:
+                sub = [t for t in tokenize(w) if t not in generic]
+                numeric = [t for t in sub if any(ch.isdigit() for ch in t)]
+                if numeric:
+                    exists = all(t in user_toks for t in numeric)
+                else:
+                    exists = bool(sub) and any(t in user_toks for t in sub)
+                if exists:
                     continue
                 if w not in suspects:
                     suspects.append(w)

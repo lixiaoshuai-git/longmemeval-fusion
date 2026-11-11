@@ -117,3 +117,27 @@ def test_scope_note_asks_for_paraphrase_not_refusal():
     assert "paraphrase" in ctx            # 先找同义表达
     assert "not enough" in ctx            # 真正缺失时才用拒答措辞
     assert "MUST answer" not in ctx       # 不再强制拒答
+
+
+# ---------------- 数字是不可改写的硬事实（v3.19） ----------------
+
+def test_premise_flags_numeric_compound_with_wrong_number():
+    """用户有 20-gallon，问题问 30-gallon：数字必须原样出现，不能被 gallon 顶替。"""
+    m = mem_with([{"role": "user",
+                   "content": "I keep 10 neon tetras in my 20-gallon tank."}])
+    out = m._premise_check("How many fish are in my 30-gallon tank?")
+    assert out and "30-gallon" in out
+
+
+def test_premise_allows_hyphenated_modifier_paraphrase():
+    """art-related 这类修饰词只要部词出现过就算存在（v3.4.4 的宽松保留）。"""
+    m = mem_with([{"role": "user",
+                   "content": "I bought some art prints for the living room."}])
+    assert m._premise_check(
+        "Where did I put the art-related purchases?") is None
+
+
+def test_premise_allows_same_number_hyphenated_compound():
+    m = mem_with([{"role": "user",
+                   "content": "I keep 10 neon tetras in my 20-gallon tank."}])
+    assert m._premise_check("How many fish are in my 20-gallon tank?") is None

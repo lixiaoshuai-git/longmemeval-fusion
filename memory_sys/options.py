@@ -28,6 +28,9 @@ class RuntimeOptions:
     # 前提校验只报带专名信号（大写/数字/连字符）的词；False 恢复 v3.10 之前
     # 的宽口径（普通动词也算 suspect，会把 catch/caught 判成假前提）。
     premise_proper_only: bool = True
+    # 领域词：语料专属的高频普通名词（tank / gallon / undergrad …）。
+    # 默认空——语言通用词在 lexicon.LANGUAGE_GENERIC，两者不混。
+    domain_terms: frozenset[str] = frozenset()
     # 以下三个是消融开关：关闭后分别去掉算术注记 / 句子级摘录 / 证据地板。
     enable_arith: bool = True
     enable_excerpts: bool = True
@@ -36,7 +39,10 @@ class RuntimeOptions:
     @classmethod
     def from_env(cls) -> "RuntimeOptions":
         """环境变量覆盖默认值，供消融矩阵使用（ABL_* 与 PREMISE_PROPER_ONLY）。"""
+        import os as _os
+        raw = _os.environ.get("DOMAIN_TERMS", "")
         return cls(
+            domain_terms=frozenset(x.strip().lower() for x in raw.split(",") if x.strip()),
             premise_proper_only=_flag("PREMISE_PROPER_ONLY"),
             enable_arith=_flag("ABL_ARITH"),
             enable_excerpts=_flag("ABL_EXCERPTS"),

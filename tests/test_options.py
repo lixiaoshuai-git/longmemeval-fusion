@@ -80,3 +80,20 @@ def test_module_global_switch_is_gone():
     pkg_render = importlib.import_module("memory_sys.render")
     for mod in (flat_render, pkg_render):
         assert not hasattr(mod, "PREMISE_PROPER_ONLY"), mod.__name__
+
+
+def test_domain_terms_are_opt_in_only():
+    """P6：领域词默认不进语言通用词表，必须显式注入。"""
+    from memory_sys.lexicon import LANGUAGE_GENERIC
+
+    assert "tank" not in LANGUAGE_GENERIC
+    assert "gallon" not in LANGUAGE_GENERIC
+    assert "undergrad" not in LANGUAGE_GENERIC
+
+    plain = FusionMemory(client=object())
+    assert "tank" not in plain._generic_toks()
+    injected = FusionMemory(client=object(), options=RuntimeOptions(
+        domain_terms=frozenset({"tank", "gallon"})))
+    assert {"tank", "gallon"} <= injected._generic_toks()
+    # 注入只影响该实例，不污染默认实例
+    assert "tank" not in plain._generic_toks()
