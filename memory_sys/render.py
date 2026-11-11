@@ -9,12 +9,12 @@ from config import _FACT_CAP, _TURN_CHARS, _VERBATIM_CHARS
 from textutil import _clip, _first_number, _fmt_d
 
 
-# 前提校验只报"专名信号"（大写/数字/连字符）。开启原因：旧实现会把
-# 普通动词也算进 suspects，于是 "did I catch … with Alex" 因为用户说的是
-# caught（形态不同）被误判成假前提，整题被迫拒答（10e09553，金标 7）。
-# 审计：非拒答题触发 91 → 36（55 题不再触发，其中 46 题原本就答对，
-# 9 题为错题）；拒答题 11 题触发数不变——收紧不削弱 _abs 保护。
-PREMISE_PROPER_ONLY = True
+# 前提校验只报"专名信号"（大写/数字/连字符）是默认行为，开关在
+# `RuntimeOptions.premise_proper_only`（options.py），随实例而不是模块。
+# 开启原因：旧实现会把普通动词也算进 suspects，于是 "did I catch … with Alex"
+# 因为用户说的是 caught（形态不同）被误判成假前提，整题被迫拒答
+# （10e09553，金标 7）。审计：非拒答题触发 91 → 36（55 题不再触发，其中
+# 46 题原本就答对，9 题为错题）；拒答题 11 题触发数不变——收紧不削弱保护。
 
 
 class RenderMixin:
@@ -400,7 +400,7 @@ class RenderMixin:
                 if w not in suspects:
                     suspects.append(w)
                     suspect_proper[w] = True
-        if PREMISE_PROPER_ONLY:
+        if self.options.premise_proper_only:
             suspects = [w for w in suspects if suspect_proper.get(w, False)]
         if not suspects:
             return None

@@ -173,6 +173,7 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 | `memory_sys/read_path.py` | 查询期流程（解析 / 算子 / 召回 / 一跳 / 轨迹） |
 | `memory_sys/render.py` | 上下文渲染与守卫（台账 / 偏好 / 摘录 / 地板 / 拒答） |
 | `memory_sys/temporal.py` | 相对时间规则解析与合法性校验 |
+| `memory_sys/options.py` | 运行时选项（实例级开关，不可变） |
 | `memory_sys/bm25.py` | 纯 Python 的 BM25 检索与分词（无第三方依赖） |
 | `memory_sys/llm_io.py` | 四个 LLM 边界的提示词模板 + 稳健 JSON 解析 |
 | `memory_sys/lifecycle.py` | 遗忘/生命周期（默认关闭） |
@@ -180,7 +181,7 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 | `scripts/run_eval.py` | 评测流水线（抽样/并行/断点续跑/缓存落盘） |
 | `scripts/judge.py` | 判分（直接使用官方判分提示词） |
 | `cli.py` | 交互入口（REPL） |
-| `tests/` | 75 例离线单元测试 + CLI 手工测试用例 |
+| `tests/` | 81 例离线单元测试 + CLI 手工测试用例 |
 
 ---
 
@@ -446,6 +447,16 @@ top-30；辅路「category 命中但 BM25 低分」的事件给 0.6 底分保进
   （`store.add_event()` 与 `forget()` 都会绕过它）。
 - `before_text` 的相对时间锚定到**问题日期**。旧实现写死 `2023-06-01`，
   `before_text="today"` 会把「今天」算成 6/1（实际问题日期 3/2，差 3 个月）。
+
+**运行时选项（v3.16）**
+
+- 全部开关收在 `memory_sys/options.py` 的 `RuntimeOptions`（frozen dataclass）：
+  `premise_proper_only`、`enable_arith`、`enable_excerpts`、`enable_floor`。
+- 取值优先级：`FusionMemory(options=...)` > 环境变量（`ABL_*`、`PREMISE_PROPER_ONLY`）> 默认值。
+- 为什么不用模块全局：`fusion.py` 用扁平导入（`from render import RenderMixin`），
+  `import memory_sys.render` 与管道里的 `import render` 是**两个模块对象**；
+  v3.11 的 A/B 审计因此把开关设到了没人读的那份上，得出「0 题变化」的假结论。
+  现在开关属于实例，两个实例可以并存不同配置，单测直接锁住互不影响。
 
 ### 7.3 BM25 检索：算法直白解释
 

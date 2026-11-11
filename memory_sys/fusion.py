@@ -49,6 +49,7 @@ from config import (  # noqa: E402,F401  (re-export)
     _EXCERPT_K, _FACT_CAP, _INTENTS, _STRONG_MIN, _STRONG_RATIO, _TURN_CHARS,
     _VERBATIM_CHARS,
 )
+from options import RuntimeOptions  # noqa: E402,F401  (re-export)
 from read_path import ReadMixin  # noqa: E402
 from render import RenderMixin  # noqa: E402
 from schema import MemoryStore  # noqa: E402
@@ -89,7 +90,8 @@ class FusionMemory(WriteMixin, ReadMixin, RenderMixin):
     """
 
     def __init__(self, client, cache: dict | None = None,
-                 cache_path: str | None = None, **_):
+                 cache_path: str | None = None,
+                 options: RuntimeOptions | None = None, **_):
         self.client = client
         self.cache = cache if cache is not None else {}
         self.cache_path = cache_path
@@ -97,15 +99,25 @@ class FusionMemory(WriteMixin, ReadMixin, RenderMixin):
         self._sess_n = 0
         self._lock = threading.Lock()
         self._dirty = False
-        # 消融开关（仅评测实验用，默认全开）：ABL_ARITH / ABL_EXCERPTS /
-        # ABL_FLOOR 置 0 分别关闭算术注记 / 句子级摘录 / 证据地板。
-        # 机制真实性消融矩阵的执行面——每个开关对应一条可归因的机制。
-        import os as _os
-        self.enable_arith = _os.environ.get("ABL_ARITH", "1") == "1"
-        self.enable_excerpts = _os.environ.get("ABL_EXCERPTS", "1") == "1"
-        self.enable_floor = _os.environ.get("ABL_FLOOR", "1") == "1"
+        # 全部开关收在一个不可变对象里：显式传入 > 环境变量 > 默认值。
+        # 两个实例可以携带不同选项并存，不再有「改模块全局改错一份」的问题。
+        self.options = options if options is not None else RuntimeOptions.from_env()
         self.last_meta: dict = {}
         self.last_trace: dict = {}
+
+    # 兼容旧的 `mem.enable_arith` 读法（read_path/render 仍在用）。
+    # 只读：要改行为请传入新的 RuntimeOptions，而不是就地改属性。
+    @property
+    def enable_arith(self) -> bool:
+        return self.options.enable_arith
+
+    @property
+    def enable_excerpts(self) -> bool:
+        return self.options.enable_excerpts
+
+    @property
+    def enable_floor(self) -> bool:
+        return self.options.enable_floor
 
     # -- 缓存 --
 

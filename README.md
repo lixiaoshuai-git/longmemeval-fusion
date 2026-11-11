@@ -105,7 +105,7 @@ hindsight 强在 KU（Reflect 层 94.87），弱在 SS-A/TR，互相印证机制
 ## 运行方法
 
 依赖：Python 3.10+，`pip install -r requirements.txt`（openai / tiktoken / backoff / numpy / tqdm；judge 另需官方仓库依赖）。
-自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（75 例，纯离线，<2s；CI 见 `.github/workflows/tests.yml`）。
+自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（81 例，纯离线，<2s；CI 见 `.github/workflows/tests.yml`）。
 
 1. 配置 `.env`（参考 `.env.example`）：OpenAI 兼容接口的 `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL`。
 2. 数据：LongMemEval 官方仓库（github.com/xiaowu0162/LongMemEval），
@@ -158,6 +158,7 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | `memory_sys/render.py` | 渲染：事实清单 / 台账 / 偏好段 / 摘录 / 证据地板 / 三道守卫 |
 | `memory_sys/temporal.py` | 时间：相对/绝对表达规则解析、粒度与合法性校验（±400 天） |
 | `memory_sys/config.py` | 可调常量：强匹配阈值、摘录/事实/地板上限 |
+| `memory_sys/options.py` | **运行时选项**：`RuntimeOptions`（不可变 dataclass），开关随实例、不随模块；环境变量可覆盖默认值 |
 | `memory_sys/plan.py` | 查询计划契约（`QueryPlan`）+ 静态审计（`audit_plan`，只读、不调用模型） |
 | `memory_sys/bm25.py` | 纯 Python BM25 与分词（无第三方依赖；英文原逻辑 + 中文 OOD 单字/双字兜底） |
 | `memory_sys/schema.py` | 数据模型：Event（五元组 + fact/slot_id）、Slot 版本链、MemoryStore；**唯一事件构造点 `append_event`** |
@@ -165,7 +166,7 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | `memory_sys/llm_io.py` | LLM 边界提示词：抽取 / 关系分类 / 解析 + 稳健 JSON 解析（JSONL 兜底） |
 | `memory_sys/structured.py` | v1 结构化策略（留作消融对照） |
 | `cli.py` | **交互入口**：多轮跨会话 REPL（load / ingest / ask / context / stats / forget） |
-| `tests/` | 75 例离线单测（时间解析/执行器/BM25/遗忘/守卫/轨迹/调用可靠性/配对报告/中文 OOD/上下文基线/计划审计/写入期时间几何/守卫形态与措辞/dev-test 切分/读侧状态一致性/事件构造点）+ CLI 手工用例（17 例全过） |
+| `tests/` | 81 例离线单测（时间解析/执行器/BM25/遗忘/守卫/轨迹/调用可靠性/配对报告/中文 OOD/上下文基线/计划审计/写入期时间几何/守卫形态与措辞/dev-test 切分/读侧状态一致性/事件构造点/运行时选项）+ CLI 手工用例（17 例全过） |
 | `scripts/lme_core.py` | 数据加载（会话强制按时间排序）、LLM 客户端（思考开关、错误分类重试）、官方提示词模板 |
 | `scripts/memory.py` | 策略注册与接口（full-context / user-turn-only / structured / fusion） |
 | `scripts/run_eval.py` | 评测流水线：分层抽样、断点续跑、缓存落盘、`--trace` 执行轨迹、`--ids` 子集 |

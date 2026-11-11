@@ -1784,3 +1784,65 @@ ev.slot_id = slot_id if slot_id is not None else ev.tx_seq
    `_plan()` / `_render()` 两个阶段，便于单测。
 
 两者都不改行为，先做哪一个由下一轮的信噪比决定；R5 风险更低（不碰主链路）。
+
+---
+
+## infra-2026-11 · 阶段 O：运行时开关收进实例选项（2026-11-11）
+
+R5：上一轮结构复查记录的最后一处「隐式约定」——开关是模块全局。
+
+### 一、问题
+
+`render.py` 顶上有个 `PREMISE_PROPER_ONLY = True`，而 `fusion.py` 用扁平导入
+（`from render import RenderMixin`）。于是 `import memory_sys.render` 与管道
+实际加载的 `import render` 是**两个模块对象**：脚本把开关设在其中一份上，
+读的却是另一份。v3.11 的 A/B 审计正是这么得出了「0 题变化」的假结论，后来
+靠人工发现才纠正。同类问题还有 `ABL_*`——虽然已经是实例属性，但仍在
+`__init__` 里用 `import os as _os` 就地读环境变量，配置来源分散在两处。
+
+### 二、改法
+
+新增 `memory_sys/options.py`：
+
+```python
+@dataclass(frozen=True)
+class RuntimeOptions:
+    premise_proper_only: bool = True
+    enable_arith: bool = True
+    enable_excerpts: bool = True
+    enable_floor: bool = True
+```
+
+- 取值优先级：`FusionMemory(options=...)` > 环境变量 > 默认值
+  （`RuntimeOptions.from_env()` 保留 `ABL_*` 与 `PREMISE_PROPER_ONLY` 的旧用法，
+  消融矩阵命令不用改）；
+- `frozen=True`，只能 `with_(**changes)` 派生新实例，不能被就地改写；
+- `fusion.py` 暴露 `self.options`，并用三个**只读 property** 转发
+  `enable_arith / enable_excerpts / enable_floor`，`read_path.py`、`render.py`
+  的 5 处读取点一行未改；
+- `render.py` 的模块全局已删除，实际读取改为 `self.options.premise_proper_only`。
+
+### 三、验证
+
+| 项 | 结果 |
+| --- | --- |
+| 500 题指纹 | **0 漂移**、0 cache miss、退出码 0（默认值与原常量一致） |
+| 单测 | 75 → **81** 全绿（1.23 s） |
+| 新增用例 | 默认值＝当前生产行为；两实例并存互不影响；消融开关按实例读取；环境变量可覆盖；`RuntimeOptions` 不可变；两份 `render` 模块都不再有 `PREMISE_PROPER_ONLY` |
+| 注入通道 | `build_memory('fusion', options=...)` 已实测可用（`**kwargs` 透传） |
+
+其中「两实例并存」这条是本次的**回归保护**：同一进程里一个严格口径、一个宽口径，
+`catch/caught` 在两个实例上分别给出「不触发 / 触发」，且互不污染。
+
+### 四、判定与后续
+
+**保留，零行为变化**；版本 **v3.16**。说明文件同步：README 模块表新增
+`options.py`、`framework-explained.md` 新增「运行时选项（v3.16）」小节、
+`architecture-brief.txt` 查询期补一条。
+
+剩余结构性欠账只剩一条：**`read()` 124 行**，解析 / 执行 / 渲染 / 守卫挤在一个
+函数里。下一轮拆成 `_plan()`（解析 + 计划审计）与 `_render()`（执行 + 渲染 +
+守卫），预期 0 行为变化，用 500 题指纹 + 81 个单测验证。
+
+另记：`audit_leakage.py` 仍然报告 L1/L2 两处（抽取提示词里的 `3 lunches`、
+`10 amateur comedians`），需要重抽取约 3 h，继续排在下次全量重建时一起做。
