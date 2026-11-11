@@ -170,7 +170,7 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 | `memory_sys/schema.py` | Event/Slot/MemoryStore 数据模型与确定性存储算子；`append_event` 是唯一构造点 |
 | `memory_sys/fusion.py` | 组合根：缓存、生命周期、对外 API（行为由三个 mixin 提供） |
 | `memory_sys/write_path.py` | 写入期流程（抽取 / 定时 / 关系 / 落库） |
-| `memory_sys/read_path.py` | 查询期流程（解析 / 算子 / 召回 / 一跳 / 轨迹） |
+| `memory_sys/read_path.py` | 查询期流程：`read()` 编排 + `_plan()` 解析 + `_render()` 算子渲染 + `_guard_sections()` 守卫 |
 | `memory_sys/render.py` | 上下文渲染与守卫（台账 / 偏好 / 摘录 / 地板 / 拒答） |
 | `memory_sys/temporal.py` | 相对时间规则解析与合法性校验 |
 | `memory_sys/options.py` | 运行时选项（实例级开关，不可变） |
@@ -181,7 +181,7 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 | `scripts/run_eval.py` | 评测流水线（抽样/并行/断点续跑/缓存落盘） |
 | `scripts/judge.py` | 判分（直接使用官方判分提示词） |
 | `cli.py` | 交互入口（REPL） |
-| `tests/` | 81 例离线单元测试 + CLI 手工测试用例 |
+| `tests/` | 86 例离线单元测试 + CLI 手工测试用例 |
 
 ---
 
@@ -457,6 +457,18 @@ top-30；辅路「category 命中但 BM25 低分」的事件给 0.6 底分保进
   `import memory_sys.render` 与管道里的 `import render` 是**两个模块对象**；
   v3.11 的 A/B 审计因此把开关设到了没人读的那份上，得出「0 题变化」的假结论。
   现在开关属于实例，两个实例可以并存不同配置，单测直接锁住互不影响。
+
+**查询期分层（v3.17）**
+
+| 方法 | 行数 | 职责 |
+| --- | --- | --- |
+| `read()` | 8 | 编排：初始化 trace → `_plan()` → `_render()` → 记 `elapsed_ms` |
+| `_plan()` | 19 | 问题 → 查询计划（走 `parse` / `parse_zh` 缓存），写 `plan / plan_issues / parse_ms`，设 `last_meta` |
+| `_render()` | 70 | 计划 → 执行 → 渲染，写 `execute_ms / execution / deterministic_result`，拼装事实清单 / 台账 / 偏好 / 摘录 / 地板 |
+| `_guard_sections()` | 45 | 三道守卫（SCOPE NOTE / 推荐提示 / 前提校验），纯规则、不调模型，可脱离 LLM 单测 |
+
+拆分前 `read()` 124 行，解析、执行、渲染、守卫混在一起，任何一段出错都只能整段重跑。
+拆分是**纯移动**：500 题确定性上下文指纹 0 漂移，`elapsed_ms` 口径不变（仍在 read 出口计时）。
 
 ### 7.3 BM25 检索：算法直白解释
 

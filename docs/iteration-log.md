@@ -1846,3 +1846,47 @@ class RuntimeOptions:
 
 另记：`audit_leakage.py` 仍然报告 L1/L2 两处（抽取提示词里的 `3 lunches`、
 `10 amateur comedians`），需要重抽取约 3 h，继续排在下次全量重建时一起做。
+
+---
+
+## infra-2026-11 · 阶段 P：read() 拆成 plan / render / guards（2026-11-11）
+
+结构复查的最后一项欠账：`read()` 124 行，解析、执行、渲染、守卫揉在一个
+函数里——任何一段改动都要整段重读，守卫也没法脱离 LLM 单测。
+
+### 一、拆法（纯移动，无逻辑改动）
+
+| 方法 | 行数 | 职责 |
+| --- | --- | --- |
+| `read()` | 8（原 124） | 编排：初始化 trace → `_plan()` → `_render()` → 记 `elapsed_ms` |
+| `_plan()` | 19 | 问题 → 查询计划；走 `parse` / `parse_zh` 缓存，写 `plan / plan_issues / parse_ms`，设 `last_meta` |
+| `_render()` | 70 | 计划 → 执行 → 渲染；写 `execute_ms / execution / deterministic_result`，拼装事实/台账/偏好/摘录/地板 |
+| `_guard_sections()` | 45 | 三道守卫（SCOPE NOTE / 推荐提示 / 前提校验），返回段落列表 |
+
+- `read_path.py` 总行数 509 → 530（多出的是三个方法签名、docstring 与空行）。
+- `elapsed_ms` 口径不变：仍在 `read()` 出口计时，覆盖 plan + render 全程。
+- 守卫变成纯函数（只读 `question` 与 `sq`），可以两行构造断言，不再需要跑完整管线。
+
+### 二、验证
+
+- **500 题确定性上下文指纹：0 漂移、0 cache miss、退出码 0**（拆两次各验一次：
+  先拆 plan/render，再抽守卫）。
+- 单测 81 → **86**（`tests/test_read_stages.py`）：`_plan` 不触发执行字段；
+  `_render` 只依赖计划与日期即可产出上下文；`read` 三个阶段的 trace 字段齐全；
+  `_guard_sections` 同输入同输出、顺序稳定；建议类问句走 RECOMMENDATION HINT
+  而不是 SCOPE NOTE。
+- 中途踩坑记录：用 heredoc 传含引号的 Python 源码时，转义把 `"\n\n".join`
+  破坏成多行，导致方法重复定义。已 `git checkout` 恢复，改用编辑器精确替换；
+  校验脚本加了「`def` 出现次数必须为 1」的检查。
+
+### 三、判定与后续
+
+**保留，零行为变化**；版本 **v3.17**。说明文件同步：README 的 `read_path.py`
+职责、`framework-explained.md` 新增「查询期分层（v3.17）」表、
+`architecture-brief.txt` 查询期开头补三段编排说明；四份文档单测数统一 86。
+
+结构性欠账清零。剩下的都不是重构项：
+1. **L1/L2 泄漏**（抽取提示词里的 `3 lunches` / `10 amateur comedians`）——
+   需要重抽取 ≈3 h，与下次全量重建合并；
+2. **L6 词表分层**（`_GENERIC_TOKS` 里的领域词）——纯代码 + 单测，可独立做；
+3. 分数侧仍只有 in-sample 证据，要外推得先在 test 切分上跑一次。

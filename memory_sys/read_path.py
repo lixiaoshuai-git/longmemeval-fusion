@@ -72,10 +72,18 @@ class ReadMixin:
         return extra
 
     def read(self, question: str, question_date: str) -> str:
-        from lme_core import parse_dt
+        """一次查询 = 解析计划 + 渲染上下文；两段分开后各自可单测。"""
         t0 = time.perf_counter()
-        qdate = parse_dt(question_date) or datetime(2023, 6, 1)
         self.last_trace = {"question": question, "question_date": question_date}
+        qdate, sq = self._plan(question, question_date)
+        context = self._render(question, sq, qdate)
+        self.last_trace["elapsed_ms"] = round((time.perf_counter() - t0) * 1000, 2)
+        return context
+
+    def _plan(self, question: str, question_date: str) -> tuple[datetime, dict]:
+        """阶段一：问题 → 查询计划。走解析缓存，并做只读静态审计。"""
+        from lme_core import parse_dt
+        qdate = parse_dt(question_date) or datetime(2023, 6, 1)
         zh = _looks_zh(question)
 
         tp = time.perf_counter()
@@ -90,6 +98,10 @@ class ReadMixin:
         self.last_trace["plan_issues"] = audit_plan(sq, question, qdate)
         self.last_trace["parse_ms"] = round((time.perf_counter() - tp) * 1000, 2)
         self.last_meta = {"intent": sq.get("intent"), "topic": sq.get("topic")}
+        return qdate, sq
+
+    def _render(self, question: str, sq: dict, qdate: datetime) -> str:
+        """阶段二：计划 → 确定性执行 → 渲染 → 守卫，返回上下文文本。"""
 
         parts: list[str] = []
         te = time.perf_counter()
@@ -152,6 +164,20 @@ class ReadMixin:
             parts.append("[USER STATEMENTS] verbatim user turns, chronological:\n"
                          + "\n".join(floor))
 
+        parts.extend(self._guard_sections(question, sq))
+
+        context = "\n\n".join(parts)
+        self.last_trace["sections"] = [p.split("\n", 1)[0] for p in parts]
+        self.last_trace["context_chars"] = len(context)
+        return context
+
+    def _guard_sections(self, question: str, sq: dict) -> list[str]:
+        """三道确定性守卫：范围注记 / 推荐提示 / 前提校验。
+
+        纯规则（不调用模型），输入只有问题与查询计划，因此可以单独单测。
+        """
+        parts: list[str] = []
+
         # 拒答范围注记（v3.3-P0 措辞协议）：审计显示 7 道语义正确的拒答被 judge
         # 判错——根因是模型输出 "the count is 0" / "no record" 这类确定性措辞，
         # 而 judge 语料期望 "the information provided is not enough"。
@@ -189,12 +215,7 @@ class ReadMixin:
         premise = self._premise_check(question)
         if premise:
             parts.append(premise)
-
-        context = "\n\n".join(parts)
-        self.last_trace["sections"] = [p.split("\n", 1)[0] for p in parts]
-        self.last_trace["context_chars"] = len(context)
-        self.last_trace["elapsed_ms"] = round((time.perf_counter() - t0) * 1000, 2)
-        return context
+        return parts
 
     def _parse(self, question: str, qdate: datetime, zh: bool = False) -> dict:
         tpl = PARSE_PROMPT_V2_ZH if zh else PARSE_PROMPT_V2
