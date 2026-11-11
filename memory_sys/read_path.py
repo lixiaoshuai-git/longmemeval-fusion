@@ -25,13 +25,19 @@ class ReadMixin:
         （大事件池下 BM25 词面 topical 匹配漏掉的集合成员）。只索引
         active 事件。
         """
-        if getattr(self, "_eidx", None) is not None:
+        # 派生索引的缓存键 = 事件数 + active 数。状态改变（新增/演化/遗忘归档）
+        # 必然改变这两个数之一，所以不会出现"索引指向已归档事件"的陈旧结果；
+        # 不再依赖 write() 里的手动失效（那在 store.add_event / forget() 下会漏）。
+        key = (len(self.store.events),
+               sum(1 for e in self.store.events if e.status == "active"))
+        if getattr(self, "_eidx", None) is not None                 and getattr(self, "_eidx_key", None) == key:
             return self._eidx
         idx: dict[str, list] = {}
         for e in self._active_events():
             for t in self._entity_toks(e):
                 idx.setdefault(t, []).append(e)
         self._eidx = idx
+        self._eidx_key = key
         return idx
 
     def _entity_toks(self, e) -> set[str]:
@@ -226,11 +232,13 @@ class ReadMixin:
             return qdate - timedelta(days=sq["window_days"]), qdate
         return None
 
-    def _resolve_before(self, sq: dict) -> datetime | None:
+    def _resolve_before(self, sq: dict, qdate: datetime | None = None) -> datetime | None:
         bt = sq.get("before_text")
         if not bt:
             return None
-        rng = resolve_when_expr(bt, datetime(2023, 6, 1))
+        # 相对表达必须锚到问题日期。旧实现写死 2023-06-01：before_text="today"
+        # 会把"今天"算成 6/1，与问题实际日期（如 3/2）差 3 个月。
+        rng = resolve_when_expr(bt, qdate or datetime(2023, 6, 1))
         if rng:
             return rng[0]
         evs = self._active_events()
@@ -293,7 +301,7 @@ class ReadMixin:
         window = self._window(sq, qdate)
         before_dt = None
         if sq.get("before_text"):
-            before_dt = self._resolve_before(sq)
+            before_dt = self._resolve_before(sq, qdate)
             if before_dt:
                 window = (datetime.min, before_dt)
                 # "before X" 是事件排序问题，一律走事件列表而非槽位链
