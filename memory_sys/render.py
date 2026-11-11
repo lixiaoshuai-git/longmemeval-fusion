@@ -188,7 +188,7 @@ class RenderMixin:
             for sent in re.split(r"(?<=[.!?])\s+|\n+", t.content):
                 sent = sent.strip()
                 if 20 < len(sent) < 400:
-                    sentences.append((t.date.strftime("%Y-%m-%d"), sent))
+                    sentences.append((_fmt_d(t.date), sent))
         if not sentences:
             return []
         sent_idx = BM25([tokenize(s) for _, s in sentences])

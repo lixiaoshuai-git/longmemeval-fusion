@@ -6,7 +6,16 @@ from datetime import datetime
 
 
 def _fmt_d(dt: datetime | None) -> str:
-    return dt.strftime("%Y-%m-%d") if dt else "?"
+    """手工格式化日期，不用 strftime。
+
+    平台的 `%Y` 对 1000 年以前的年份**不保证补零**：glibc 输出 `1-01-01`，
+    MSVC 输出 `0001-01-01`。查询窗口下界常用 `datetime.min`，于是同一份
+    缓存在 Linux 与 Windows 上会渲染出不同的确定性结果——回归基线在 CI
+    （ubuntu + Python 3.11）上因此判定漂移。手工格式化消除这个平台差异。
+    """
+    if not dt:
+        return "?"
+    return f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}"
 
 
 def _clip(s: str, n: int) -> str:

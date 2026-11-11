@@ -142,7 +142,8 @@ def parse_when(when: str, sdate: datetime):
 # --------------------------------------------------------------------------
 
 def _fmt_d(dt: datetime | None) -> str:
-    return dt.strftime("%Y-%m-%d") if dt else "?"
+    # 同 textutil._fmt_d：strftime 的 %Y 对 1000 年以前不保证补零，跨平台不一致
+    return "?" if not dt else f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}"
 
 
 def execute(store: MemoryStore, sq: StructuredQuery,

@@ -1890,3 +1890,56 @@ class RuntimeOptions:
    需要重抽取 ≈3 h，与下次全量重建合并；
 2. **L6 词表分层**（`_GENERIC_TOKS` 里的领域词）——纯代码 + 单测，可独立做；
 3. 分数侧仍只有 in-sample 证据，要外推得先在 test 切分上跑一次。
+
+---
+
+## infra-2026-11 · 阶段 Q：CI 变红 → 两处平台耦合（2026-11-11）
+
+GitHub Actions 在 v3.16 起连续失败（实际从 11-05 就红），邮件通知后复盘。
+本地全绿、CI 挂在 4 个用例上，分两类问题。
+
+### 一、`test_splits` 依赖未入库的数据集
+
+三个用例都调 `load_instances(ref/LongMemEval/.../longmemeval_oracle.json)`。
+该文件 15 MB，不在仓库里（`.gitignore` 排除），CI 必然 `FileNotFoundError`。
+
+改法：主用例改用**合成实例**（6 题型 × N 题，`SimpleNamespace` 带
+`question_id / question_type`），验证切分逻辑的四条性质——覆盖全部、互不重叠、
+按题型平衡、顺序无关；真实数据的形状校验保留为 `skipif`，本地有数据集时仍会跑。
+切分逻辑本身与数据集无关，这层依赖本来就不该存在。
+
+### 二、黄金基线在 Linux 上判漂移：`strftime("%Y")` 不补零
+
+失败信息：`bbf86515` 与 `a3838d2b` 的 `ctx` 漂移（`plan / cand / sections`
+全部一致）。两题的确定性输出 header 都长这样：
+
+```
+Query: list_events  topic="..."  window=0001-01-01..2023-06-01
+```
+
+根因：窗口下界是 `datetime.min`，而 `_fmt_d` 用 `strftime("%Y-%m-%d")`。
+**`%Y` 对 1000 年以前不保证补零**——glibc 输出 `1-01-01`，MSVC 输出
+`0001-01-01`。于是同一份缓存在 Windows 与 Linux 上渲染出不同文本，
+"确定性上下文"其实不跨平台。
+
+改法：`_fmt_d` 手工格式化 `f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}"`，
+`structured.py` 的同名函数一并改；`render.py` 摘录里的 `t.date.strftime`
+也换成 `_fmt_d`，避免同类问题在别处复发。
+
+影响面：Windows 上输出逐字不变（本来补零），**500 题指纹 0 漂移**；
+Linux 上才回到与基线一致。新增 2 个单测锁住（`datetime.min` 必须是
+`0001-01-01`；无时间窗的 header 必须是四位年份）。
+
+### 三、验证与判定
+
+- 本地单测 86 → **90** 全绿（1.07s）；500 题基线 0 漂移。
+- 排障过程：先用 21 个 `PYTHONHASHSEED` 排除哈希随机化，再用
+  `uv run --python 3.11` 排除解释器版本，最后定位到平台 `strftime` 差异。
+  Docker 未启动，因此 Linux 侧以 CI 复跑为准。
+- 判定：**保留**；版本 **v3.18**。
+
+**教训（写进 P 系列之外的工程约定）**：
+1. CI 跑的是**干净检出**，任何依赖 `ref/`、`results/` 的测试都会红——
+   夹具要么进仓库（自包含），要么 `skipif`；
+2. "确定性"必须**跨平台**成立。日期、浮点、locale、路径分隔符都是常见破口；
+   凡是写进指纹的文本，都不能交给平台相关的格式化函数。
