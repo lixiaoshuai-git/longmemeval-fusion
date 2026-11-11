@@ -182,6 +182,7 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | `scripts/build_report.py` | 真实水平报告生成器（从 summary.json 直注数据，零手抄数字） |
 | `docs/layer2-data-structure.md` | 设计文档：三层 schema、四类流程、v1 失败取证（§8）、v2 实现与验证（§9） |
 | `docs/iteration-principles.md` | **迭代原则 P1–P9**（含防过拟合条款：提示词不写题库、词表分层、dev/test 切分、配对判定） |
+| `docs/exit-criteria.md` | **阶段性结束判据**：三道闸门（可交付 / 结论可信 / 主张成立）、剩余成本与冻结纪律 |
 | `docs/iteration-log.md` | 全部迭代实验日志（v1→v3.9.1；`infra-2026-11` 为基础设施轮次，含失败与回滚记录） |
 | `docs/evaluation-report.md` | 正式评估报告：多轮主结果、消融矩阵、检索延迟、成本、方差披露 |
 | `docs/defense-outline.md` | 答辩材料：演示流程、关键数据速查、Q&A 预案 |
