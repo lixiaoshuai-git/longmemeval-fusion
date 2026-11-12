@@ -104,34 +104,26 @@ hindsight 强在 KU（Reflect 层 94.87），弱在 SS-A/TR，互相印证机制
 `Slot.value_at(t)` 时刻查询不过滤状态——**历史时刻仍可审计**，符合 B.1
 "历史版本保留方式"要求。策略幂等，报告含逐条归档原因。
 
-## 作为库使用（5 个动作）
+## 作为库使用
+
+对外接口只有 `Memory`，完整说明（接口构成、数据结构、方法参考、错误边界）
+见独立文档 **[docs/api.md](docs/api.md)**；可运行示例：`python examples/quickstart.py`。
 
 ```python
 from memory_sys import Memory
 
 mem = Memory(llm=client)                          # client 只需 .chat(prompt, max_tokens=...)
-mem.add_session(turns, "2023-05-01")             # 写入一个会话 → 新增事件数
-r = mem.recall("How many tanks do I have?", "2023-06-01")
-#   Recall(context=给模型的记忆块, plan=查询计划, candidates=命中事实, sections=段落)
-a = mem.answer("How many tanks do I have?", "2023-06-01")
-#   Answer(text=答案, recall=依据的那次检索, latency_s)
-mem.forget(ttl_days=180)                          # 遗忘：软归档，历史仍可 value_at 审计
+mem.add_session(turns, "2023-05-01")             # → 新增事件数
+r = mem.recall("How many tanks do I have?", "2023-06-01")   # Recall(context, plan, candidates)
+a = mem.answer("How many tanks do I have?", "2023-06-01")   # Answer(text, recall, latency_s)
 ```
 
-| 动作 | 方法 | 说明 |
-| --- | --- | --- |
-| 写入 | `add_session(turns, date)` / `add_sessions([...])` | `turns` 为 `[{"role","content"}]`；返回新增事件数 |
-| 检索 | `recall(question, date)` | 只检索不生成；返回结构化的 `Recall`，可直接 `str(recall)` 当上下文 |
-| 作答 | `answer(question, date)` | 检索 + `llm.chat`；换模型只需换 `llm`，记忆逻辑不动 |
-| 遗忘 | `forget(ttl_days=…, capacity=…, compact_days=…)` | 软归档，返回逐条原因报告 |
-| 观测 | `stats()` / `save_cache()` / `reset()` | 规模指标、缓存落盘、清空内容 |
-
-`llm` 只用于查询解析与作答；如果查询计划已在缓存里（离线回放），`recall()` 可以不传 `llm`。
+`llm` 只用于查询解析与作答；解析缓存命中时 `recall()` 可离线运行。
 
 ## 运行方法
 
 依赖：Python 3.10+，`pip install -r requirements.txt`（openai / tiktoken / backoff / numpy / tqdm；judge 另需官方仓库依赖）。
-自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（104 例，纯离线，<2s；CI 见 `.github/workflows/tests.yml`）。
+自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（105 例，纯离线，<2s；CI 见 `.github/workflows/tests.yml`）。
 
 1. 配置 `.env`（参考 `.env.example`）：OpenAI 兼容接口的 `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL`。
 2. 数据：LongMemEval 官方仓库（github.com/xiaowu0162/LongMemEval），
@@ -194,7 +186,7 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | `memory_sys/llm_io.py` | LLM 边界提示词：抽取 / 关系分类 / 解析 + 稳健 JSON 解析（JSONL 兜底） |
 | `memory_sys/structured.py` | v1 结构化策略（留作消融对照） |
 | `cli.py` | **交互入口**：多轮跨会话 REPL（load / ingest / ask / context / stats / forget） |
-| `tests/` | 104 例离线单测（时间解析/执行器/BM25/遗忘/守卫/轨迹/调用可靠性/配对报告/中文 OOD/上下文基线/计划审计/写入期时间几何/守卫形态与措辞/dev-test 切分/读侧状态一致性/事件构造点/运行时选项/查询期分层/跨平台确定性/词表分层/对外接口）+ CLI 手工用例（17 例全过） |
+| `tests/` | 105 例离线单测（时间解析/执行器/BM25/遗忘/守卫/轨迹/调用可靠性/配对报告/中文 OOD/上下文基线/计划审计/写入期时间几何/守卫形态与措辞/dev-test 切分/读侧状态一致性/事件构造点/运行时选项/查询期分层/跨平台确定性/词表分层/对外接口）+ CLI 手工用例（17 例全过） |
 | `scripts/lme_core.py` | 数据加载（会话强制按时间排序）、LLM 客户端（思考开关、错误分类重试）、官方提示词模板 |
 | `scripts/memory.py` | 策略注册与接口（full-context / user-turn-only / structured / fusion） |
 | `scripts/run_eval.py` | 评测流水线：分层抽样、断点续跑、缓存落盘、`--trace` 执行轨迹、`--ids` 子集 |
@@ -210,6 +202,8 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | `scripts/judge.py` | 评分（直接 import 官方 `get_anscheck_prompt`，不重写提示词；judge 错误单独标记） |
 | `scripts/build_report.py` | 真实水平报告生成器（从 summary.json 直注数据，零手抄数字） |
 | `docs/layer2-data-structure.md` | 设计文档：三层 schema、四类流程、v1 失败取证（§8）、v2 实现与验证（§9） |
+| `docs/api.md` | **接口文档（独立）**：接口构成、`Recall`/`Answer`、方法参考、配置、缓存与离线回放、错误边界 |
+| `examples/quickstart.py` | 不联网的最小示例：写入 → 检索 → 作答 → 统计 |
 | `docs/iteration-principles.md` | **迭代原则 P1–P9**（含防过拟合条款：提示词不写题库、词表分层、dev/test 切分、配对判定） |
 | `docs/exit-criteria.md` | **阶段性结束判据**：三道闸门（可交付 / 结论可信 / 主张成立）、剩余成本与冻结纪律 |
 | `docs/iteration-log.md` | 全部迭代实验日志（v1→v3.9.1；`infra-2026-11` 为基础设施轮次，含失败与回滚记录） |

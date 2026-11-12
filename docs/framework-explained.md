@@ -183,7 +183,7 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 | `scripts/run_eval.py` | 评测流水线（抽样/并行/断点续跑/缓存落盘） |
 | `scripts/judge.py` | 判分（直接使用官方判分提示词） |
 | `cli.py` | 交互入口（REPL） |
-| `tests/` | 104 例离线单元测试 + CLI 手工测试用例 |
+| `tests/` | 105 例离线单元测试 + CLI 手工测试用例 |
 
 ---
 
@@ -484,19 +484,11 @@ top-30；辅路「category 命中但 BM25 低分」的事件给 0.6 底分保进
 **对外接口（v3.21）**
 
 内部是 `write(session, date)` / `read(question, date) -> str`：`read` 返回的是
-给 LLM 的上下文，不是答案，计划与候选只能从 `last_trace` 侧门读。facade
-`memory_sys/api.py` 把对外动作收敛成五个：
+给 LLM 的上下文，不是答案。对外统一走 `memory_sys/api.py` 的门面 `Memory`
+（写入 / 检索 / 作答 / 遗忘 / 观测五个动作），**接口细节见独立文档
+[docs/api.md](api.md)**，本文不重复。
 
-| 动作 | 方法 | 返回 |
-| --- | --- | --- |
-| 写入 | `add_session(turns, date)` | 新增事件数 |
-| 检索 | `recall(question, date)` | `Recall(context, plan, sections, candidates, stats)` |
-| 作答 | `answer(question, date)` | `Answer(text, recall, latency_s)` |
-| 遗忘 | `forget(ttl_days / capacity / compact_days)` | 逐条归档原因 |
-| 观测 | `stats()` / `save_cache()` / `reset()` | 规模与配置 |
-
-约束：`llm` 只需 `.chat(prompt, max_tokens=...)`；`answer()` 在无 `llm` 时抛
-明确错误；日期与 turns 在入口做校验并给出可用示例。内部模块不承诺稳定，
+约束：`llm` 只需 `.chat(prompt, max_tokens=...)`；内部模块不承诺稳定，
 扩展优先走 `RuntimeOptions` 与 `Memory` 的方法。
 
 **词表分层（v3.19）**
