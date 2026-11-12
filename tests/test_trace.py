@@ -19,17 +19,19 @@ class FakeClient:
         return self.payload
 
 
-def _legacy_key(scope_key: str) -> str:
-    return hashlib.sha1(("fusion-v2.4|" + scope_key).encode("utf-8")).hexdigest()[:16]
+def _key_for(scope: str, scope_key: str) -> str:
+    """按某 scope 的**当前**版本算缓存键（版本会随提示词演进而变）。"""
+    version = fusion_mod.PROMPT_VERSIONS[scope]
+    return hashlib.sha1((version + "|" + scope_key).encode("utf-8")).hexdigest()[:16]
 
 
-def test_prompt_version_split_keeps_legacy_hash():
+def test_prompt_version_split_keeps_scope_isolation():
     key = "ext|unit-test"
-    mem = FusionMemory(client=FakeClient(), cache={_legacy_key(key): ["cached"]})
+    mem = FusionMemory(client=FakeClient(), cache={_key_for("extract", key): ["cached"]})
     got = mem._cached(key, lambda: (_ for _ in ()).throw(AssertionError("cache miss")),
                       scope="extract")
     assert got == ["cached"]
-    # 改 parse 版本不应影响 extract 的缓存命中
+    # 改 parse 版本不应影响 extract 的缓存命中（各边界独立演进）
     old = fusion_mod.PROMPT_VERSIONS["parse"]
     try:
         fusion_mod.PROMPT_VERSIONS["parse"] = "fusion-parse-vtest"

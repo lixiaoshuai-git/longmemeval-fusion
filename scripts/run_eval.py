@@ -96,6 +96,10 @@ def answer_one(inst, client: LLMClient, strategy: str, mem_kwargs: dict,
     }
     if trace:
         out["mem_trace"] = getattr(mem, "last_trace", None)
+    # 增量落盘：全量重建要跑几小时，旧实现只在全部结束后写缓存，
+    # 中途一次网络中断就丢掉全部抽取调用（约 6400 次）。
+    if hasattr(mem, "save_cache"):
+        mem.save_cache()
     return out
 
 

@@ -7,6 +7,7 @@
 2. 环境变量仍能改默认值（消融矩阵沿用旧调用方式）。
 """
 import importlib
+import json
 
 from datetime import datetime
 
@@ -97,3 +98,19 @@ def test_domain_terms_are_opt_in_only():
     assert {"tank", "gallon"} <= injected._generic_toks()
     # 注入只影响该实例，不污染默认实例
     assert "tank" not in plain._generic_toks()
+
+
+def test_save_cache_is_atomic_and_leaves_no_temp(tmp_path):
+    """增量落盘：写到临时文件再原子替换，且不留 .tmp 残骸。"""
+    from memory_sys.fusion import FusionMemory
+
+    p = tmp_path / "cache.json"
+    mem = FusionMemory(client=object(), cache={"k": ["v"]}, cache_path=str(p))
+    mem._dirty = True
+    mem.save_cache()
+    assert json.loads(p.read_text(encoding="utf-8")) == {"k": ["v"]}
+    assert not list(tmp_path.glob("*.tmp"))
+    # 未变更时不应重写
+    mtime = p.stat().st_mtime_ns
+    mem.save_cache()
+    assert p.stat().st_mtime_ns == mtime

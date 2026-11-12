@@ -41,6 +41,11 @@ import pathlib
 import sys
 import threading
 
+# 缓存字典与缓存文件的唯一锁：并发评测时多个 FusionMemory 实例共享同一份
+# cache 与同一个文件，字典变更与快照必须互斥，否则 json.dumps 会撞上
+# "dictionary changed size during iteration"。
+_CACHE_LOCK = threading.RLock()
+
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
@@ -67,8 +72,11 @@ PROMPT_VERSION = "fusion-v2.4"
 # 四个 LLM 边界的缓存版本独立演进。初值刻意与旧 PROMPT_VERSION 相同，
 # 因此旧缓存哈希逐位兼容；以后只改 PARSE_VERSION 不会让写入缓存失效。
 PROMPT_VERSIONS = {
-    "extract": PROMPT_VERSION,
-    "assistant": PROMPT_VERSION,
+    # 2026-11-12 P5：抽取 / 助手事实提示词里的题库原句换成抽象占位，
+    # 写入侧两个 scope 需要重建（relation 的 prompt 未变，但它的缓存键
+    # 含候选与既有事实，抽取变化后会自然 miss）。
+    "extract": "fusion-v2.6-extract",
+    "assistant": "fusion-v2.6-assistant",
     "relation": PROMPT_VERSION,
     # 2026-11-05 P5：解析提示词里的题库示例换成抽象描述，英文解析缓存因此
     # 需要重建（写入侧 extract/assistant/relation 三个 scope 不受影响）。
@@ -97,7 +105,6 @@ class FusionMemory(WriteMixin, ReadMixin, RenderMixin):
         self.cache_path = cache_path
         self.store = MemoryStore()
         self._sess_n = 0
-        self._lock = threading.Lock()
         self._dirty = False
         # 全部开关收在一个不可变对象里：显式传入 > 环境变量 > 默认值。
         # 两个实例可以携带不同选项并存，不再有「改模块全局改错一份」的问题。
@@ -124,24 +131,34 @@ class FusionMemory(WriteMixin, ReadMixin, RenderMixin):
     def _cached(self, key: str, fn, *, scope: str):
         version = PROMPT_VERSIONS[scope]
         full = hashlib.sha1((version + "|" + key).encode("utf-8")).hexdigest()[:16]
-        with self._lock:
+        with _CACHE_LOCK:
             hit = self.cache.get(full)
         if hit is not None:
             return hit
         val = fn()
-        with self._lock:
+        with _CACHE_LOCK:
             self.cache[full] = val
             self._dirty = True
         return val
 
     def save_cache(self) -> None:
+        """增量落盘（跨实例安全）。
+
+        全量重建要跑几小时；只在结束时写一次，中途一次网络中断就丢掉全部
+        抽取调用。这里每题落盘一次。并发评测时多个实例共享同一个缓存文件，
+        因此用**模块级锁 + 临时文件原子替换**，避免交错写导致 JSON 损坏。
+        """
         if self.cache_path and self._dirty:
-            with self._lock:
+            with _CACHE_LOCK:
+                if not self._dirty:
+                    return
+                blob = json.dumps(self.cache, ensure_ascii=False)
+                self._dirty = False
                 p = pathlib.Path(self.cache_path)
                 p.parent.mkdir(parents=True, exist_ok=True)
-                p.write_text(json.dumps(self.cache, ensure_ascii=False),
-                             encoding="utf-8")
-                self._dirty = False
+                tmp = p.with_suffix(p.suffix + f".{os.getpid()}.tmp")
+                tmp.write_text(blob, encoding="utf-8")
+                os.replace(tmp, p)
 
     def reset(self) -> None:
         self.store = MemoryStore()

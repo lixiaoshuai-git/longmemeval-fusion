@@ -77,9 +77,9 @@ Output ONLY a JSON array. Each item is ONE atomic fact stated by the user in thi
 {{"fact":"<complete sentence>","when_raw":"<the exact time words used, or empty>","when":"<resolved YYYY-MM-DD | YYYY-MM | start..end | none>","category":"<one of: {cats}>","kind":"event|state|preference|numeric"}}
 
 HARD RULES:
-1. The fact sentence MUST be self-contained and preserve EVERY number, quantity, price, duration and proper name VERBATIM ("it lasted 3 lunches", "10 amateur comedians", "$40", "38 pre-1920 American coins"). Never drop or round numbers — a later question may ask for that exact count.
+1. The fact sentence MUST be self-contained and preserve EVERY number, quantity, price, duration and proper name VERBATIM. Never drop or round numbers — a later question may ask for that exact count. Copy the user's own wording for names and numbers.
 2. One statement = one item. Two different happenings = two items. Do NOT merge; do NOT pad with background.
-3. ACQUISITION RULE: if the message mentions having gotten/bought/received/been given something ("I got a new X", "my new Instant Pot", "just picked up Y"), that acquisition MUST be its own fact with kind="event", even if the message is mostly about something else. Never bury an acquisition inside a usage/preference fact.
+3. ACQUISITION RULE: if the message mentions having gotten/bought/received/been given something ("I got a new X", "just picked up Y"), that acquisition MUST be its own fact with kind="event", even if the message is mostly about something else. Never bury an acquisition inside a usage/preference fact.
 4. "when": resolve the relative time against {date} ("two weeks ago" -> {date} minus 14 days; "last month" -> previous calendar month; "in March" -> that March). Keep "when_raw" as the user's exact words (copy them verbatim — do not paraphrase). Use "none" ONLY if the sentence truly implies no time at all; for vague words like "recently" put them in when_raw unchanged.
 5. PRE-ORDER RULE: for pre-orders/reservations, the user GOT the item at the stated ARRIVAL/delivery date, not at ordering time. Set "when" to the arrival date when stated, and keep both dates in the fact sentence.
 6. kind: "state" = ongoing condition that can later change (where I live, my job, a collection total, a membership); "event" = one-time happening (bought, visited, watched, was born); "preference" = like/dislike/favorite; "numeric" = a count/amount attached to an event.
@@ -94,7 +94,8 @@ Output ONLY a JSON array; each item:
 {{"fact":"<complete sentence with the specific name/title/link/number verbatim>","when_raw":"","when":"none","category":"<one of: {cats}>","kind":"assistant_fact"}}
 
 Rules:
-- DO extract informational facts the assistant TAUGHT or INTRODUCED (cultural facts, definitions, how-to details, prices, dates): "the Hoop Dance is traditionally performed by skilled dancers", "the trail is 4 miles". The user may later ask "which X did you mention?" — these facts must survive.
+- DO extract informational facts the assistant TAUGHT or INTRODUCED (cultural facts, definitions, how-to details, prices, dates) — anything the assistant stated as a concrete, reusable fact. The user may later ask "which X did you mention?" — these facts must survive.
+- Counts and quantities matter: if the assistant stated how many of something there are, or a price/duration, keep that number in its own fact sentence.
 - Do NOT extract option-list items the user was explicitly asked to CHOOSE from (menus, A-or-B picks, "which of these do you want"). Informational content is never an option list, even when it mentions several things.
 - Do NOT restate what the user said. NOT congratulations.
 - Extract at most 12 facts; never drop a named cultural/factual item just to stay under the cap.
