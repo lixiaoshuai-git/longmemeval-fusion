@@ -2084,3 +2084,55 @@ single-session-preference −1，其余持平。
 到这一轮，G2 的两个条件都满足了：提示词不再含评测集原句，且有了一份带日期的
 test 数字。剩下的是 G3（同一 test 切分上与全上下文基线配对），属于"要不要对外
 声称超过基线"的选择题，不再是代码问题。
+
+---
+
+## infra-2026-11 · 阶段 T：对外接口 facade（2026-11-12）
+
+**起因**：回答"记忆框架接口现在长什么样"时，发现内部接口对外不直观——
+`read(question, date)` 返回的是**给 LLM 的上下文**，不是答案；查询计划与候选
+事实只能从 `last_trace` 侧门读；`write()` 也没有批量入口与输入校验。
+
+### 一、旧接口
+
+```python
+mem = FusionMemory(client=..., cache=..., cache_path=...)
+mem.write(session, "2023-05-01")          # 无返回值、无校验
+ctx  = mem.read(question, "2023-06-01")   # 返回上下文文本
+plan = mem.last_trace["plan"]              # 侧门
+```
+
+问题：名字像"读取记忆"却返回提示词；没有结构化的命中结果；换模型要自己拼
+prompt；遗忘与观测散落在 `forget()/stats()`。
+
+### 二、新接口（`memory_sys/api.py`）
+
+```python
+from memory_sys import Memory
+
+mem = Memory(llm=client)
+mem.add_session(turns, "2023-05-01")             # → 新增事件数
+r = mem.recall("How many tanks?", "2023-06-01")  # → Recall(context/plan/sections/candidates)
+a = mem.answer("How many tanks?", "2023-06-01")  # → Answer(text/recall/latency_s)
+mem.forget(ttl_days=180)                          # → 逐条归档原因
+mem.stats()                                       # → 规模 + 生效选项
+```
+
+- `Recall` / `Answer` 是不可变 dataclass，`str(recall)` 直接就是上下文，兼容旧用法；
+- 入口校验 turns 与日期，错误信息带可用示例（`2023/05/01 (Mon) 17:50`）；
+- `llm` 只要求 `.chat(prompt, max_tokens=...)`；`answer()` 无 llm 时抛
+  `RuntimeError("answer() 需要 llm…")`，`recall()` 在缓存未命中且无 llm 时给出解释；
+- `memory_sys/__init__.py` 用 PEP 562 惰性导出，`import memory_sys.render`
+  这类内部用法不承担额外导入成本。
+
+### 三、验证
+
+- 新增 `tests/test_api.py` 9 例：写入计数、批量写入、结构化 recall、answer 保真
+  recall、无 llm 的明确报错、非法日期/turns/空问题、forget + reset、stats 暴露选项；
+- 单测 95 → **104** 全绿（2.4s）；
+- **500 题指纹 0 漂移**（facade 是增量层，未触碰读写路径）。
+
+### 四、文档
+
+README 新增「作为库使用（5 个动作）」；`framework-explained.md` 新增
+「对外接口（v3.21）」小节与模块表行。版本 **v3.21**。

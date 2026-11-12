@@ -24,7 +24,7 @@ S 档（122k tok/题，48 题样本）零架构改动泛化，89.58% 进入第�
 | **fusion v3.11（单轮）** | 1 | 87.40 | — | 收窄前提校验；影响 84 题，因果 +2。同批未改动 416 题自身漂移 -7，故**总分不可比**，以配对为准 |
 | fusion v3.12 | 子集 24 | 16 → 23 | — | SCOPE NOTE 不再强制拒答；**7 修 0 坏**（三轮一致，含去题库例子版） |
 | fusion v3.13 | 1 | 88.80 | — | 解析提示词去题库示例（P5）：267 题上下文变化，因果 +2（12 修/10 坏）落在噪声内；未改动 233 题自身 +5 ⇒ **只主张"去泄漏不掉分"**，不主张提升 |
-| fusion v3.14–v3.19 | — | 无新分数 | — | 结构重构与可移植性（拆分 / 构造单点 / 实例选项 / 跨平台日期 / 词表分层），500 题指纹均 0 漂移 |
+| fusion v3.14–v3.19 | — | 无新分数 | — | 结构重构与可移植性（拆分 / 构造单点 / 实例选项 / 跨平台日期 / 词表分层/对外接口），500 题指纹均 0 漂移 |
 | **fusion v3.20（当前代码，单轮）** | 1 | **90.00** | — | 抽取提示词去题库原句 + 助手事实数字规则；配对 **+6（17 修 / 11 坏）**；**dev 91.63 / test 88.35**（test 首次持有集数字，2026-11-12，judge glm-5.2 代跑） |
 
 **跨采样稳定的结论**（单次差值 <3pp 不作数，见方差披露）：
@@ -104,10 +104,34 @@ hindsight 强在 KU（Reflect 层 94.87），弱在 SS-A/TR，互相印证机制
 `Slot.value_at(t)` 时刻查询不过滤状态——**历史时刻仍可审计**，符合 B.1
 "历史版本保留方式"要求。策略幂等，报告含逐条归档原因。
 
+## 作为库使用（5 个动作）
+
+```python
+from memory_sys import Memory
+
+mem = Memory(llm=client)                          # client 只需 .chat(prompt, max_tokens=...)
+mem.add_session(turns, "2023-05-01")             # 写入一个会话 → 新增事件数
+r = mem.recall("How many tanks do I have?", "2023-06-01")
+#   Recall(context=给模型的记忆块, plan=查询计划, candidates=命中事实, sections=段落)
+a = mem.answer("How many tanks do I have?", "2023-06-01")
+#   Answer(text=答案, recall=依据的那次检索, latency_s)
+mem.forget(ttl_days=180)                          # 遗忘：软归档，历史仍可 value_at 审计
+```
+
+| 动作 | 方法 | 说明 |
+| --- | --- | --- |
+| 写入 | `add_session(turns, date)` / `add_sessions([...])` | `turns` 为 `[{"role","content"}]`；返回新增事件数 |
+| 检索 | `recall(question, date)` | 只检索不生成；返回结构化的 `Recall`，可直接 `str(recall)` 当上下文 |
+| 作答 | `answer(question, date)` | 检索 + `llm.chat`；换模型只需换 `llm`，记忆逻辑不动 |
+| 遗忘 | `forget(ttl_days=…, capacity=…, compact_days=…)` | 软归档，返回逐条原因报告 |
+| 观测 | `stats()` / `save_cache()` / `reset()` | 规模指标、缓存落盘、清空内容 |
+
+`llm` 只用于查询解析与作答；如果查询计划已在缓存里（离线回放），`recall()` 可以不传 `llm`。
+
 ## 运行方法
 
 依赖：Python 3.10+，`pip install -r requirements.txt`（openai / tiktoken / backoff / numpy / tqdm；judge 另需官方仓库依赖）。
-自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（95 例，纯离线，<2s；CI 见 `.github/workflows/tests.yml`）。
+自动化单测：`pip install -r requirements-dev.txt && python -m pytest tests/ -q`（104 例，纯离线，<2s；CI 见 `.github/workflows/tests.yml`）。
 
 1. 配置 `.env`（参考 `.env.example`）：OpenAI 兼容接口的 `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL`。
 2. 数据：LongMemEval 官方仓库（github.com/xiaowu0162/LongMemEval），
@@ -160,6 +184,7 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | `memory_sys/render.py` | 渲染：事实清单 / 台账 / 偏好段 / 摘录 / 证据地板 / 三道守卫 |
 | `memory_sys/temporal.py` | 时间：相对/绝对表达规则解析、粒度与合法性校验（±400 天） |
 | `memory_sys/config.py` | 可调常量：强匹配阈值、摘录/事实/地板上限 |
+| `memory_sys/api.py` | **对外门面**：`Memory` / `Recall` / `Answer`，把 write/read 收敛成 add_session / recall / answer / forget / stats |
 | `memory_sys/lexicon.py` | 词表分层：`LANGUAGE_GENERIC`（语言通用，可硬编码）与领域词（默认空，按数据集注入） |
 | `memory_sys/options.py` | **运行时选项**：`RuntimeOptions`（不可变 dataclass），开关随实例、不随模块；环境变量可覆盖默认值 |
 | `memory_sys/plan.py` | 查询计划契约（`QueryPlan`）+ 静态审计（`audit_plan`，只读、不调用模型） |
@@ -169,7 +194,7 @@ python cli.py --cache results/fusfull38-fusion-cache.json   # 可选复用评测
 | `memory_sys/llm_io.py` | LLM 边界提示词：抽取 / 关系分类 / 解析 + 稳健 JSON 解析（JSONL 兜底） |
 | `memory_sys/structured.py` | v1 结构化策略（留作消融对照） |
 | `cli.py` | **交互入口**：多轮跨会话 REPL（load / ingest / ask / context / stats / forget） |
-| `tests/` | 95 例离线单测（时间解析/执行器/BM25/遗忘/守卫/轨迹/调用可靠性/配对报告/中文 OOD/上下文基线/计划审计/写入期时间几何/守卫形态与措辞/dev-test 切分/读侧状态一致性/事件构造点/运行时选项/查询期分层/跨平台确定性/词表分层）+ CLI 手工用例（17 例全过） |
+| `tests/` | 104 例离线单测（时间解析/执行器/BM25/遗忘/守卫/轨迹/调用可靠性/配对报告/中文 OOD/上下文基线/计划审计/写入期时间几何/守卫形态与措辞/dev-test 切分/读侧状态一致性/事件构造点/运行时选项/查询期分层/跨平台确定性/词表分层/对外接口）+ CLI 手工用例（17 例全过） |
 | `scripts/lme_core.py` | 数据加载（会话强制按时间排序）、LLM 客户端（思考开关、错误分类重试）、官方提示词模板 |
 | `scripts/memory.py` | 策略注册与接口（full-context / user-turn-only / structured / fusion） |
 | `scripts/run_eval.py` | 评测流水线：分层抽样、断点续跑、缓存落盘、`--trace` 执行轨迹、`--ids` 子集 |

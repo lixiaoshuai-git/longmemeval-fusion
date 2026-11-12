@@ -175,6 +175,7 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 | `memory_sys/temporal.py` | 相对时间规则解析与合法性校验 |
 | `memory_sys/options.py` | 运行时选项（实例级开关，不可变） |
 | `memory_sys/lexicon.py` | 词表分层：语言通用词 + 可注入的领域词 |
+| `memory_sys/api.py` | 对外门面：`Memory` / `Recall` / `Answer` |
 | `memory_sys/bm25.py` | 纯 Python 的 BM25 检索与分词（无第三方依赖） |
 | `memory_sys/llm_io.py` | 四个 LLM 边界的提示词模板 + 稳健 JSON 解析 |
 | `memory_sys/lifecycle.py` | 遗忘/生命周期（默认关闭） |
@@ -182,7 +183,7 @@ LLM 的每次 API 调用互相独立。昨天告诉它「我买了 3 盆植物�
 | `scripts/run_eval.py` | 评测流水线（抽样/并行/断点续跑/缓存落盘） |
 | `scripts/judge.py` | 判分（直接使用官方判分提示词） |
 | `cli.py` | 交互入口（REPL） |
-| `tests/` | 95 例离线单元测试 + CLI 手工测试用例 |
+| `tests/` | 104 例离线单元测试 + CLI 手工测试用例 |
 
 ---
 
@@ -479,6 +480,24 @@ top-30；辅路「category 命中但 BM25 低分」的事件给 0.6 底分保进
   会让同一份缓存在 Linux 与 Windows 上渲染出不同文本，回归基线在 CI 上判漂移。
 - `splits` 的性质测试改为**合成实例**驱动（6 题型 × N 题），不再依赖
   `ref/` 里 15 MB 的评测集；真实数据的形状校验保留为 `skipif`，本地有则跑。
+
+**对外接口（v3.21）**
+
+内部是 `write(session, date)` / `read(question, date) -> str`：`read` 返回的是
+给 LLM 的上下文，不是答案，计划与候选只能从 `last_trace` 侧门读。facade
+`memory_sys/api.py` 把对外动作收敛成五个：
+
+| 动作 | 方法 | 返回 |
+| --- | --- | --- |
+| 写入 | `add_session(turns, date)` | 新增事件数 |
+| 检索 | `recall(question, date)` | `Recall(context, plan, sections, candidates, stats)` |
+| 作答 | `answer(question, date)` | `Answer(text, recall, latency_s)` |
+| 遗忘 | `forget(ttl_days / capacity / compact_days)` | 逐条归档原因 |
+| 观测 | `stats()` / `save_cache()` / `reset()` | 规模与配置 |
+
+约束：`llm` 只需 `.chat(prompt, max_tokens=...)`；`answer()` 在无 `llm` 时抛
+明确错误；日期与 turns 在入口做校验并给出可用示例。内部模块不承诺稳定，
+扩展优先走 `RuntimeOptions` 与 `Memory` 的方法。
 
 **词表分层（v3.19）**
 
