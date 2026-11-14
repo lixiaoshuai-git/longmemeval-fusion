@@ -1,0 +1,177 @@
+{
+  "rounds": [
+    "v320",
+    "r2",
+    "r3",
+    "r4"
+  ],
+  "n": 500,
+  "per_round": {
+    "v320": {
+      "overall": 90.0,
+      "correct": 450,
+      "n": 500,
+      "dev": 91.63346613545816,
+      "dev_correct": 230,
+      "dev_n": 251,
+      "test": 88.35341365461848,
+      "test_correct": 220,
+      "test_n": 249,
+      "abstention": 80.0,
+      "abstention_correct": 24,
+      "abstention_n": 30,
+      "judge_errors": 0
+    },
+    "r2": {
+      "overall": 89.6,
+      "correct": 448,
+      "n": 500,
+      "dev": 90.43824701195219,
+      "dev_correct": 227,
+      "dev_n": 251,
+      "test": 88.75502008032129,
+      "test_correct": 221,
+      "test_n": 249,
+      "abstention": 80.0,
+      "abstention_correct": 24,
+      "abstention_n": 30,
+      "judge_errors": 0
+    },
+    "r3": {
+      "overall": 90.0,
+      "correct": 450,
+      "n": 500,
+      "dev": 91.63346613545816,
+      "dev_correct": 230,
+      "dev_n": 251,
+      "test": 88.35341365461848,
+      "test_correct": 220,
+      "test_n": 249,
+      "abstention": 76.66666666666667,
+      "abstention_correct": 23,
+      "abstention_n": 30,
+      "judge_errors": 0
+    },
+    "r4": {
+      "overall": 89.6,
+      "correct": 448,
+      "n": 500,
+      "dev": 90.0398406374502,
+      "dev_correct": 226,
+      "dev_n": 251,
+      "test": 89.1566265060241,
+      "test_correct": 222,
+      "test_n": 249,
+      "abstention": 80.0,
+      "abstention_correct": 24,
+      "abstention_n": 30,
+      "judge_errors": 0
+    }
+  },
+  "mean": {
+    "overall": 89.8,
+    "overall_sd": 0.23,
+    "test": 88.65,
+    "test_sd": 0.38,
+    "dev": 90.94,
+    "dev_sd": 0.82
+  },
+  "per_type": {
+    "knowledge-update": {
+      "n": 78,
+      "mean": 93.27,
+      "min": 92.31,
+      "max": 93.59
+    },
+    "multi-session": {
+      "n": 133,
+      "mean": 82.89,
+      "min": 81.95,
+      "max": 83.46
+    },
+    "single-session-assistant": {
+      "n": 56,
+      "mean": 92.86,
+      "min": 92.86,
+      "max": 92.86
+    },
+    "single-session-preference": {
+      "n": 30,
+      "mean": 89.17,
+      "min": 86.67,
+      "max": 90.0
+    },
+    "single-session-user": {
+      "n": 70,
+      "mean": 97.14,
+      "min": 97.14,
+      "max": 97.14
+    },
+    "temporal-reasoning": {
+      "n": 133,
+      "mean": 89.66,
+      "min": 88.72,
+      "max": 90.98
+    }
+  },
+  "stability": {
+    "stable_correct": 437,
+    "stable_wrong": 42,
+    "flaky": 21,
+    "flaky_ids": [
+      "09d032c9",
+      "0a34ad58",
+      "129d1232",
+      "2133c1b5_abs",
+      "2788b940",
+      "2ce6a0f2",
+      "3fdac837",
+      "4dfccbf8",
+      "73d42213",
+      "7405e8b1",
+      "88432d0a",
+      "993da5e2",
+      "caf03d32",
+      "cc6d1ec1",
+      "d23cf73b",
+      "gpt4_1d80365e",
+      "gpt4_59c863d7",
+      "gpt4_731e37d7",
+      "gpt4_a1b77f9c",
+      "gpt4_d6585ce9",
+      "gpt4_fe651585"
+    ]
+  },
+  "pairwise": {
+    "v320 vs r2": {
+      "common": 500,
+      "same": 492,
+      "agreement": 98.4
+    },
+    "v320 vs r3": {
+      "common": 500,
+      "same": 492,
+      "agreement": 98.4
+    },
+    "v320 vs r4": {
+      "common": 500,
+      "same": 490,
+      "agreement": 98.0
+    },
+    "r2 vs r3": {
+      "common": 500,
+      "same": 486,
+      "agreement": 97.2
+    },
+    "r2 vs r4": {
+      "common": 500,
+      "same": 488,
+      "agreement": 97.6
+    },
+    "r3 vs r4": {
+      "common": 500,
+      "same": 486,
+      "agreement": 97.2
+    }
+  }
+}

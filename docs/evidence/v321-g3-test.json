@@ -1,0 +1,96 @@
+{
+  "split": "test",
+  "n": 249,
+  "base": {
+    "tags": [
+      "full500",
+      "full500-rerun",
+      "full500-run3",
+      "full500-run4"
+    ],
+    "scores": [
+      86.35,
+      90.36,
+      87.95,
+      89.16
+    ],
+    "mean": 88.45,
+    "sd": 1.72
+  },
+  "cand": {
+    "tags": [
+      "v320",
+      "r2",
+      "r3",
+      "r4"
+    ],
+    "scores": [
+      88.35,
+      88.76,
+      88.35,
+      89.16
+    ],
+    "mean": 88.65,
+    "sd": 0.38
+  },
+  "pair": {
+    "delta_pp": 0.2,
+    "ci95": [
+      -3.61,
+      4.12
+    ],
+    "net_questions": 0.5,
+    "better": 30,
+    "worse": 20,
+    "mcnemar": {
+      "cand_only": 20,
+      "base_only": 15,
+      "p_exact": 0.4996
+    }
+  },
+  "per_type": {
+    "knowledge-update": {
+      "n": 39,
+      "base": 94.23,
+      "cand": 89.1,
+      "delta": -5.13
+    },
+    "multi-session": {
+      "n": 66,
+      "base": 80.3,
+      "cand": 80.68,
+      "delta": 0.38
+    },
+    "single-session-assistant": {
+      "n": 28,
+      "base": 100.0,
+      "cand": 89.29,
+      "delta": -10.71
+    },
+    "single-session-preference": {
+      "n": 15,
+      "base": 90.0,
+      "cand": 93.33,
+      "delta": 3.33
+    },
+    "single-session-user": {
+      "n": 35,
+      "base": 97.14,
+      "cand": 97.14,
+      "delta": 0.0
+    },
+    "temporal-reasoning": {
+      "n": 66,
+      "base": 83.33,
+      "cand": 90.53,
+      "delta": 7.2
+    },
+    "_abs": {
+      "n": 18,
+      "base": 81.94,
+      "cand": 81.94,
+      "delta": 0.0
+    }
+  },
+  "note": "判分只读；无 API 调用。sd 为样本标准差，CI 由题级 bootstrap 得到。"
+}

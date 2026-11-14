@@ -1,0 +1,213 @@
+{
+  "baseline": {
+    "tags": [
+      "v320",
+      "r2",
+      "r3",
+      "r4"
+    ],
+    "n": 500,
+    "overall": 89.8,
+    "sd": 0.23,
+    "split_test": 88.65
+  },
+  "ablations": {
+    "no_excerpts": {
+      "overall": 88.2,
+      "delta_pp": -1.6,
+      "net_questions_mean": -8,
+      "per_type": {
+        "knowledge-update": {
+          "base": 93.27,
+          "abl": 93.59,
+          "delta": 0.32,
+          "n": 78
+        },
+        "multi-session": {
+          "base": 82.89,
+          "abl": 80.45,
+          "delta": -2.44,
+          "n": 133
+        },
+        "single-session-assistant": {
+          "base": 92.86,
+          "abl": 89.29,
+          "delta": -3.57,
+          "n": 56
+        },
+        "single-session-preference": {
+          "base": 89.17,
+          "abl": 93.33,
+          "delta": 4.17,
+          "n": 30
+        },
+        "single-session-user": {
+          "base": 97.14,
+          "abl": 97.14,
+          "delta": 0.0,
+          "n": 70
+        },
+        "temporal-reasoning": {
+          "base": 89.66,
+          "abl": 86.47,
+          "delta": -3.2,
+          "n": 133
+        },
+        "_abs": {
+          "base": 79.17,
+          "abl": 83.33,
+          "delta": 4.17,
+          "n": 30
+        }
+      }
+    },
+    "no_arith": {
+      "overall": 89.2,
+      "delta_pp": -0.6,
+      "net_questions_mean": -3,
+      "per_type": {
+        "knowledge-update": {
+          "base": 93.27,
+          "abl": 91.03,
+          "delta": -2.24,
+          "n": 78
+        },
+        "multi-session": {
+          "base": 82.89,
+          "abl": 83.46,
+          "delta": 0.56,
+          "n": 133
+        },
+        "single-session-assistant": {
+          "base": 92.86,
+          "abl": 94.64,
+          "delta": 1.79,
+          "n": 56
+        },
+        "single-session-preference": {
+          "base": 89.17,
+          "abl": 90.0,
+          "delta": 0.83,
+          "n": 30
+        },
+        "single-session-user": {
+          "base": 97.14,
+          "abl": 97.14,
+          "delta": 0.0,
+          "n": 70
+        },
+        "temporal-reasoning": {
+          "base": 89.66,
+          "abl": 87.22,
+          "delta": -2.44,
+          "n": 133
+        },
+        "_abs": {
+          "base": 79.17,
+          "abl": 80.0,
+          "delta": 0.83,
+          "n": 30
+        }
+      }
+    },
+    "no_floor": {
+      "overall": 86.2,
+      "delta_pp": -3.6,
+      "net_questions_mean": -18,
+      "per_type": {
+        "knowledge-update": {
+          "base": 93.27,
+          "abl": 93.59,
+          "delta": 0.32,
+          "n": 78
+        },
+        "multi-session": {
+          "base": 82.89,
+          "abl": 78.2,
+          "delta": -4.7,
+          "n": 133
+        },
+        "single-session-assistant": {
+          "base": 92.86,
+          "abl": 94.64,
+          "delta": 1.79,
+          "n": 56
+        },
+        "single-session-preference": {
+          "base": 89.17,
+          "abl": 83.33,
+          "delta": -5.83,
+          "n": 30
+        },
+        "single-session-user": {
+          "base": 97.14,
+          "abl": 95.71,
+          "delta": -1.43,
+          "n": 70
+        },
+        "temporal-reasoning": {
+          "base": 89.66,
+          "abl": 81.95,
+          "delta": -7.71,
+          "n": 133
+        },
+        "_abs": {
+          "base": 79.17,
+          "abl": 83.33,
+          "delta": 4.17,
+          "n": 30
+        }
+      }
+    },
+    "wide_premise": {
+      "overall": 88.8,
+      "delta_pp": -1.0,
+      "net_questions_mean": -5,
+      "per_type": {
+        "knowledge-update": {
+          "base": 93.27,
+          "abl": 91.03,
+          "delta": -2.24,
+          "n": 78
+        },
+        "multi-session": {
+          "base": 82.89,
+          "abl": 81.2,
+          "delta": -1.69,
+          "n": 133
+        },
+        "single-session-assistant": {
+          "base": 92.86,
+          "abl": 91.07,
+          "delta": -1.79,
+          "n": 56
+        },
+        "single-session-preference": {
+          "base": 89.17,
+          "abl": 90.0,
+          "delta": 0.83,
+          "n": 30
+        },
+        "single-session-user": {
+          "base": 97.14,
+          "abl": 97.14,
+          "delta": 0.0,
+          "n": 70
+        },
+        "temporal-reasoning": {
+          "base": 89.66,
+          "abl": 89.47,
+          "delta": -0.19,
+          "n": 133
+        },
+        "_abs": {
+          "base": 79.17,
+          "abl": 80.0,
+          "delta": 0.83,
+          "n": 30
+        }
+      }
+    }
+  },
+  "note": "单轮消融，基线为 4 轮均值；轮间噪声带宽 0.4pp（89.6–90.0）。"
+}
